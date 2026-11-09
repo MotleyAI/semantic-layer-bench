@@ -1,0 +1,802 @@
+# Frozen question set. Vocabulary: ../model_contract.md
+# Conventions for every question:
+#   - "revenue" is the contract metric: SUM(l_extendedprice * (1 - l_discount)).
+#   - "order year/month/quarter" = bucket of orders.order_date; "ship year" = bucket of lineitem.ship_date.
+#   - customer nation/region and supplier nation/region are distinct dimensions.
+#   - months/quarters are returned as the first date of the bucket.
+#   - shares and percent changes are fractions (0.25 = 25%), not rounded.
+#   - percentiles are continuous (PERCENTILE_CONT).
+#   - 1998 is a partial year (orders end 1998-08-02); "each order year" includes it unless a range is given.
+#   - year ranges ("1993 to 1997") are inclusive.
+
+patterns:
+  P01: Single aggregate
+  P02: Group by one dimension
+  P03: Dimension filters (IN, range, contains, column-to-column)
+  P04: Multi-hop join dimensions
+  P05: Time-grain bucketing
+  P06: Ad-hoc derived metric (query-time arithmetic)
+  P07: Filtered (conditional) measures side by side
+  P08: Filter on a metric (HAVING)
+  P09: Top-N overall and per group
+  P10: Period-over-period
+  P11: Running total
+  P12: Rolling window
+  P13: Grain-to-date (YTD/QTD)
+  P14: Share of total / of group
+  P15: Nested aggregation (aggregate of aggregates)
+  P16: Multi-stage (dimension derived from a metric)
+  P17: Cross-fact (two fact tables, no fan-out)
+  P18: Multiple time dimensions
+  P19: Distinct counts across joins
+  P20: Existence / anti-join
+  P21: Sequence / conversion
+  P22: Statistical aggregates
+  P23: Fine grains and gap-filling (day/week, empty periods as 0)
+  P24: Metrics of different grains in one query (fan-out safety / symmetric aggregates)
+
+questions:
+
+# ---------------- P01 ----------------
+- id: Q01
+  pattern: P01
+  question: What is total revenue across all line items?
+  columns: [revenue]
+  order_matters: false
+  sql: |
+    select sum(l_extendedprice * (1 - l_discount)) as revenue from lineitem
+
+- id: Q02
+  pattern: P01
+  question: How many orders were placed in 1996?
+  columns: [order_count]
+  order_matters: false
+  sql: |
+    select count(*) as order_count from orders where year(o_orderdate) = 1996
+
+# ---------------- P02 ----------------
+- id: Q03
+  pattern: P02
+  question: What is revenue by ship mode?
+  columns: [ship_mode, revenue]
+  order_matters: false
+  sql: |
+    select l_shipmode as ship_mode, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem group by 1
+
+- id: Q04
+  pattern: P02
+  question: How many orders are there per order priority?
+  columns: [order_priority, order_count]
+  order_matters: false
+  sql: |
+    select o_orderpriority as order_priority, count(*) as order_count from orders group by 1
+
+- id: Q05
+  pattern: P02
+  question: How many customers are in each market segment?
+  columns: [market_segment, customer_count]
+  order_matters: false
+  sql: |
+    select c_mktsegment as market_segment, count(distinct c_custkey) as customer_count
+    from customer group by 1
+
+# ---------------- P03 ----------------
+- id: Q06
+  pattern: P03
+  question: What was revenue from line items shipped by AIR or MAIL with a ship date in 1995?
+  columns: [revenue]
+  order_matters: false
+  sql: |
+    select sum(l_extendedprice * (1 - l_discount)) as revenue from lineitem
+    where l_shipmode in ('AIR', 'MAIL') and l_shipdate >= date '1995-01-01' and l_shipdate < date '1996-01-01'
+
+- id: Q07
+  pattern: P03
+  question: How many orders have status 'F' and a total price above 300,000?
+  columns: [order_count]
+  order_matters: false
+  sql: |
+    select count(*) as order_count from orders where o_orderstatus = 'F' and o_totalprice > 300000
+
+- id: Q08
+  pattern: P03
+  question: What is the total quantity sold of parts whose part type contains 'BRASS'?
+  columns: [total_quantity]
+  order_matters: false
+  sql: |
+    select sum(l_quantity) as total_quantity
+    from lineitem join part on l_partkey = p_partkey where p_type like '%BRASS%'
+
+# ---------------- P04 ----------------
+- id: Q09
+  pattern: P04
+  question: What was revenue by customer region for orders placed in 1994?
+  columns: [customer_region_name, revenue]
+  order_matters: false
+  sql: |
+    select r_name as customer_region_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem
+    join orders on l_orderkey = o_orderkey
+    join customer on o_custkey = c_custkey
+    join nation on c_nationkey = n_nationkey
+    join region on n_regionkey = r_regionkey
+    where year(o_orderdate) = 1994
+    group by 1
+
+- id: Q10
+  pattern: P04
+  question: What is revenue by supplier nation, for suppliers in the EUROPE region?
+  columns: [supplier_nation_name, revenue]
+  order_matters: false
+  sql: |
+    select n_name as supplier_nation_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem
+    join supplier on l_suppkey = s_suppkey
+    join nation on s_nationkey = n_nationkey
+    join region on n_regionkey = r_regionkey
+    where r_name = 'EUROPE'
+    group by 1
+
+- id: Q11
+  pattern: P03
+  question: >
+    For orders placed in 1994 by customers in the ASIA region, what is revenue by customer nation,
+    counting only line items whose supplier is in the same nation as the customer
+    (customer_nation_name = supplier_nation_name)?
+  columns: [customer_nation_name, revenue]
+  order_matters: false
+  sql: |
+    select cn.n_name as customer_nation_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem
+    join orders on l_orderkey = o_orderkey
+    join customer on o_custkey = c_custkey
+    join nation cn on c_nationkey = cn.n_nationkey
+    join region cr on cn.n_regionkey = cr.r_regionkey
+    join supplier on l_suppkey = s_suppkey
+    where cr.r_name = 'ASIA' and year(o_orderdate) = 1994 and s_nationkey = c_nationkey
+    group by 1
+
+# ---------------- P05 ----------------
+- id: Q12
+  pattern: P05
+  question: What was revenue for each order month of 1997?
+  columns: [order_month, revenue]
+  order_matters: true
+  sql: |
+    select date_trunc('month', o_orderdate)::date as order_month,
+           sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem join orders on l_orderkey = o_orderkey
+    where year(o_orderdate) = 1997
+    group by 1 order by 1
+
+- id: Q13
+  pattern: P05
+  question: How many orders were placed in each quarter of 1995?
+  columns: [order_quarter, order_count]
+  order_matters: true
+  sql: |
+    select date_trunc('quarter', o_orderdate)::date as order_quarter, count(*) as order_count
+    from orders where year(o_orderdate) = 1995
+    group by 1 order by 1
+
+# ---------------- P06 ----------------
+- id: Q14
+  pattern: P06
+  question: For each market segment, what is revenue per order (revenue divided by the number of distinct orders)?
+  columns: [market_segment, revenue_per_order]
+  order_matters: false
+  sql: |
+    select c_mktsegment as market_segment,
+           sum(l_extendedprice * (1 - l_discount)) / count(distinct o_orderkey) as revenue_per_order
+    from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+    group by 1
+
+- id: Q15
+  pattern: P06
+  question: >
+    For each ship mode, what share of gross sales was given away as discount? Either form is accepted:
+    1 - revenue / gross_sales, or SUM(extended_price * discount) / SUM(extended_price) (they are equal).
+  columns: [ship_mode, discount_share]
+  order_matters: false
+  sql: |
+    select l_shipmode as ship_mode, sum(l_extendedprice * l_discount) / sum(l_extendedprice) as discount_share
+    from lineitem group by 1
+
+- id: Q16
+  pattern: P06
+  question: What is the average order value (the avg_order_value metric) for each order year?
+  columns: [order_year, avg_order_value]
+  order_matters: true
+  sql: |
+    select year(o_orderdate) as order_year, sum(o_totalprice) / count(*) as avg_order_value
+    from orders group by 1 order by 1
+
+# ---------------- P07 ----------------
+- id: Q17
+  pattern: P07
+  question: >
+    For each ship mode, show total revenue, revenue from returned line items (return_flag = 'R'),
+    and the returned share of revenue, in one result.
+  columns: [ship_mode, revenue, returned_revenue, returned_share]
+  order_matters: false
+  sql: |
+    select l_shipmode as ship_mode,
+           sum(l_extendedprice * (1 - l_discount)) as revenue,
+           sum(case when l_returnflag = 'R' then l_extendedprice * (1 - l_discount) end) as returned_revenue,
+           sum(case when l_returnflag = 'R' then l_extendedprice * (1 - l_discount) end)
+             / sum(l_extendedprice * (1 - l_discount)) as returned_share
+    from lineitem group by 1
+
+- id: Q18
+  pattern: P07
+  question: For each order year, show the number of orders and the number of '1-URGENT' priority orders side by side.
+  columns: [order_year, order_count, urgent_order_count]
+  order_matters: true
+  sql: |
+    select year(o_orderdate) as order_year, count(*) as order_count,
+           count(*) filter (where o_orderpriority = '1-URGENT') as urgent_order_count
+    from orders group by 1 order by 1
+
+# ---------------- P08 ----------------
+- id: Q19
+  pattern: P08
+  question: Which customer nations had more than 1,345,000,000 of revenue on orders placed in 1995?
+  columns: [customer_nation_name, revenue]
+  order_matters: false
+  sql: |
+    select n_name as customer_nation_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem join orders on l_orderkey = o_orderkey
+    join customer on o_custkey = c_custkey join nation on c_nationkey = n_nationkey
+    where year(o_orderdate) = 1995
+    group by 1 having sum(l_extendedprice * (1 - l_discount)) > 1345000000
+
+- id: Q20
+  pattern: P08
+  question: >
+    Among line items shipped in 1996 (ship date), which part brands have more than 37,000 line items?
+    Show their line count and average discount.
+  columns: [brand, line_count, avg_discount]
+  order_matters: false
+  sql: |
+    select p_brand as brand, count(*) as line_count, avg(l_discount) as avg_discount
+    from lineitem join part on l_partkey = p_partkey
+    where year(l_shipdate) = 1996
+    group by 1 having count(*) > 37000
+
+- id: Q21
+  pattern: P08
+  question: Which suppliers had more than 5,000,000 of revenue on orders placed in 1997?
+  columns: [supplier_name, revenue]
+  order_matters: false
+  sql: |
+    select s_name as supplier_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem join orders on l_orderkey = o_orderkey join supplier on l_suppkey = s_suppkey
+    where year(o_orderdate) = 1997
+    group by 1 having sum(l_extendedprice * (1 - l_discount)) > 5000000
+
+# ---------------- P09 ----------------
+- id: Q22
+  pattern: P09
+  question: Who are the top 10 customers by revenue on orders placed in 1995?
+  columns: [customer_name, revenue]
+  order_matters: true
+  sql: |
+    select c_name as customer_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+    where year(o_orderdate) = 1995
+    group by 1 order by 2 desc limit 10
+
+- id: Q23
+  pattern: P09
+  question: For each customer region, what are the top 3 part brands by revenue on orders placed in 1996?
+  columns: [customer_region_name, brand, revenue, brand_rank]
+  order_matters: false
+  sql: |
+    with t as (
+      select r_name as customer_region_name, p_brand as brand,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+      join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+      join part on l_partkey = p_partkey
+      where year(o_orderdate) = 1996
+      group by 1, 2)
+    select *, rank() over (partition by customer_region_name order by revenue desc) as brand_rank
+    from t qualify brand_rank <= 3
+
+- id: Q24
+  pattern: P09
+  question: For each order year from 1992 to 1997, which ship mode had the highest revenue, and how much?
+  columns: [order_year, ship_mode, revenue]
+  order_matters: true
+  sql: |
+    with t as (
+      select year(o_orderdate) as order_year, l_shipmode as ship_mode,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) between 1992 and 1997 group by 1, 2)
+    select * from t qualify rank() over (partition by order_year order by revenue desc) = 1
+    order by order_year
+
+# ---------------- P10 ----------------
+- id: Q25
+  pattern: P10
+  question: >
+    For each order month of 1996, show revenue, the previous month's revenue, and the month-over-month
+    percent change. January 1996 is compared with December 1995.
+  columns: [order_month, revenue, prev_month_revenue, mom_change]
+  order_matters: true
+  sql: |
+    with m as (
+      select date_trunc('month', o_orderdate)::date as order_month,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey group by 1),
+    w as (select order_month, revenue,
+                 lag(revenue) over (order by order_month) as prev_month_revenue from m)
+    select order_month, revenue, prev_month_revenue,
+           (revenue - prev_month_revenue) / prev_month_revenue as mom_change
+    from w where year(order_month) = 1996 order by 1
+
+- id: Q26
+  pattern: P10
+  question: For each customer region, compare revenue on 1997 orders with 1996 orders and give the percent change.
+  columns: [customer_region_name, revenue_1997, revenue_1996, yoy_change]
+  order_matters: false
+  sql: |
+    with t as (
+      select r_name as customer_region_name,
+             sum(case when year(o_orderdate) = 1997 then l_extendedprice * (1 - l_discount) end) as revenue_1997,
+             sum(case when year(o_orderdate) = 1996 then l_extendedprice * (1 - l_discount) end) as revenue_1996
+      from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+      join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+      group by 1)
+    select *, (revenue_1997 - revenue_1996) / revenue_1996 as yoy_change from t
+
+- id: Q27
+  pattern: P10
+  question: >
+    For each quarter of 1996, show the order count, the order count in the same quarter of 1995,
+    and the year-over-year percent change.
+  columns: [order_quarter, order_count, prior_year_order_count, yoy_change]
+  order_matters: true
+  sql: |
+    with q as (select date_trunc('quarter', o_orderdate)::date as order_quarter, count(*) as order_count
+               from orders group by 1)
+    select a.order_quarter, a.order_count, b.order_count as prior_year_order_count,
+           (a.order_count - b.order_count) / b.order_count as yoy_change
+    from q a join q b on b.order_quarter = a.order_quarter - interval 1 year
+    where year(a.order_quarter) = 1996 order by 1
+
+# ---------------- P11 ----------------
+- id: Q28
+  pattern: P11
+  question: For each order month of 1995, show revenue and the running total of revenue since January 1995.
+  columns: [order_month, revenue, cumulative_revenue]
+  order_matters: true
+  sql: |
+    with m as (
+      select date_trunc('month', o_orderdate)::date as order_month,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) = 1995 group by 1)
+    select *, sum(revenue) over (order by order_month) as cumulative_revenue from m order by 1
+
+- id: Q29
+  pattern: P11
+  question: >
+    For each market segment and order year, show the order count and the cumulative order count
+    since the first year in the data, restarting for each segment.
+  columns: [market_segment, order_year, order_count, cumulative_order_count]
+  order_matters: false
+  sql: |
+    with t as (
+      select c_mktsegment as market_segment, year(o_orderdate) as order_year, count(*) as order_count
+      from orders join customer on o_custkey = c_custkey group by 1, 2)
+    select *, sum(order_count) over (partition by market_segment order by order_year) as cumulative_order_count
+    from t
+
+# ---------------- P12 ----------------
+- id: Q30
+  pattern: P12
+  question: >
+    For each order month of 1996, what is trailing 3-month revenue (that month plus the two before it)?
+    January 1996 includes November and December 1995.
+  columns: [order_month, trailing_3m_revenue]
+  order_matters: true
+  sql: |
+    with m as (
+      select date_trunc('month', o_orderdate)::date as order_month,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey group by 1),
+    w as (select order_month,
+                 sum(revenue) over (order by order_month rows between 2 preceding and current row) as trailing_3m_revenue
+          from m)
+    select * from w where year(order_month) = 1996 order by 1
+
+- id: Q31
+  pattern: P12
+  question: >
+    For each order month of 1997, what is the average monthly order count over the trailing 12 months
+    (that month and the 11 before it)?
+  columns: [order_month, trailing_12m_avg_order_count]
+  order_matters: true
+  sql: |
+    with m as (select date_trunc('month', o_orderdate)::date as order_month, count(*) as order_count
+               from orders group by 1),
+    w as (select order_month,
+                 avg(order_count) over (order by order_month rows between 11 preceding and current row) as trailing_12m_avg_order_count
+          from m)
+    select * from w where year(order_month) = 1997 order by 1
+
+# ---------------- P13 ----------------
+- id: Q32
+  pattern: P13
+  question: >
+    For each order month of 1995 and 1996, show revenue and year-to-date revenue (resetting every January).
+  columns: [order_month, revenue, ytd_revenue]
+  order_matters: true
+  sql: |
+    with m as (
+      select date_trunc('month', o_orderdate)::date as order_month,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) in (1995, 1996) group by 1)
+    select *, sum(revenue) over (partition by year(order_month) order by order_month) as ytd_revenue
+    from m order by 1
+
+- id: Q33
+  pattern: P13
+  question: For each order month of 1997, show the order count and the quarter-to-date order count.
+  columns: [order_month, order_count, qtd_order_count]
+  order_matters: true
+  sql: |
+    with m as (select date_trunc('month', o_orderdate)::date as order_month, count(*) as order_count
+               from orders where year(o_orderdate) = 1997 group by 1)
+    select *, sum(order_count) over (partition by date_trunc('quarter', order_month) order by order_month) as qtd_order_count
+    from m order by 1
+
+# ---------------- P14 ----------------
+- id: Q34
+  pattern: P14
+  question: What share of revenue on 1996 orders came from each customer region?
+  columns: [customer_region_name, revenue, revenue_share]
+  order_matters: false
+  sql: |
+    with t as (
+      select r_name as customer_region_name, sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+      join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+      where year(o_orderdate) = 1996 group by 1)
+    select *, revenue / sum(revenue) over () as revenue_share from t
+
+- id: Q35
+  pattern: P14
+  question: For 1996 orders, what share of its customer region's revenue does each customer nation account for?
+  columns: [customer_region_name, customer_nation_name, revenue, share_of_region]
+  order_matters: false
+  sql: |
+    with t as (
+      select r_name as customer_region_name, n_name as customer_nation_name,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+      join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+      where year(o_orderdate) = 1996 group by 1, 2)
+    select *, revenue / sum(revenue) over (partition by customer_region_name) as share_of_region from t
+
+- id: Q36
+  pattern: P14
+  question: For each order year from 1993 through 1997 (inclusive), what share of that year's revenue came from each ship mode?
+  columns: [order_year, ship_mode, revenue, share_of_year]
+  order_matters: false
+  sql: |
+    with t as (
+      select year(o_orderdate) as order_year, l_shipmode as ship_mode,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) between 1993 and 1997 group by 1, 2)
+    select *, revenue / sum(revenue) over (partition by order_year) as share_of_year from t
+
+# ---------------- P15 ----------------
+- id: Q37
+  pattern: P15
+  question: What was the average monthly revenue in 1996 (the average of the 12 monthly totals, by order month)?
+  columns: [avg_monthly_revenue]
+  order_matters: false
+  sql: |
+    select avg(revenue) as avg_monthly_revenue from (
+      select date_trunc('month', o_orderdate) as m, sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) = 1996 group by 1)
+
+- id: Q38
+  pattern: P15
+  question: Among customers with at least one order, what is the median number of orders per customer?
+  columns: [median_orders_per_customer]
+  order_matters: false
+  sql: |
+    select percentile_cont(0.5) within group (order by n) as median_orders_per_customer
+    from (select o_custkey, count(*) as n from orders group by 1)
+
+- id: Q39
+  pattern: P15
+  question: For each market segment, what was the highest single-month revenue in 1997 (by order month)?
+  columns: [market_segment, max_monthly_revenue]
+  order_matters: false
+  sql: |
+    select market_segment, max(revenue) as max_monthly_revenue from (
+      select c_mktsegment as market_segment, date_trunc('month', o_orderdate) as m,
+             sum(l_extendedprice * (1 - l_discount)) as revenue
+      from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+      where year(o_orderdate) = 1997 group by 1, 2)
+    group by 1
+
+# ---------------- P16 ----------------
+- id: Q40
+  pattern: P16
+  question: >
+    Put customers with at least one order into tiers by lifetime order value (sum of order total price):
+    'low' below 1,500,000, 'mid' from 1,500,000 up to but not including 3,000,000, 'high' 3,000,000 and above.
+    For each tier, how many customers are there and what is their total order value?
+  columns: [tier, customer_count, order_value]
+  order_matters: false
+  sql: |
+    with c as (select o_custkey, sum(o_totalprice) as v from orders group by 1)
+    select case when v < 1500000 then 'low' when v < 3000000 then 'mid' else 'high' end as tier,
+           count(*) as customer_count, sum(v) as order_value
+    from c group by 1
+
+- id: Q41
+  pattern: P16
+  question: >
+    Group customers into cohorts by the year of their first order. For each cohort year, how many
+    customers are in it and what is their all-time revenue?
+  columns: [cohort_year, customer_count, revenue]
+  order_matters: true
+  sql: |
+    with f as (select o_custkey, year(min(o_orderdate)) as cohort_year from orders group by 1),
+    r as (select o_custkey, sum(l_extendedprice * (1 - l_discount)) as revenue
+          from lineitem join orders on l_orderkey = o_orderkey group by 1)
+    select cohort_year, count(*) as customer_count, sum(revenue) as revenue
+    from f join r using (o_custkey) group by 1 order by 1
+
+- id: Q42
+  pattern: P16
+  question: What share of revenue on 1997 orders came from customers whose first order was placed before 1995-01-01?
+  columns: [early_customer_revenue_share]
+  order_matters: false
+  sql: |
+    with f as (select o_custkey, min(o_orderdate) as first_order from orders group by 1)
+    select sum(case when first_order < date '1995-01-01' then l_extendedprice * (1 - l_discount) end)
+           / sum(l_extendedprice * (1 - l_discount)) as early_customer_revenue_share
+    from lineitem join orders on l_orderkey = o_orderkey join f using (o_custkey)
+    where year(o_orderdate) = 1997
+
+# ---------------- P17 ----------------
+- id: Q43
+  pattern: P17
+  question: >
+    For each part manufacturer, show all-time revenue (from line items) and total available supply
+    quantity (from partsupp) in one result.
+  columns: [manufacturer, revenue, total_available_qty]
+  order_matters: false
+  sql: |
+    with r as (select p_mfgr, sum(l_extendedprice * (1 - l_discount)) as revenue
+               from lineitem join part on l_partkey = p_partkey group by 1),
+    s as (select p_mfgr, sum(ps_availqty) as total_available_qty
+          from partsupp join part on ps_partkey = p_partkey group by 1)
+    select p_mfgr as manufacturer, revenue, total_available_qty from r join s using (p_mfgr)
+
+- id: Q44
+  pattern: P06
+  question: >
+    For parts whose name contains 'green', what is profit by supplier nation and order year, where profit
+    per line item is extended_price * (1 - discount) - supply_cost * quantity, using the supply cost of
+    that line item's part and supplier (partsupp)?
+  columns: [supplier_nation_name, order_year, profit]
+  order_matters: false
+  sql: |
+    select n_name as supplier_nation_name, year(o_orderdate) as order_year,
+           sum(l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity) as profit
+    from lineitem
+    join part on l_partkey = p_partkey
+    join partsupp on ps_partkey = l_partkey and ps_suppkey = l_suppkey
+    join supplier on l_suppkey = s_suppkey
+    join nation on s_nationkey = n_nationkey
+    join orders on l_orderkey = o_orderkey
+    where p_name like '%green%'
+    group by 1, 2
+
+# ---------------- P18 ----------------
+- id: Q45
+  pattern: P18
+  question: For orders placed in 1994, what is revenue by ship year?
+  columns: [ship_year, revenue]
+  order_matters: true
+  sql: |
+    select year(l_shipdate) as ship_year, sum(l_extendedprice * (1 - l_discount)) as revenue
+    from lineitem join orders on l_orderkey = o_orderkey
+    where year(o_orderdate) = 1994 group by 1 order by 1
+
+- id: Q46
+  pattern: P18
+  question: >
+    For line items shipped in 1996, how many were received late (receipt date after commit date),
+    by ship mode?
+  columns: [ship_mode, late_line_count]
+  order_matters: false
+  sql: |
+    select l_shipmode as ship_mode, count(*) as late_line_count
+    from lineitem where year(l_shipdate) = 1996 and l_receiptdate > l_commitdate group by 1
+
+- id: Q47
+  pattern: P18
+  question: >
+    For each order priority, what is the average number of days between the order date and the ship
+    date, averaged over line items?
+  columns: [order_priority, avg_days_to_ship]
+  order_matters: false
+  sql: |
+    select o_orderpriority as order_priority, avg(l_shipdate - o_orderdate) as avg_days_to_ship
+    from lineitem join orders on l_orderkey = o_orderkey group by 1
+
+# ---------------- P19 ----------------
+- id: Q48
+  pattern: P19
+  question: How many distinct customers bought each part brand on orders placed in 1997?
+  columns: [brand, customer_count]
+  order_matters: false
+  sql: |
+    select p_brand as brand, count(distinct o_custkey) as customer_count
+    from lineitem join orders on l_orderkey = o_orderkey join part on l_partkey = p_partkey
+    where year(o_orderdate) = 1997 group by 1
+
+- id: Q49
+  pattern: P19
+  question: How many distinct suppliers supplied line items to customers in each customer region, on orders placed in 1995?
+  columns: [customer_region_name, supplier_count]
+  order_matters: false
+  sql: |
+    select r_name as customer_region_name, count(distinct l_suppkey) as supplier_count
+    from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+    join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+    where year(o_orderdate) = 1995 group by 1
+
+# ---------------- P20 ----------------
+- id: Q50
+  pattern: P20
+  question: How many customers have never placed an order?
+  columns: [customer_count]
+  order_matters: false
+  sql: |
+    select count(*) as customer_count from customer c
+    where not exists (select 1 from orders o where o.o_custkey = c.c_custkey)
+
+- id: Q51
+  pattern: P20
+  question: For each market segment, how many customers placed at least one order in 1996 but none in 1997?
+  columns: [market_segment, customer_count]
+  order_matters: false
+  sql: |
+    with y as (
+      select o_custkey,
+             bool_or(year(o_orderdate) = 1996) as in_96,
+             bool_or(year(o_orderdate) = 1997) as in_97
+      from orders group by 1)
+    select c_mktsegment as market_segment, count(*) as customer_count
+    from y join customer on o_custkey = c_custkey
+    where in_96 and not in_97 group by 1
+
+# ---------------- P21 ----------------
+- id: Q52
+  pattern: P21
+  question: >
+    Among customers with at least one order, what share placed their second order 0 to 90 days
+    (inclusive) after their first order? Orders are ranked by order date, then order key, so a second
+    order on the same day counts as 0 days.
+  columns: [repeat_within_90d_share]
+  order_matters: false
+  sql: |
+    with r as (
+      select o_custkey, o_orderdate,
+             row_number() over (partition by o_custkey order by o_orderdate, o_orderkey) as rn
+      from orders),
+    p as (
+      select o_custkey,
+             max(case when rn = 1 then o_orderdate end) as d1,
+             max(case when rn = 2 then o_orderdate end) as d2
+      from r where rn <= 2 group by 1)
+    select avg(case when d2 is not null and d2 - d1 <= 90 then 1.0 else 0.0 end) as repeat_within_90d_share
+    from p
+
+# ---------------- P22 ----------------
+- id: Q53
+  pattern: P22
+  question: For each order priority, what are the median and the 90th percentile of order total price?
+  columns: [order_priority, median_total_price, p90_total_price]
+  order_matters: false
+  sql: |
+    select o_orderpriority as order_priority,
+           percentile_cont(0.5) within group (order by o_totalprice) as median_total_price,
+           percentile_cont(0.9) within group (order by o_totalprice) as p90_total_price
+    from orders group by 1
+
+- id: Q54
+  pattern: P22
+  question: For each ship mode, what is the sample standard deviation of line-item quantity?
+  columns: [ship_mode, stddev_quantity]
+  order_matters: false
+  sql: |
+    select l_shipmode as ship_mode, stddev_samp(l_quantity) as stddev_quantity from lineitem group by 1
+
+# ---------------- P23 ----------------
+- id: Q55
+  pattern: P23
+  question: >
+    For each day of January 1996, how many orders had a total price above 400,000?
+    Days with no such orders must appear with 0.
+  columns: [order_date, order_count]
+  order_matters: true
+  sql: |
+    with days as (
+      select unnest(generate_series(date '1996-01-01', date '1996-01-31', interval 1 day))::date as order_date)
+    select d.order_date, count(o.o_orderkey) as order_count
+    from days d left join orders o on o.o_orderdate = d.order_date and o.o_totalprice > 400000
+    group by 1 order by 1
+
+- id: Q56
+  pattern: P23
+  question: >
+    How many orders were placed in each week (weeks start on Monday) from the week of 1996-01-01
+    up to and including the week of 1996-02-19?
+  columns: [order_week, order_count]
+  order_matters: true
+  sql: |
+    select date_trunc('week', o_orderdate)::date as order_week, count(*) as order_count
+    from orders where o_orderdate >= date '1996-01-01' and o_orderdate < date '1996-02-26'
+    group by 1 order by 1
+
+# ---------------- P24 ----------------
+- id: Q57
+  pattern: P24
+  question: For each order priority, show order count, order value and revenue in one result.
+  columns: [order_priority, order_count, order_value, revenue]
+  order_matters: false
+  sql: |
+    with o as (select o_orderpriority as order_priority, count(*) as order_count, sum(o_totalprice) as order_value
+               from orders group by 1),
+    r as (select o_orderpriority as order_priority, sum(l_extendedprice * (1 - l_discount)) as revenue
+          from lineitem join orders on l_orderkey = o_orderkey group by 1)
+    select order_priority, order_count, order_value, revenue from o join r using (order_priority)
+
+- id: Q58
+  pattern: P24
+  question: >
+    For each part brand, what is the total order value of orders placed in 1997 that contain at least
+    one line item of that brand? Each order counts once per brand, however many of its lines are that brand.
+  columns: [brand, order_value]
+  order_matters: false
+  sql: |
+    with ob as (
+      select distinct p_brand, o_orderkey, o_totalprice
+      from lineitem join part on l_partkey = p_partkey join orders on l_orderkey = o_orderkey
+      where year(o_orderdate) = 1997)
+    select p_brand as brand, sum(o_totalprice) as order_value from ob group by 1
+
+# ---------------- P21 (conversion between two event types) ----------------
+- id: Q59
+  pattern: P21
+  question: >
+    Take customers who placed a '5-LOW' priority order in Q1 1996 (Jan 1 to Mar 31). Using each customer's
+    first such order as the start, what share of them placed a '1-URGENT' order 0 to 30 days (inclusive)
+    after that start?
+  columns: [conversion_rate]
+  order_matters: false
+  sql: |
+    with b as (
+      select o_custkey, min(o_orderdate) as d from orders
+      where o_orderpriority = '5-LOW' and o_orderdate between date '1996-01-01' and date '1996-03-31'
+      group by 1)
+    select avg(case when exists (
+             select 1 from orders o where o.o_custkey = b.o_custkey and o.o_orderpriority = '1-URGENT'
+               and o.o_orderdate between b.d and b.d + 30) then 1.0 else 0.0 end) as conversion_rate
+    from b

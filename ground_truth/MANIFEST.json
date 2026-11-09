@@ -1,0 +1,360 @@
+{
+  "questions_sha256": "4f34fc3a9193539767c3c588c7ec0dd4cb9dfda9f25cbed92dd3e829ed7ce478",
+  "n_questions": 59,
+  "answers": {
+    "Q01": {
+      "pattern": "P01",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "d63f6658430948436d36c5bfb9e362182654a637503cf2d2449cc0b9e485f710"
+    },
+    "Q02": {
+      "pattern": "P01",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "84e1c9fd6e039e366d77410925761a4a5006e0b8efe644d278ee02d59194b869"
+    },
+    "Q03": {
+      "pattern": "P02",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "95a47019e85996db43a8192cbe77f45ff3b59c4ed5642958f9e0383d2360655a"
+    },
+    "Q04": {
+      "pattern": "P02",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "cf75148939b97723dc362d69dcb06134f6cd545aad7f4924337e91a06dfee5bd"
+    },
+    "Q05": {
+      "pattern": "P02",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "6544a5d7ce17cc2b8aeea70e12d8a043fe9c04aa686354fd348486f6674a6635"
+    },
+    "Q06": {
+      "pattern": "P03",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "3c81e0130a108b579be93bd14722435afa96619351352f3567b097bbfe58c1b7"
+    },
+    "Q07": {
+      "pattern": "P03",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "4363308cc4fe4c01ace2fb25e274efda23657011a6dd98452a799a182d62fec8"
+    },
+    "Q08": {
+      "pattern": "P03",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "f6a45f1414bf28e550f2a077b4c6aedcd3a18c6153398eae6af36acf7291fd2b"
+    },
+    "Q09": {
+      "pattern": "P04",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "80e00c1fc756902c9982de59e882e981e2aa6643863e8cbf797c36184dab2e22"
+    },
+    "Q10": {
+      "pattern": "P04",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "322c1df6337152da20bc31ae6d4b82d730f7a0830e388cf4420e33935a00711f"
+    },
+    "Q11": {
+      "pattern": "P03",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "2d6ead7e8f1b43b4c1dcd1fca58ade621699ecd075e6c7125ae18cf4fac124cf"
+    },
+    "Q12": {
+      "pattern": "P05",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "f4876effbfeaab5bcdd307af20d4ef93572e72d9dd465f02008b9e7199fb4931"
+    },
+    "Q13": {
+      "pattern": "P05",
+      "rows": 4,
+      "order_matters": true,
+      "sha256": "6f10d39632a0651b92905373b33b85b206787a9e66d018771f74c16721729121"
+    },
+    "Q14": {
+      "pattern": "P06",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "09ad37092053cb207a77c24ff237835ab342c5371e999684c5ef41d4d002f187"
+    },
+    "Q15": {
+      "pattern": "P06",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "5975fcfc2a178895d920f6b89a5f5dee5703cc7ae608e8249cc86f0de92b8a01"
+    },
+    "Q16": {
+      "pattern": "P06",
+      "rows": 7,
+      "order_matters": true,
+      "sha256": "3804bd75b3345e1b34f5736834c04461a935208e94db4d781e3df8d71a490069"
+    },
+    "Q17": {
+      "pattern": "P07",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "40217f5c4e4a191dda32a6f00e58309607b206e303bc1ac1bf970436feb84989"
+    },
+    "Q18": {
+      "pattern": "P07",
+      "rows": 7,
+      "order_matters": true,
+      "sha256": "edb3532912fb506baf0192f32d9e34089c18506c561db3aba33f895c85f9c001"
+    },
+    "Q19": {
+      "pattern": "P08",
+      "rows": 4,
+      "order_matters": false,
+      "sha256": "22a2c3ff93a7e889bf840dcf9482601a8c2fe38092e944a1b245cac535a33e7c"
+    },
+    "Q20": {
+      "pattern": "P08",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "ce5b901d7d77dda3d2ccc108db793f571b046b0b40ea9876efb88a5af91ee516"
+    },
+    "Q21": {
+      "pattern": "P08",
+      "rows": 6,
+      "order_matters": false,
+      "sha256": "ee470cb4abf8acdd3404dabb403ee2851eb233432eba778da92b6f936527529c"
+    },
+    "Q22": {
+      "pattern": "P09",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "b5a884952c5eb6724f4170e43219be3956a52c2adedb63f435de7c7299519cf3"
+    },
+    "Q23": {
+      "pattern": "P09",
+      "rows": 15,
+      "order_matters": false,
+      "sha256": "6b72e9a17dea978731c404d263426d72e76526ea09ed301ae181e177388801c8"
+    },
+    "Q24": {
+      "pattern": "P09",
+      "rows": 6,
+      "order_matters": true,
+      "sha256": "2928b4f6d9da88087a3000743a411a2bf2d4586d25d7feff74b6327a2c51cbd9"
+    },
+    "Q25": {
+      "pattern": "P10",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "4d8974106c6d91e4edd198c00dd99cf775e03ad855af94b833b5d4a6e357e077"
+    },
+    "Q26": {
+      "pattern": "P10",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "9590d4164acb7563032be73e2962e9e6132679cd15e84da97fa3ba668b230ef6"
+    },
+    "Q27": {
+      "pattern": "P10",
+      "rows": 4,
+      "order_matters": true,
+      "sha256": "986a89350017f0b43c50e0c9ab96f658f5a8593b383f81caa71df1368f30c08f"
+    },
+    "Q28": {
+      "pattern": "P11",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "b45e8f50e46b249a2ca09b458093d44825bf9914e84d349fefb4889c624b3cab"
+    },
+    "Q29": {
+      "pattern": "P11",
+      "rows": 35,
+      "order_matters": false,
+      "sha256": "b4d08bffeaee23ce7d788b96e57fea30e15a4134fcda84a05e5ee62ba55124c7"
+    },
+    "Q30": {
+      "pattern": "P12",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "cdf457229e9388f8e0766b1bfa9981ce80a5a07772b5093c5de447da54669fe5"
+    },
+    "Q31": {
+      "pattern": "P12",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "398e4148ffab6e5812d2a69d2ce952451986040a893ebd246ec41f4786eceb18"
+    },
+    "Q32": {
+      "pattern": "P13",
+      "rows": 24,
+      "order_matters": true,
+      "sha256": "405a0c3661de4663f974724aef5e19c3e9dd558a1fa0c6a9c35c40399c67e373"
+    },
+    "Q33": {
+      "pattern": "P13",
+      "rows": 12,
+      "order_matters": true,
+      "sha256": "24bd2d1668863fa8ae51acad1247babfc230d908c56486f03285c12e88f9dbe6"
+    },
+    "Q34": {
+      "pattern": "P14",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "387fa5675f9a85d9727c0e38912407bdd1af5a2c209485ae9a63d38956691abe"
+    },
+    "Q35": {
+      "pattern": "P14",
+      "rows": 25,
+      "order_matters": false,
+      "sha256": "c12c85d526a609917e93b92c5486af7c91dead1afbe5131f045f645bc1ee751c"
+    },
+    "Q36": {
+      "pattern": "P14",
+      "rows": 35,
+      "order_matters": false,
+      "sha256": "de66a98392aecdcdc6fa51138e96e2c5d75b8648c44e5f20466c88accb1ae0f9"
+    },
+    "Q37": {
+      "pattern": "P15",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "01e7819b6f78befbca123fe42eb9cce2521560ec9ce5e5c5d29bcdbcf22e9da5"
+    },
+    "Q38": {
+      "pattern": "P15",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "d11aa90bd1f5c9af5501dbddb400a89aee2c173bcaee0152b3aa56ec6e8af02c"
+    },
+    "Q39": {
+      "pattern": "P15",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "69b05133ae83ae1f7a97db907babbddb486c0014981287cb3a8c0f6783e8f590"
+    },
+    "Q40": {
+      "pattern": "P16",
+      "rows": 3,
+      "order_matters": false,
+      "sha256": "d5cf30bdb0faf6abed904381e91ce927868040239bee9e22d7a4560eadf86f71"
+    },
+    "Q41": {
+      "pattern": "P16",
+      "rows": 7,
+      "order_matters": true,
+      "sha256": "587be3c7a591fe760789c61b199db566df6c3d1b4ff9d37b1a904f8cdf1043bd"
+    },
+    "Q42": {
+      "pattern": "P16",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "658c6604a4034d931c827d5bc9856c2c1bed14f260d335f9b45f71fae3c82bb0"
+    },
+    "Q43": {
+      "pattern": "P17",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "84638a642bd03c108bdc879423e150f0f6d66876f454f75d05881311494c927c"
+    },
+    "Q44": {
+      "pattern": "P06",
+      "rows": 175,
+      "order_matters": false,
+      "sha256": "c2f4fb62ebf3c35eb0d7f74861b2b822f61623e7848db18787cce4bab1828459"
+    },
+    "Q45": {
+      "pattern": "P18",
+      "rows": 2,
+      "order_matters": true,
+      "sha256": "8dd5b078afa087d09c415fe78de03b55b037be4e88f9df296a0dca3bab3af650"
+    },
+    "Q46": {
+      "pattern": "P18",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "0b64b21c82e14652be264a81a4c1c0640a35db668fcdac22c5a8fe48ca41f599"
+    },
+    "Q47": {
+      "pattern": "P18",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "1a313314c294a16de821d027b7d0b9911a836c4a7989c860da70e282d16ab482"
+    },
+    "Q48": {
+      "pattern": "P19",
+      "rows": 25,
+      "order_matters": false,
+      "sha256": "73155e481750de2d37db3f5cc60f0bca7354d8ffbb0d0c999d3645d6f76115cc"
+    },
+    "Q49": {
+      "pattern": "P19",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "6c72f32ae82345af311509789d76954bbca742cf4597415ee4f8e10bb565f715"
+    },
+    "Q50": {
+      "pattern": "P20",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "022cd9085daaaf57a3ed7f495957f7580d09905d9d1aa13d727cc3abaf69de1a"
+    },
+    "Q51": {
+      "pattern": "P20",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "d579ba1bc28b21da0db7fdb2a50f09aa55db3cb3b42c9d732b9884b0f8ab5cdc"
+    },
+    "Q52": {
+      "pattern": "P21",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "a105a3b5c2fd09b9912eb8818c2b235a07337c99b740140ccea25801e8007b38"
+    },
+    "Q53": {
+      "pattern": "P22",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "80c8ac878e6f13583bf50baa7505e1fa50bac3439e9b4a6eeac311a5b257bea9"
+    },
+    "Q54": {
+      "pattern": "P22",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "8baa5db6d741962793a6694ae918135fc5fd3b6393260e9443ad9c71f8c69ec1"
+    },
+    "Q55": {
+      "pattern": "P23",
+      "rows": 31,
+      "order_matters": true,
+      "sha256": "7b0e3dd6dc1ca3c0776720cbe423c078742ae237cb68bb718f1f0cfe54a9037e"
+    },
+    "Q56": {
+      "pattern": "P23",
+      "rows": 8,
+      "order_matters": true,
+      "sha256": "112562d4e1df5c1e73c2b0945380c31ac0d0271dad98e2849221149d6a584ef2"
+    },
+    "Q57": {
+      "pattern": "P24",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "c62ef2c982c48ab5cf547d353477fe7acaaba7797a6f0c5aeecac25f7ff2b014"
+    },
+    "Q58": {
+      "pattern": "P24",
+      "rows": 25,
+      "order_matters": false,
+      "sha256": "f508d8f9474791978abf0655b38eeb6a83cf64311f65dbcfcead831e32e03667"
+    },
+    "Q59": {
+      "pattern": "P21",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "896ffe1f247ba3c45ff3fb06f9fdebc6223b0291a0b9ed153da178c4fd2b2770"
+    }
+  }
+}
