@@ -84,8 +84,8 @@ stages), using only declared members. But not every answer expresses the questio
   ties at the cut-offs.
 - **Relies on the data (B17, B65).** The model declares no part key, so a part is identified by
   `part_name` + `manufacturer`, unique in this dataset only.
-- **Exact by construction, without `row_number` (B69, B72)**, and two queries rely on every order
-  having a line item (B47, B68, B70), true in TPC-H.
+- **Exact by construction, without `row_number` (B69, B72).** Three queries (B47, B68, B70) also
+  rely on every order having a line item, which is true in TPC-H.
 
 A strict reading that counts only answers expressing the question exactly as specified, with no
 reliance on properties of this dataset, would not credit the 10 questions above (B16, B17, B30,
