@@ -1,128 +1,110 @@
-# Blind round results (B01 to B50)
+# Blind round results (B01 to B75)
 
 The first round (Q01 to Q59) was written by people who knew what each layer can do. This round
-answers the obvious objection to that ("the questions were picked to favour SLayer"): the 50
-questions here were written without any knowledge of semantic-layer capabilities, then frozen,
-then scored under the same rules (`README.md` rules 3 to 5, including the Member rule).
-Snowflake is not scored (no account).
+answers the obvious objection to that ("the questions were picked to favour SLayer"): the
+questions here were written without any knowledge of semantic-layer capabilities, frozen, then
+scored under the same rules (`README.md` rules 3 to 5, including the Member rule). Snowflake is
+not scored (no account).
 
 ## How the questions were made
 
-1. **Isolated author.** One subagent got only the business domain (a wholesale parts
-   distributor), the vocabulary of `model_contract.md` (pasted into its brief), and the task:
-   50 questions a business person would ask, about evenly split across operations, finance and
-   marketing, with about 15 simple, 20 medium and 15 hard. It was told not to read anything in
-   the repo and not to think about which tool could answer a question. Its output is kept
-   verbatim in [`questions_blind/authored.yaml`](questions_blind/authored.yaml).
-2. **Ground truth.** Hand-written DuckDB SQL for each question was added to
-   [`questions_blind/questions.yaml`](questions_blind/questions.yaml) and executed with
-   `uv run python scripts/run_ground_truth.py --blind`, which writes
+1. **Isolated author, B01 to B50.** One subagent got only the business domain (a wholesale parts
+   distributor), the vocabulary of `model_contract.md`, and the task: 50 questions a business
+   person would ask, about evenly split across operations, finance and marketing, about 15
+   simple, 20 medium and 15 hard. It read nothing else in the repo and was told not to consider
+   which tool could answer a question. Output kept verbatim in
+   [`questions_blind/authored.yaml`](questions_blind/authored.yaml). Frozen in `5cfec3b`.
+2. **Extension, B51 to B75.** After B01 to B50 were scored (SLayer 50/50), a second isolated
+   author was asked for 25 more, analytically harder questions (5 medium, 20 hard), with the
+   same brief plus the text of the first 50 so as not to duplicate them. It saw no layer, attempt
+   or result. Verbatim in
+   [`questions_blind/authored_extension.yaml`](questions_blind/authored_extension.yaml). Frozen with
+   ground truth in `ccb5b82` before any layer was tried on them. The extension was requested to
+   test whether a harder blind mix would find SLayer's limits; it is reported in full whatever the
+   outcome.
+3. **Ground truth.** Hand-written DuckDB SQL per question in
+   [`questions_blind/questions.yaml`](questions_blind/questions.yaml), executed with
+   `uv run python scripts/run_ground_truth.py --blind [ids]` into
    [`ground_truth_blind/`](ground_truth_blind/) with SHA-256 hashes in `MANIFEST.json`. Every
-   answer is non-empty and NULL-free.
-3. **One fix, logged.** B15 asked about finished (status F) orders placed in 1996. No 1996 order
-   has status F in TPC-H (only orders completed before mid-1995 do), so the answer was empty. It
-   was moved to 1994; the question is otherwise unchanged. No other question was edited.
-4. **Frozen** in commit `5cfec3b` before any layer was tried.
-5. **Scoring.** One agent per layer, each told to get the strongest fair result for its layer,
-   to record `tried` queries and errors before marking anything unsupported, and to flag
-   suspected translation bugs instead of working around them. Attempts are in
-   `layers/<layer>/attempts_blind.yaml`; results in `results_blind/<layer>.json` and
-   `results_blind.json`, produced by `uv run python scripts/run_attempts.py <layer> --blind` and
-   `--aggregate --blind`. All three layers were re-run from those files after the agents
-   finished, with the same scores.
+   answer is non-empty and NULL-free. Generating B51 to B75 left the B01 to B50 files untouched.
+4. **One fix, logged.** B15 asked about finished (status F) orders placed in 1996; none exist in
+   TPC-H, so it was moved to 1994. No other question was edited.
+5. **Scoring.** One agent per layer per batch, each told to get the strongest fair result, to
+   record `tried` queries and errors before marking anything unsupported, and to flag suspected
+   translation bugs. Attempts in `layers/<layer>/attempts_blind.yaml`; results in
+   `results_blind/<layer>.json` and `results_blind.json` (`run_attempts.py <layer> --blind`,
+   `--aggregate --blind`). All three layers were re-run from those files afterwards, with the
+   same scores.
 
 ## Scores (Score A, fixed OSSIE model)
 
 | Layer | Answered | Wrong | Unsupported |
 |---|---|---|---|
-| SLayer | **50 / 50** | 0 | 0 |
-| Cube | 15 / 50 | 0 | 35 |
-| MetricFlow | 11 / 50 | 0 | 39 |
+| SLayer | **75 / 75** | 0 | 0 |
+| Cube | 15 / 75 | 0 | 60 |
+| MetricFlow | 11 / 75 | 0 | 64 |
 
-By domain:
+By batch: B01 to B50 SLayer 50, Cube 15, MetricFlow 11. B51 to B75 SLayer 25, Cube 0, MetricFlow 0.
 
 | Domain | SLayer | Cube | MetricFlow |
 |---|---|---|---|
-| Operations (17) | 17 | 3 | 2 |
-| Finance (17) | 17 | 6 | 5 |
-| Marketing (16) | 16 | 6 | 4 |
-
-By difficulty:
+| Operations (25) | 25 | 3 | 2 |
+| Finance (26) | 26 | 6 | 5 |
+| Marketing (24) | 24 | 6 | 4 |
 
 | Difficulty | SLayer | Cube | MetricFlow |
 |---|---|---|---|
 | Simple (15) | 15 | 12 | 8 |
-| Medium (20) | 20 | 3 | 3 |
-| Hard (15) | 15 | 0 | 0 |
-
-Answered by Cube: B03, B04, B05, B18, B19, B21, B22, B26, B27, B35, B36, B37, B38, B39, B43.
-Answered by MetricFlow: B03, B05, B18, B19, B21, B26, B27, B36, B38, B39, B43.
+| Medium (25) | 25 | 3 | 3 |
+| Hard (35) | 35 | 0 | 0 |
 
 ## What the blind questions show
 
-Business questions are mostly not "one metric by one dimension". Of the 50, only about 15
-are a single declared metric grouped and filtered. The rest need, at query time, things the
-OSSIE model has no slot for:
+Only 15 of the 75 questions are a declared metric grouped and filtered (exactly Cube's 15
+answers; MetricFlow's 11 are a subset). The other 60 need, at query time, things the OSSIE model
+has no slot for: ratios between metrics or of a filtered count to a total, conditions comparing
+two fields (receipt date after commit date), aggregates of row-level expressions (supply cost
+times quantity), period comparisons, running and rolling totals, percentiles, ranks and buckets
+within groups, and aggregates of aggregates (cohorts, per-order and per-customer measures,
+anti-joins). Neither Cube REST nor `mf query` can express these at query time.
 
-- **A ratio of two metrics or of a filtered count to a total** (late share, return share, margin
-  rate, revenue per customer, discount cost). This is the most common need: B01, B02, B07 to
-  B10, B13, B20, B28, B44, B45 and more. Neither Cube REST nor `mf query` can do arithmetic
-  between measures at query time; both can with a model-level metric.
-- **A condition comparing two fields** (receipt_date > commit_date defines "late", which drives
-  9 of the 17 operations questions).
-- **An aggregate over a row-level expression** (supply_cost * quantity for margin, date
-  differences for transit days): B06, B11, B24, B25, B32.
-- **Period comparisons, ranks within groups, shares of a group total, top-N sums, cohorts and
-  anti-joins**: all 15 hard questions.
+## Caveats on the SLayer result (read before quoting 75/75)
 
-Cube's and MetricFlow's simple-question scores (12/15 and 8/15) show both work for the
-questions they are designed for. The gap opens at medium difficulty, where a ratio or a
-two-field condition appears.
+SLayer answered through its query API only (formulas, `iif`, `partition_by`, `rank`, `ntile`,
+`percentile`, `cumsum`, `window`, `time_shift`, multi-stage queries and inline joins between
+stages), using only declared members. But not every answer expresses the question as written:
 
-## Caveats on the SLayer result
+- **Workaround: running total over a ranking (B51, B62).** `cumsum` only runs along a time axis.
+  The query converts each rank into a day offset from a declared date, runs `cumsum` on that
+  axis, and converts back. It is correct and within the rules, but it is a trick an agent is
+  unlikely to find unaided.
+- **Tie-breaks not expressible (B16, B30, B31, B48, B51, B62, B67, B73).** `rank` and `ntile`
+  take no secondary sort key, and `ntile` has no direction (`ntile(-x)` is used for descending).
+  The questions specify a tie-break by name or key. Answers match only because this data has no
+  ties at the cut-offs.
+- **Relies on the data (B17, B65).** The model declares no part key, so a part is identified by
+  `part_name` + `manufacturer`, unique in this dataset only.
+- **Exact by construction, without `row_number` (B69, B72)**, and two queries rely on every order
+  having a line item (B47, B68, B70), true in TPC-H.
 
-SLayer answered everything through its query API (formulas, `iif` conditional aggregates,
-`partition_by`, `rank`, `time_shift`, multi-stage queries and joins between stages in one
-request), using only declared members. Points a reviewer may want to weigh:
-
-- **B16, B30, B31, B48 (top-N per group).** SLayer's `rank()` gives tied values the same rank;
-  ground truth uses `row_number()` with a name or key tie-break. They match because this data
-  has no ties at the cut-offs. With ties, SLayer would return extra rows rather than applying
-  the stated tie-break.
-- **B17 (cheapest supplier share).** The model declares no part key, so the query identifies a
-  part by `part_name` + `manufacturer` (unique across all 200,000 parts; `part_name` alone has 3
-  duplicates). Both are declared fields, so it satisfies the Member rule, but it relies on a
-  property of the data.
-- **B40 (container size class).** SLayer has no `split_part`; the first word of the container
-  is taken with `substr`/`instr`.
-- **B47 (lapsed customers).** "Has a 1996 order" is computed as "has a 1996 line item", which is
-  equivalent because every TPC-H order has lines.
+A strict reading that counts only answers expressing the question exactly as specified, with no
+reliance on properties of this dataset, would not credit the 10 questions above (B16, B17, B30,
+B31, B48, B51, B62, B65, B67, B73): **65 / 75**. This stricter reading was defined after seeing
+the results, so it is reported as a secondary view, not the headline rule. Cube and MetricFlow
+scores are unchanged under it (none of their answers involve these features).
 
 ## Failures that come from the translation, not the query API
 
-No layer agent found a translation bug (a translated model that differs from
-`model/tpch.ossie.yaml` beyond what `TRANSLATION.md` documents). Several MetricFlow failures do
-come from the **documented translation losses**, and a reader should see them as such:
+No layer agent found a translation bug. Several MetricFlow failures come from the documented
+translation losses: `customer_count`, `supplier_count` and `total_available_qty` were dropped
+(MetricFlow needs an aggregation time dimension on each measure's model), which blocks B35 and
+contributes to B04, B12, B37, B42, B45, B71 and B74; `metric_time` is `ship_date`, which also
+limits order-dated offsets (B23, B34, B61, B63); and the 2-hop join limit puts customer and
+supplier nation and region out of reach (B22, B29, B34, B45, B48, B64 and parts of others).
+For Cube, B12 and B74 are join-direction effects (many-to-one only, as declared; no customer to
+orders path, so never-ordered customers are invisible).
 
-- **Dropped metrics.** MetricFlow needs an aggregation time dimension on every measure's own
-  model, so `customer_count`, `supplier_count` and `total_available_qty` were dropped. That
-  alone blocks B35 (customers per segment, a simple question Cube answers) and contributes to
-  B04, B12, B37, B42 and B45.
-- **`metric_time` is `ship_date`** for line-item metrics, so offsets (YoY) cannot run on order
-  date: contributes to B23, B34.
-- **Join depth.** customer_nation (3 hops) and customer_region (4 hops) are beyond MetricFlow's
-  2-hop limit: B22, B29, B34, B45, B48 and parts of B31, B37, B41. This is a MetricFlow engine
-  limit on the shared join graph (`topology`), not a translation error, but a model laid out
-  differently (denormalised nation and region onto customer) would avoid it.
-
-For Cube, one failure is a join-graph effect: **B12** (brass stock versus 1997 sales). Cube's
-joins are many-to-one only, as declared, so filtering by order date roots the query at lineitem
-and `total_available_qty` then covers only offers that sold in 1997, not all offers. Recorded as
-`topology`.
-
-All Cube failures are marked `fixable_in_model: yes` (Cube can declare the needed ratio,
-filtered or windowed measure in the model). For MetricFlow, 10 are `yes` (ratio or filtered
-metrics) and 29 `no`.
+Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 
 ## Every non-answered question
 
@@ -169,6 +151,31 @@ metrics) and 29 `no`.
 | B48 | marketing / hard | expressivity | no | Top-3 brands per customer region needs ranking within groups (mf query has only a global order and limit), and customer_region_name is 4 hops from lineitem. |
 | B49 | marketing / hard | expressivity | no | Bucketing customers by lifetime order count is a dimension derived from a metric (multi-stage), then customer counts and revenue per bucket; mf query cannot group by a metric. |
 | B50 | marketing / hard | expressivity | no | Share of each year's revenue per segment needs a partitioned total and a ratio for two years side by side plus their difference; not expressible. |
+| B51 | operations / hard | expressivity | no | Needs distinct supplier count, a revenue ranking with a running sum and an 80% cut-off. mf query has no window/cumulative over a ranked list, no count distinct at query time and no arithmetic. |
+| B52 | operations / hard | expressivity | no | line_count by ship_mode for 1997 shipments runs, but median and p90 of a per-line date difference (receipt_date - ship_date) are percentiles of an undeclared expression; mf query only requests declared metrics. |
+| B53 | operations / hard | expressivity | no | Perfect orders need a per-order test that no line is late (nested aggregation: late lines per order, then count orders with zero) and a share; mf query aggregates once and has no arithmetic. |
+| B54 | operations / medium | expressivity | no | Averages of date differences across lineitem and orders (commit_date - order_date, receipt_date - order_date) are not declared metrics and cannot be computed at query time; the gap is arithmetic. |
+| B55 | operations / hard | expressivity | yes | late_share is a filtered-count ratio and the rolling 3-month share needs a window over months; mf query has one where clause, no arithmetic and no query-time cumulative/window metrics. |
+| B56 | operations / medium | expressivity | no | returned_share is a filtered-count ratio and return_rate_index divides it by the period-wide share (a total across groups); not expressible. |
+| B57 | operations / hard | expressivity | no | Per-supplier late shares compared with a regional late share, a >= 50 lines threshold and counts of outlier suppliers: nested aggregation plus arithmetic. supplier_region_name is also 3 hops from lineitem. |
+| B58 | operations / hard | expressivity | no | Ship span per order (max - min ship_date), a >= 2 lines filter and percentiles of the span over orders: nested aggregation of an undeclared expression; not expressible. |
+| B59 | finance / hard | expressivity | yes | revenue and total_quantity per manufacturer and year are expressible, but two years side by side, unit prices and the volume/price effects are arithmetic between metrics. |
+| B60 | finance / hard | expressivity | no | Customer margin rate needs sum(supply_cost * quantity) across lineitem and partsupp (no declared metric, measures cannot use joined columns), a per-customer distinct-order threshold and percentiles over customers. |
+| B61 | finance / hard | expressivity | yes | Year-to-date revenue for 1998 and 1997 side by side needs a grain-to-date cumulative metric and a one-year offset, plus a ratio. None exist at query time; metric_time for revenue is ship_date, not order_date. |
+| B62 | finance / hard | expressivity | no | Customer margin needs sum(supply_cost * quantity) (not declared, not computable), then a ranking with a running share of total; not expressible. |
+| B63 | finance / hard | expressivity | yes | Trailing twelve-month revenue and the same window a year earlier need a 12-month cumulative window and an offset on order_date, plus a ratio; not available at query time. |
+| B64 | finance / hard | topology | no | customer_region_name is 3 hops from orders (orders -> customer -> customer_nation -> customer_region), beyond the 2-hop limit; the company-wide percentile threshold and the large-order share are also not expressible. |
+| B65 | finance / hard | expressivity | no | actual_cost (supply_cost * quantity) and cheapest_cost (per-part min supply_cost across offers * quantity) are aggregations of expressions over a joined dataset and a nested aggregation; no declared metric covers them. |
+| B66 | finance / medium | expressivity | no | avg_discount and revenue by order_priority for 1997 run, but margin_rate needs sum(supply_cost * quantity), which is not a declared metric and cannot be computed at query time. |
+| B67 | finance / hard | expressivity | no | Deciles of orders by total_price (NTILE) and shares of total order value: a ranking-derived dimension, a total across groups and arithmetic; not expressible. |
+| B68 | marketing / hard | expressivity | no | Cohort by first-order year is a dimension derived from min(order_date) per customer (multi-stage), plus an index over the cohort's first year; mf query cannot group by a metric and has no arithmetic. |
+| B69 | marketing / hard | expressivity | no | Days to second order needs per-customer order positions (row_number) and percentiles; not expressible. |
+| B70 | marketing / hard | expressivity | no | Manufacturer pair co-occurrence per order is a self-join of lineitem through orders, and lift needs ratios over N; not expressible in mf query. |
+| B71 | marketing / hard | expressivity | no | Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts; customer_count was dropped in translation and metric filters do not inherit the outer where nor take a date filter. |
+| B72 | marketing / medium | expressivity | no | First order per customer (earliest order_date, ties by key) is a row-number-derived dimension; averages of first versus later orders and their ratio are not expressible. |
+| B73 | marketing / hard | expressivity | no | Revenue quartiles per year (NTILE) for customers active in both years, cross-tabulated with zero-filled cells: multi-stage ranking and existence tests; not expressible. |
+| B74 | marketing / medium | topology | no | Customers on file with no orders need customer_count (dropped in translation: customer has no aggregation time dimension) and an anti-join; avg account_balance is not a declared metric either. |
+| B75 | marketing / hard | expressivity | no | Bucketing customers by number of distinct brands bought is a dimension derived from a per-customer count distinct (multi-stage), then customer counts, averages and shares; not expressible. |
 
 ### cube
 
@@ -209,3 +216,28 @@ metrics) and 29 `no`.
 | B48 | marketing / hard | expressivity | yes | Top-3 brands per customer region needs a rank within region; REST has only a global order + limit. |
 | B49 | marketing / hard | expressivity | yes | Bucketing customers by lifetime order count is a dimension derived from an aggregate, then re-aggregated; no subquery dimensions at query time. |
 | B50 | marketing / hard | expressivity | yes | Segment share of each year's total for two years, side by side, and the change; needs partitioned totals and arithmetic at query time. |
+| B51 | operations / hard | expressivity | no | Pareto count needs a running sum of revenue over suppliers ranked by revenue, compared with 80% of the total, then counted. Windows and an aggregate over a ranked sub-result; REST aggregates once. |
+| B52 | operations / hard | expressivity | yes | Percentiles of a row-level date difference (receipt_date - ship_date). No percentile measure and no ad-hoc aggregate of dimensions at query time. line_count by ship_mode alone is one REST query. |
+| B53 | operations / hard | expressivity | yes | A perfect order is a per-order flag derived from its lines (no line with receipt_date > commit_date, a member-vs-member condition), then averaged per year and priority: aggregate of an aggregate plus a ratio. order_count by year and priority alone is one REST query. |
+| B54 | operations / medium | expressivity | yes | Averages of row-level date differences across lineitem and orders (commit_date - order_date, receipt_date - order_date) and their difference; no such measures, no ad-hoc aggregates, no calculated measures. |
+| B55 | operations / hard | expressivity | yes | Monthly late_share (member-vs-member conditional count / count) and a 3-month rolling ratio; no conditional measure, no calculated measure, no query-time rolling window. |
+| B56 | operations / medium | expressivity | yes | returned_share needs a filtered count (return_flag 'R') beside the unfiltered count and a ratio, and return_rate_index needs the period-wide share on every row. line_count per ship_mode x ship_instruct is one plain CubeScan, the shares are not. |
+| B57 | operations / hard | expressivity | no | Per-supplier late shares (conditional ratio), compared with the region's late share, filtered on line counts and counted per region: multi-stage aggregation with a member-vs-member condition. |
+| B58 | operations / hard | expressivity | yes | Per-order ship span (MAX - MIN of ship_date over the order's lines), filtered to multi-line orders, then percentiles per priority; aggregate of an aggregate plus percentiles. |
+| B59 | finance / hard | expressivity | yes | Revenue and quantity per manufacturer and year come from one REST query, but the 1996 and 1997 values must sit side by side and be combined (change, volume and price effects): per-measure year filters and calculated measures, neither available at query time. |
+| B60 | finance / hard | expressivity | yes | Per-customer margin rate needs SUM(supply_cost * quantity) across lineitem and partsupp dimensions (no cost measure), a HAVING on distinct orders, then percentiles of the per-customer rate per segment: ad-hoc aggregate, ratio and aggregate of an aggregate. |
+| B61 | finance / hard | expressivity | yes | Year-to-date running sums per month for 1998 and 1997 side by side and their ratio; no query-time rolling/to-date window, time shift or calculated measure. |
+| B62 | finance / hard | expressivity | yes | Per-customer margin (needs SUM(supply_cost * quantity), no cost measure), margin_rate ratio, rank and running share of total margin; ad-hoc aggregate, calculated measure and windows. |
+| B63 | finance / hard | expressivity | yes | Trailing-twelve-month revenue per month, the same window a year earlier, and growth; no query-time rolling window or time shift. |
+| B64 | finance / hard | expressivity | no | A company-wide percentile threshold on total_price, repeated per region, then a conditional count and value share relative to it. No percentile measure and no filter that references an aggregate. order_value per region alone is one REST query. |
+| B65 | finance / hard | expressivity | yes | actual_cost is SUM(supply_cost * quantity) over cross-cube dimensions, and cheapest_cost needs the per-part minimum supply_cost over all offers (an aggregate turned into a row value). Ad-hoc aggregates and subquery dimensions are not available at query time. |
+| B66 | finance / medium | expressivity | yes | avg_discount and revenue per order_priority for 1997 are one REST query, but margin_rate needs SUM(supply_cost * quantity) (no cost measure; cross-cube dimensions) and a ratio. |
+| B67 | finance / hard | expressivity | no | NTILE(10) deciles of orders by total_price, then per-decile aggregates and shares; needs a window-derived dimension and re-aggregation. |
+| B68 | marketing / hard | expressivity | yes | Cohort by first-order year is a dimension derived from a per-customer MIN(order_date), and revenue_index divides by the cohort's first-year revenue; no subquery dimensions, no calculated measures. |
+| B69 | marketing / hard | expressivity | no | Days between a customer's first and second order need order positions per customer (ROW_NUMBER), a self-join and percentiles; not expressible at query time. |
+| B70 | marketing / hard | expressivity | no | Manufacturer pair co-occurrence needs a per-order distinct manufacturer set, a self-join of it, and lift ratios; Cube queries have no self-join and no aggregate over sub-results. |
+| B71 | marketing / hard | expressivity | yes | Lapsed and reactivated customers need per-customer existence flags across three periods (anti-join and semi-join), then counts per segment and a ratio. |
+| B72 | marketing / medium | expressivity | yes | First order per customer (ROW_NUMBER by date, key), then conditional averages of total_price on first vs other orders and their ratio; no window, no conditional measure, no calculated measure. |
+| B73 | marketing / hard | expressivity | no | Two NTILE(4) assignments per customer (one per year, on per-year revenue), restricted to customers active in both years, cross-tabulated with zero cells; windows over sub-results and a dense grid. |
+| B74 | marketing / medium | topology | yes | Never-ordered customers need an existence test from customer to orders (no join in that direction; orders -> customer only) and conditional averages of account_balance, a dimension with no avg measure. |
+| B75 | marketing / hard | expressivity | yes | Per-customer distinct brand count (an aggregate) bucketed into a dimension, then counts, averages and revenue shares per bucket; aggregate of an aggregate plus ratios. |

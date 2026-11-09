@@ -1,7 +1,7 @@
 {
  "layer": "slayer",
  "summary": {
-  "answered": 50,
+  "answered": 75,
   "wrong": 0,
   "unsupported": 0,
   "not_attempted": 0
@@ -1730,6 +1730,1579 @@
     "revenue_share_1997": "lineitem.revenue_share_1997",
     "share_change": "lineitem.share_change"
    },
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B51",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "ps",
+     "source_model": "lineitem",
+     "dimensions": [
+      "supplier.supplier_key"
+     ],
+     "measures": [
+      "revenue",
+      {
+       "formula": "rank(revenue, direction='desc')",
+       "name": "rev_rank"
+      },
+      {
+       "formula": "sum(extended_price * (1 - discount), partition_by=[])",
+       "name": "total_revenue"
+      },
+      {
+       "formula": "min(orders.order_date, partition_by=[])",
+       "name": "base_date"
+      }
+     ],
+     "filters": [
+      "orders.order_date in '1997'"
+     ]
+    },
+    {
+     "name": "axis",
+     "source_model": "ps",
+     "dimensions": [
+      "supplier__supplier_key",
+      "base_date",
+      "total_revenue",
+      {
+       "expression": "date_add(base_date, rev_rank, 'day')",
+       "name": "rank_axis"
+      }
+     ],
+     "measures": [
+      {
+       "formula": "sum(revenue)",
+       "name": "rev"
+      }
+     ]
+    },
+    {
+     "name": "cum",
+     "source_model": "axis",
+     "dimensions": [
+      "base_date",
+      "total_revenue"
+     ],
+     "time_dimensions": [
+      {
+       "dimension": "rank_axis",
+       "granularity": "day"
+      }
+     ],
+     "measures": [
+      {
+       "formula": "sum(rev)",
+       "name": "rev_in_rank"
+      },
+      {
+       "formula": "cumsum(sum(rev))",
+       "name": "cum_revenue"
+      }
+     ]
+    },
+    {
+     "source_model": "cum",
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "active_supplier_count"
+      },
+      {
+       "formula": "min(iif(cum_revenue >= 0.8 * total_revenue, date_diff('day', base_date, rank_axis), 1000000000))",
+       "name": "suppliers_for_80pct_revenue"
+      },
+      {
+       "formula": "min(iif(cum_revenue >= 0.8 * total_revenue, date_diff('day', base_date, rank_axis), 1000000000)) * 1.0 / count(*)",
+       "name": "supplier_share_for_80pct"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "active_supplier_count": "cum.active_supplier_count",
+    "suppliers_for_80pct_revenue": "cum.suppliers_for_80pct_revenue",
+    "supplier_share_for_80pct": "cum.supplier_share_for_80pct"
+   },
+   "notes": "SLayer's running total (cumsum) needs a time axis, so the supplier revenue rank is turned into a day offset (date_add(base_date, rev_rank, 'day'), base_date = earliest 1997 order date, a declared field) and cumsum runs over that day axis; the rank is read back with date_diff. All inside one multi-stage request, no raw SQL. Tie-break approximated: rank(revenue, desc) has no secondary key (supplier_key asc); no revenue ties among the 10,000 suppliers, so the result is exact here.",
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B52",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "dimensions": [
+     "ship_mode"
+    ],
+    "measures": [
+     "line_count",
+     {
+      "formula": "percentile(date_diff('day', ship_date, receipt_date), p=0.5)",
+      "name": "median_transit_days"
+     },
+     {
+      "formula": "percentile(date_diff('day', ship_date, receipt_date), p=0.9)",
+      "name": "p90_transit_days"
+     }
+    ],
+    "filters": [
+     "ship_date in '1997'"
+    ]
+   },
+   "columns": {
+    "ship_mode": "lineitem.ship_mode",
+    "line_count": "lineitem.line_count",
+    "median_transit_days": "lineitem.median_transit_days",
+    "p90_transit_days": "lineitem.p90_transit_days"
+   },
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B53",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.order_key",
+      "orders.order_priority",
+      {
+       "expression": "date_part('year', orders.order_date)",
+       "name": "order_year"
+      }
+     ],
+     "measures": [
+      {
+       "formula": "max(iif(receipt_date > commit_date, 1, 0))",
+       "name": "any_late"
+      }
+     ],
+     "filters": [
+      "orders.order_date >= '1993'",
+      "orders.order_date <= '1997'"
+     ]
+    },
+    {
+     "source_model": "per_order",
+     "dimensions": [
+      "order_year",
+      "orders__order_priority"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "order_count"
+      },
+      {
+       "formula": "avg(iif(any_late == 0, 1.0, 0.0))",
+       "name": "perfect_order_share"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "order_year": "per_order.order_year",
+    "order_priority": "per_order.orders__order_priority",
+    "order_count": "per_order.order_count",
+    "perfect_order_share": "per_order.perfect_order_share"
+   },
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B54",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "dimensions": [
+     "orders.order_priority"
+    ],
+    "measures": [
+     {
+      "formula": "avg(date_diff('day', orders.order_date, commit_date))",
+      "name": "avg_promised_days"
+     },
+     {
+      "formula": "avg(date_diff('day', orders.order_date, receipt_date))",
+      "name": "avg_actual_days"
+     },
+     {
+      "formula": "avg(date_diff('day', orders.order_date, receipt_date)) - avg(date_diff('day', orders.order_date, commit_date))",
+      "name": "avg_gap_days"
+     }
+    ],
+    "filters": [
+     "orders.order_date in '1997'"
+    ]
+   },
+   "columns": {
+    "order_priority": "lineitem.orders.order_priority",
+    "avg_promised_days": "lineitem.avg_promised_days",
+    "avg_actual_days": "lineitem.avg_actual_days",
+    "avg_gap_days": "lineitem.avg_gap_days"
+   },
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B55",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "time_dimensions": [
+     {
+      "dimension": "ship_date",
+      "granularity": "month",
+      "date_range": [
+       "1996-01",
+       "1997-12"
+      ]
+     }
+    ],
+    "measures": [
+     {
+      "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0))",
+      "name": "late_share"
+     },
+     {
+      "formula": "sum(iif(receipt_date > commit_date, 1.0, 0.0), window='3m') / count(*, window='3m')",
+      "name": "rolling_3m_late_share"
+     }
+    ]
+   },
+   "columns": {
+    "ship_month": "lineitem.ship_date",
+    "late_share": "lineitem.late_share",
+    "rolling_3m_late_share": "lineitem.rolling_3m_late_share"
+   },
+   "notes": "Rolling 3-month pooled share = sum(late, window='3m') / count(*, window='3m') on the monthly ship_date axis.",
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B56",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "dimensions": [
+     "ship_mode",
+     "ship_instruct"
+    ],
+    "measures": [
+     "line_count",
+     {
+      "formula": "avg(iif(return_flag == 'R', 1.0, 0.0))",
+      "name": "returned_share"
+     },
+     {
+      "formula": "avg(iif(return_flag == 'R', 1.0, 0.0)) / avg(iif(return_flag == 'R', 1.0, 0.0), partition_by=[])",
+      "name": "return_rate_index"
+     }
+    ],
+    "filters": [
+     "receipt_date >= '1993'",
+     "receipt_date <= '1994'"
+    ]
+   },
+   "columns": {
+    "ship_mode": "lineitem.ship_mode",
+    "ship_instruct": "lineitem.ship_instruct",
+    "line_count": "lineitem.line_count",
+    "returned_share": "lineitem.returned_share",
+    "return_rate_index": "lineitem.return_rate_index"
+   },
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B57",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_supplier",
+     "source_model": "lineitem",
+     "dimensions": [
+      "supplier.supplier_nation.supplier_region.supplier_region_name",
+      "supplier.supplier_key"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "n_lines"
+      },
+      {
+       "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0))",
+       "name": "late_share"
+      },
+      {
+       "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0), partition_by=supplier.supplier_nation.supplier_region.supplier_region_name)",
+       "name": "region_late_share"
+      }
+     ],
+     "filters": [
+      "ship_date in '1997'"
+     ]
+    },
+    {
+     "source_model": "per_supplier",
+     "dimensions": [
+      "supplier__supplier_nation__supplier_region__supplier_region_name",
+      "region_late_share"
+     ],
+     "measures": [
+      {
+       "formula": "sum(iif(n_lines >= 50, 1, 0))",
+       "name": "qualifying_supplier_count"
+      },
+      {
+       "formula": "sum(iif(n_lines >= 50 and late_share >= region_late_share + 0.10, 1, 0))",
+       "name": "outlier_supplier_count"
+      },
+      {
+       "formula": "sum(iif(n_lines >= 50 and late_share >= region_late_share + 0.10, 1, 0)) * 1.0 / sum(iif(n_lines >= 50, 1, 0))",
+       "name": "outlier_share"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "supplier_region_name": "per_supplier.supplier__supplier_nation__supplier_region__supplier_region_name",
+    "region_late_share": "per_supplier.region_late_share",
+    "qualifying_supplier_count": "per_supplier.qualifying_supplier_count",
+    "outlier_supplier_count": "per_supplier.outlier_supplier_count",
+    "outlier_share": "per_supplier.outlier_share"
+   },
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B58",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.order_key",
+      "orders.order_priority"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "n_lines"
+      },
+      {
+       "formula": "date_diff('day', min(ship_date), max(ship_date))",
+       "name": "ship_span_days"
+      }
+     ],
+     "filters": [
+      "orders.order_date in '1996'",
+      "count(*) >= 2"
+     ]
+    },
+    {
+     "source_model": "per_order",
+     "dimensions": [
+      "orders__order_priority"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "order_count"
+      },
+      {
+       "formula": "percentile(ship_span_days, p=0.5)",
+       "name": "median_ship_span_days"
+      },
+      {
+       "formula": "percentile(ship_span_days, p=0.9)",
+       "name": "p90_ship_span_days"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "order_priority": "per_order.orders__order_priority",
+    "order_count": "per_order.order_count",
+    "median_ship_span_days": "per_order.median_ship_span_days",
+    "p90_ship_span_days": "per_order.p90_ship_span_days"
+   },
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B59",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "dimensions": [
+     "part.manufacturer"
+    ],
+    "measures": [
+     {
+      "formula": "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+      "name": "revenue_1996"
+     },
+     {
+      "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0))",
+      "name": "revenue_1997"
+     },
+     {
+      "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) - sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+      "name": "revenue_change"
+     },
+     {
+      "formula": "(sum(iif(orders.order_date in '1997', quantity, 0)) - sum(iif(orders.order_date in '1996', quantity, 0))) * sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1996', quantity, 0))",
+      "name": "volume_effect"
+     },
+     {
+      "formula": "(sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1997', quantity, 0)) - sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1996', quantity, 0))) * sum(iif(orders.order_date in '1997', quantity, 0))",
+      "name": "price_effect"
+     }
+    ],
+    "filters": [
+     "orders.order_date >= '1996'",
+     "orders.order_date <= '1997'"
+    ]
+   },
+   "columns": {
+    "manufacturer": "lineitem.part.manufacturer",
+    "revenue_1996": "lineitem.revenue_1996",
+    "revenue_1997": "lineitem.revenue_1997",
+    "revenue_change": "lineitem.revenue_change",
+    "volume_effect": "lineitem.volume_effect",
+    "price_effect": "lineitem.price_effect"
+   },
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B60",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.customer_key",
+      "orders.customer.market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "count_distinct(orders.order_key)",
+       "name": "n_orders"
+      },
+      {
+       "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+       "name": "margin_rate"
+      }
+     ],
+     "filters": [
+      "orders.order_date in '1997'"
+     ]
+    },
+    {
+     "source_model": "per_customer",
+     "dimensions": [
+      "orders__customer__market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "customer_count"
+      },
+      {
+       "formula": "percentile(margin_rate, p=0.25)",
+       "name": "p25_margin_rate"
+      },
+      {
+       "formula": "percentile(margin_rate, p=0.5)",
+       "name": "median_margin_rate"
+      },
+      {
+       "formula": "percentile(margin_rate, p=0.75)",
+       "name": "p75_margin_rate"
+      }
+     ],
+     "filters": [
+      "n_orders >= 3"
+     ]
+    }
+   ],
+   "columns": {
+    "market_segment": "per_customer.orders__customer__market_segment",
+    "customer_count": "per_customer.customer_count",
+    "p25_margin_rate": "per_customer.p25_margin_rate",
+    "median_margin_rate": "per_customer.median_margin_rate",
+    "p75_margin_rate": "per_customer.p75_margin_rate"
+   },
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B61",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "ytd",
+     "source_model": "lineitem",
+     "dimensions": [
+      {
+       "expression": "date_part('year', orders.order_date)",
+       "name": "order_year"
+      }
+     ],
+     "time_dimensions": [
+      {
+       "dimension": "orders.order_date",
+       "granularity": "month",
+       "date_range": [
+        "1997-01",
+        "1998-07"
+       ]
+      }
+     ],
+     "filters": [
+      "date_part('month', orders.order_date) <= 7"
+     ],
+     "measures": [
+      {
+       "formula": "cumsum(revenue)",
+       "name": "ytd_revenue"
+      }
+     ]
+    },
+    {
+     "source_model": "ytd",
+     "time_dimensions": [
+      {
+       "dimension": "orders__order_date",
+       "granularity": "month",
+       "date_range": [
+        "1998-01",
+        "1998-07"
+       ]
+      }
+     ],
+     "measures": [
+      {
+       "formula": "sum(ytd_revenue)",
+       "name": "ytd_revenue_1998"
+      },
+      {
+       "formula": "time_shift(sum(ytd_revenue), -1, 'year')",
+       "name": "ytd_revenue_1997"
+      },
+      {
+       "formula": "sum(ytd_revenue) / time_shift(sum(ytd_revenue), -1, 'year') - 1",
+       "name": "ytd_growth"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "order_month": "ytd.orders__order_date",
+    "ytd_revenue_1998": "ytd.ytd_revenue_1998",
+    "ytd_revenue_1997": "ytd.ytd_revenue_1997",
+    "ytd_growth": "ytd.ytd_growth"
+   },
+   "notes": "YTD = cumsum per calendar year (year as an extra dimension), then time_shift(-1, 'year') in a second stage.",
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B62",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.customer_key",
+      "orders.customer.customer_name"
+     ],
+     "measures": [
+      {
+       "formula": "revenue - sum(partsupp.supply_cost * quantity)",
+       "name": "margin"
+      },
+      {
+       "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+       "name": "margin_rate"
+      },
+      {
+       "formula": "rank(revenue - sum(partsupp.supply_cost * quantity), direction='desc')",
+       "name": "margin_rank"
+      },
+      {
+       "formula": "sum(extended_price * (1 - discount) - partsupp.supply_cost * quantity, partition_by=[])",
+       "name": "total_margin"
+      },
+      {
+       "formula": "min(orders.order_date, partition_by=[])",
+       "name": "base_date"
+      }
+     ]
+    },
+    {
+     "name": "rank_axis",
+     "source_model": "per_customer",
+     "dimensions": [
+      "orders__customer_key",
+      "orders__customer__customer_name",
+      "margin",
+      "margin_rank",
+      "margin_rate",
+      "base_date",
+      "total_margin",
+      {
+       "expression": "date_add(base_date, margin_rank, 'day')",
+       "name": "rank_day"
+      }
+     ]
+    },
+    {
+     "name": "running",
+     "source_model": "rank_axis",
+     "dimensions": [
+      "total_margin"
+     ],
+     "time_dimensions": [
+      {
+       "dimension": "rank_day",
+       "granularity": "day"
+      }
+     ],
+     "measures": [
+      {
+       "formula": "cumsum(sum(margin))",
+       "name": "cum_margin"
+      }
+     ]
+    },
+    {
+     "source_model": {
+      "source_name": "rank_axis",
+      "joins": [
+       {
+        "target_model": "running",
+        "join_pairs": [
+         [
+          "rank_day",
+          "rank_day"
+         ]
+        ],
+        "cardinality": "many_to_one"
+       }
+      ]
+     },
+     "dimensions": [
+      "margin_rank",
+      "orders__customer__customer_name",
+      "margin",
+      "margin_rate",
+      {
+       "expression": "running.cum_margin / total_margin",
+       "name": "cumulative_margin_share"
+      }
+     ],
+     "filters": [
+      "margin_rank <= 20"
+     ],
+     "order": [
+      {
+       "column": "margin_rank",
+       "direction": "asc"
+      }
+     ],
+     "limit": 20
+    }
+   ],
+   "columns": {
+    "margin_rank": "rank_axis.margin_rank",
+    "customer_name": "rank_axis.orders__customer__customer_name",
+    "margin": "rank_axis.margin",
+    "margin_rate": "rank_axis.margin_rate",
+    "cumulative_margin_share": "rank_axis.cumulative_margin_share"
+   },
+   "notes": "Running margin over the rank order uses the same device as B51: the rank becomes a day offset from a declared date (earliest order date), cumsum runs over that day axis, and the running total is joined back to each customer by that day. Tie-break approximated: rank(margin, desc) has no secondary key (customer_key asc); no ties affect the top 20, so it matches.",
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B63",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "time_dimensions": [
+     {
+      "dimension": "orders.order_date",
+      "granularity": "month",
+      "date_range": "1997"
+     }
+    ],
+    "measures": [
+     {
+      "formula": "sum(extended_price * (1 - discount), window='12m')",
+      "name": "ttm_revenue"
+     },
+     {
+      "formula": "time_shift(sum(extended_price * (1 - discount), window='12m'), -1, 'year')",
+      "name": "ttm_revenue_prior_year"
+     },
+     {
+      "formula": "sum(extended_price * (1 - discount), window='12m') / time_shift(sum(extended_price * (1 - discount), window='12m'), -1, 'year') - 1",
+      "name": "ttm_growth"
+     }
+    ]
+   },
+   "columns": {
+    "order_month": "lineitem.orders.order_date",
+    "ttm_revenue": "lineitem.ttm_revenue",
+    "ttm_revenue_prior_year": "lineitem.ttm_revenue_prior_year",
+    "ttm_growth": "lineitem.ttm_growth"
+   },
+   "notes": "TTM = sum(..., window='12m') on a monthly order_date axis; prior year via time_shift(-1, 'year').",
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B64",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "orders",
+     "dimensions": [
+      "order_key",
+      "customer.customer_nation.customer_region.customer_region_name",
+      "total_price"
+     ],
+     "measures": [
+      {
+       "formula": "percentile(total_price, p=0.9, partition_by=[])",
+       "name": "large_order_threshold"
+      }
+     ],
+     "filters": [
+      "order_date in '1997'"
+     ]
+    },
+    {
+     "source_model": "per_order",
+     "dimensions": [
+      "customer__customer_nation__customer_region__customer_region_name"
+     ],
+     "measures": [
+      {
+       "formula": "max(large_order_threshold)",
+       "name": "threshold"
+      },
+      {
+       "formula": "sum(total_price)",
+       "name": "order_value"
+      },
+      {
+       "formula": "sum(iif(total_price > large_order_threshold, 1, 0))",
+       "name": "large_order_count"
+      },
+      {
+       "formula": "sum(iif(total_price > large_order_threshold, total_price, 0)) / sum(total_price)",
+       "name": "large_order_value_share"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "customer_region_name": "per_order.customer__customer_nation__customer_region__customer_region_name",
+    "large_order_threshold": "per_order.threshold",
+    "order_value": "per_order.order_value",
+    "large_order_count": "per_order.large_order_count",
+    "large_order_value_share": "per_order.large_order_value_share"
+   },
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B65",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "min_cost",
+     "source_model": "partsupp",
+     "dimensions": [
+      "part.part_name",
+      "part.manufacturer"
+     ],
+     "measures": [
+      {
+       "formula": "min(supply_cost)",
+       "name": "min_supply_cost"
+      }
+     ]
+    },
+    {
+     "name": "part_lines",
+     "source_model": "lineitem",
+     "dimensions": [
+      "part.part_name",
+      "part.manufacturer"
+     ],
+     "measures": [
+      "total_quantity",
+      {
+       "formula": "sum(partsupp.supply_cost * quantity)",
+       "name": "actual_cost"
+      }
+     ],
+     "filters": [
+      "orders.order_date in '1997'"
+     ]
+    },
+    {
+     "source_model": {
+      "source_name": "part_lines",
+      "joins": [
+       {
+        "target_model": "min_cost",
+        "join_pairs": [
+         [
+          "part__part_name",
+          "part__part_name"
+         ],
+         [
+          "part__manufacturer",
+          "part__manufacturer"
+         ]
+        ],
+        "cardinality": "many_to_one"
+       }
+      ]
+     },
+     "dimensions": [
+      "part__manufacturer"
+     ],
+     "measures": [
+      {
+       "formula": "sum(actual_cost)",
+       "name": "actual_cost_total"
+      },
+      {
+       "formula": "sum(min_cost.min_supply_cost * total_quantity)",
+       "name": "cheapest_cost"
+      },
+      {
+       "formula": "sum(actual_cost) - sum(min_cost.min_supply_cost * total_quantity)",
+       "name": "savings_opportunity"
+      },
+      {
+       "formula": "(sum(actual_cost) - sum(min_cost.min_supply_cost * total_quantity)) / sum(actual_cost)",
+       "name": "savings_share"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "manufacturer": "part_lines.part__manufacturer",
+    "actual_cost": "part_lines.actual_cost_total",
+    "cheapest_cost": "part_lines.cheapest_cost",
+    "savings_opportunity": "part_lines.savings_opportunity",
+    "savings_share": "part_lines.savings_share"
+   },
+   "notes": "The model declares no part key, so a part is identified by part_name + manufacturer (unique over all 200,000 parts), as in B17.\n",
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B66",
+   "status": "attempted",
+   "interface": "query",
+   "query": {
+    "source_model": "lineitem",
+    "dimensions": [
+     "orders.order_priority"
+    ],
+    "measures": [
+     "avg_discount",
+     "revenue",
+     {
+      "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+      "name": "margin_rate"
+     }
+    ],
+    "filters": [
+     "orders.order_date in '1997'"
+    ]
+   },
+   "columns": {
+    "order_priority": "lineitem.orders.order_priority",
+    "avg_discount": "lineitem.avg_discount",
+    "revenue": "lineitem.revenue",
+    "margin_rate": "lineitem.margin_rate"
+   },
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B67",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "orders",
+     "dimensions": [
+      "order_key"
+     ],
+     "measures": [
+      {
+       "formula": "sum(total_price)",
+       "name": "order_total"
+      },
+      {
+       "formula": "ntile(-sum(total_price), n=10)",
+       "name": "value_decile"
+      }
+     ],
+     "filters": [
+      "order_date in '1997'"
+     ]
+    },
+    {
+     "source_model": "per_order",
+     "dimensions": [
+      "value_decile"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "order_count"
+      },
+      {
+       "formula": "sum(order_total)",
+       "name": "order_value"
+      },
+      {
+       "formula": "sum(order_total) / sum(order_total, partition_by=[])",
+       "name": "order_value_share"
+      },
+      {
+       "formula": "min(order_total)",
+       "name": "min_total_price"
+      },
+      {
+       "formula": "max(order_total)",
+       "name": "max_total_price"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "value_decile": "per_order.value_decile",
+    "order_count": "per_order.order_count",
+    "order_value": "per_order.order_value",
+    "order_value_share": "per_order.order_value_share",
+    "min_total_price": "per_order.min_total_price",
+    "max_total_price": "per_order.max_total_price"
+   },
+   "notes": "ntile always orders ascending, so the decile is ntile(-sum(total_price), n=10), i.e. largest first. Tie-break approximated: ntile cannot take the secondary key (order_key asc); ties in total_price do not change any decile's count, sum, min or max here.",
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B68",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer_year",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.customer_key",
+      {
+       "expression": "date_part('year', orders.order_date)",
+       "name": "order_year"
+      }
+     ],
+     "measures": [
+      "revenue",
+      {
+       "formula": "date_part('year', min(orders.order_date, partition_by=orders.customer_key))",
+       "name": "first_order_year"
+      }
+     ]
+    },
+    {
+     "source_model": "per_customer_year",
+     "dimensions": [
+      "first_order_year",
+      "order_year"
+     ],
+     "measures": [
+      {
+       "formula": "sum(revenue)",
+       "name": "cohort_revenue"
+      },
+      {
+       "formula": "sum(revenue) / sum(iif(order_year == first_order_year, revenue, 0), partition_by=first_order_year)",
+       "name": "revenue_index"
+      }
+     ],
+     "filters": [
+      "first_order_year >= 1992",
+      "first_order_year <= 1995",
+      "order_year <= 1997"
+     ]
+    }
+   ],
+   "columns": {
+    "first_order_year": "per_customer_year.first_order_year",
+    "order_year": "per_customer_year.order_year",
+    "revenue": "per_customer_year.cohort_revenue",
+    "revenue_index": "per_customer_year.revenue_index"
+   },
+   "notes": "first_order_year is min(orders.order_date) over the customer's lines with no row filter; every order has at least one line, so it equals the customer's earliest order date.",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B69",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "orders",
+     "dimensions": [
+      "customer_key",
+      "customer.market_segment",
+      "order_key",
+      "order_date"
+     ],
+     "measures": [
+      {
+       "formula": "min(order_date, partition_by=customer_key)",
+       "name": "first_order_date"
+      }
+     ]
+    },
+    {
+     "name": "per_customer",
+     "source_model": "per_order",
+     "dimensions": [
+      "customer_key",
+      "customer__market_segment",
+      "first_order_date"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "n_orders"
+      },
+      {
+       "formula": "sum(iif(order_date == first_order_date, 1, 0))",
+       "name": "n_on_first_date"
+      },
+      {
+       "formula": "min(iif(order_date > first_order_date, date_diff('day', first_order_date, order_date), 100000))",
+       "name": "days_to_next_date"
+      }
+     ]
+    },
+    {
+     "source_model": "per_customer",
+     "dimensions": [
+      "customer__market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "customer_count"
+      },
+      {
+       "formula": "percentile(iif(n_on_first_date >= 2, 0, days_to_next_date), p=0.5)",
+       "name": "median_days_to_second_order"
+      },
+      {
+       "formula": "percentile(iif(n_on_first_date >= 2, 0, days_to_next_date), p=0.9)",
+       "name": "p90_days_to_second_order"
+      }
+     ],
+     "filters": [
+      "n_orders >= 2"
+     ]
+    }
+   ],
+   "columns": {
+    "market_segment": "per_customer.customer__market_segment",
+    "customer_count": "per_customer.customer_count",
+    "median_days_to_second_order": "per_customer.median_days_to_second_order",
+    "p90_days_to_second_order": "per_customer.p90_days_to_second_order"
+   },
+   "notes": "Position 2 by (order_date, order_key) is expressed without row_number: if the customer has 2+ orders on the first date, days = 0, else days = first later order date minus the first date. Exact by construction. The 100000 sentinel is never reached for customers with 2+ orders.",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B70",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "order_mfr",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.order_key",
+      "part.manufacturer"
+     ],
+     "filters": [
+      "orders.order_date in '1997'"
+     ]
+    },
+    {
+     "name": "om_a",
+     "source_model": "order_mfr",
+     "dimensions": [
+      "orders__order_key",
+      "part__manufacturer"
+     ],
+     "measures": [
+      {
+       "formula": "count(*, partition_by=part__manufacturer)",
+       "name": "orders_with_mfr"
+      },
+      {
+       "formula": "count_distinct(orders__order_key, partition_by=[])",
+       "name": "order_total"
+      }
+     ]
+    },
+    {
+     "name": "om_b",
+     "source_model": "order_mfr",
+     "dimensions": [
+      "orders__order_key",
+      "part__manufacturer"
+     ],
+     "measures": [
+      {
+       "formula": "count(*, partition_by=part__manufacturer)",
+       "name": "orders_with_mfr"
+      }
+     ]
+    },
+    {
+     "source_model": {
+      "source_name": "om_a",
+      "joins": [
+       {
+        "target_model": "om_b",
+        "join_pairs": [
+         [
+          "orders__order_key",
+          "orders__order_key"
+         ]
+        ],
+        "cardinality": "many_to_many"
+       }
+      ]
+     },
+     "dimensions": [
+      "part__manufacturer",
+      "om_b.part__manufacturer"
+     ],
+     "measures": [
+      {
+       "formula": "count(om_b.orders__order_key)",
+       "name": "orders_with_both"
+      },
+      {
+       "formula": "(count(om_b.orders__order_key) * 1.0 / max(order_total)) / ((max(orders_with_mfr) * 1.0 / max(order_total)) * (max(om_b.orders_with_mfr) * 1.0 / max(order_total)))",
+       "name": "lift"
+      }
+     ],
+     "filters": [
+      "part__manufacturer < om_b.part__manufacturer"
+     ],
+     "to_many_handling": "associate"
+    }
+   ],
+   "columns": {
+    "manufacturer_a": "om_a.part__manufacturer",
+    "manufacturer_b": "om_a.om_b.part__manufacturer",
+    "orders_with_both": "om_a.orders_with_both",
+    "lift": "om_a.lift"
+   },
+   "notes": "The two manufacturer roles come from two copies of the (order, manufacturer) stage joined on order key with a declared many_to_many cardinality and to_many_handling='associate'. N = distinct 1997 orders seen through lineitem; every order has at least one line, so this equals the number of 1997 orders.\n",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B71",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "orders",
+     "dimensions": [
+      "customer_key",
+      "customer.market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "max(iif(order_date in '1994', 1, 0))",
+       "name": "has_1994"
+      },
+      {
+       "formula": "max(iif(order_date in '1995', 1, 0))",
+       "name": "has_1995"
+      },
+      {
+       "formula": "max(iif(order_date >= '1996' and order_date <= '1997', 1, 0))",
+       "name": "has_1996_1997"
+      }
+     ]
+    },
+    {
+     "source_model": "per_customer",
+     "dimensions": [
+      "customer__market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "lapsed_customer_count"
+      },
+      {
+       "formula": "sum(has_1996_1997)",
+       "name": "reactivated_customer_count"
+      },
+      {
+       "formula": "sum(has_1996_1997) * 1.0 / count(*)",
+       "name": "reactivation_share"
+      }
+     ],
+     "filters": [
+      "has_1994 == 1",
+      "has_1995 == 0"
+     ]
+    }
+   ],
+   "columns": {
+    "market_segment": "per_customer.customer__market_segment",
+    "lapsed_customer_count": "per_customer.lapsed_customer_count",
+    "reactivated_customer_count": "per_customer.reactivated_customer_count",
+    "reactivation_share": "per_customer.reactivation_share"
+   },
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B72",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_order",
+     "source_model": "orders",
+     "dimensions": [
+      "customer_key",
+      "customer.market_segment",
+      "order_key",
+      "order_date",
+      "total_price"
+     ],
+     "measures": [
+      {
+       "formula": "min(order_date, partition_by=customer_key)",
+       "name": "first_order_date"
+      }
+     ]
+    },
+    {
+     "name": "per_order_ranked",
+     "source_model": "per_order",
+     "dimensions": [
+      "customer_key",
+      "customer__market_segment",
+      "order_key",
+      "total_price"
+     ],
+     "measures": [
+      {
+       "formula": "min(iif(order_date == first_order_date, order_key, 999999999), partition_by=customer_key)",
+       "name": "first_order_key"
+      }
+     ]
+    },
+    {
+     "source_model": "per_order_ranked",
+     "dimensions": [
+      "customer__market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "sum(iif(order_key == first_order_key, total_price, 0)) / sum(iif(order_key == first_order_key, 1, 0))",
+       "name": "first_order_avg_value"
+      },
+      {
+       "formula": "sum(iif(order_key != first_order_key, total_price, 0)) / sum(iif(order_key != first_order_key, 1, 0))",
+       "name": "repeat_order_avg_value"
+      },
+      {
+       "formula": "(sum(iif(order_key == first_order_key, total_price, 0)) / sum(iif(order_key == first_order_key, 1, 0))) / (sum(iif(order_key != first_order_key, total_price, 0)) / sum(iif(order_key != first_order_key, 1, 0)))",
+       "name": "first_to_repeat_ratio"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "market_segment": "per_order_ranked.customer__market_segment",
+    "first_order_avg_value": "per_order_ranked.first_order_avg_value",
+    "repeat_order_avg_value": "per_order_ranked.repeat_order_avg_value",
+    "first_to_repeat_ratio": "per_order_ranked.first_to_repeat_ratio"
+   },
+   "notes": "First order = min order_key among orders on the customer's earliest date (two partition_by stages), equal to row_number by (order_date, order_key) = 1. The 999999999 sentinel never wins a min.",
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B73",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.customer_key"
+     ],
+     "measures": [
+      {
+       "formula": "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+       "name": "revenue_1996"
+      },
+      {
+       "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0))",
+       "name": "revenue_1997"
+      },
+      {
+       "formula": "sum(iif(orders.order_date in '1996', 1, 0))",
+       "name": "lines_1996"
+      },
+      {
+       "formula": "sum(iif(orders.order_date in '1997', 1, 0))",
+       "name": "lines_1997"
+      }
+     ],
+     "filters": [
+      "orders.order_date >= '1996'",
+      "orders.order_date <= '1997'"
+     ]
+    },
+    {
+     "name": "quartiles",
+     "source_model": "per_customer",
+     "dimensions": [
+      "orders__customer_key"
+     ],
+     "measures": [
+      {
+       "formula": "ntile(-sum(revenue_1996), n=4)",
+       "name": "revenue_quartile_1996"
+      },
+      {
+       "formula": "ntile(-sum(revenue_1997), n=4)",
+       "name": "revenue_quartile_1997"
+      }
+     ],
+     "filters": [
+      "lines_1996 > 0",
+      "lines_1997 > 0"
+     ]
+    },
+    {
+     "source_model": "quartiles",
+     "dimensions": [
+      "revenue_quartile_1996",
+      "revenue_quartile_1997"
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "customer_count"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "revenue_quartile_1996": "quartiles.revenue_quartile_1996",
+    "revenue_quartile_1997": "quartiles.revenue_quartile_1997",
+    "customer_count": "quartiles.customer_count"
+   },
+   "notes": "ntile always orders ascending, so quartiles use ntile(-revenue, n=4) (quartile 1 = highest). Tie-break approximated: ntile cannot take the secondary key (customer_key asc); matches ground truth. All 16 combinations are non-empty, so no zero-filling was needed.",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "answered"
+  },
+  {
+   "id": "B74",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "customer",
+     "dimensions": [
+      "customer_key",
+      "market_segment",
+      "account_balance"
+     ],
+     "measures": [
+      {
+       "formula": "count(orders.order_key)",
+       "name": "n_orders"
+      }
+     ]
+    },
+    {
+     "source_model": "per_customer",
+     "dimensions": [
+      "market_segment"
+     ],
+     "measures": [
+      {
+       "formula": "sum(iif(n_orders == 0, 1, 0))",
+       "name": "never_ordered_count"
+      },
+      {
+       "formula": "avg(iif(n_orders == 0, 1.0, 0.0))",
+       "name": "never_ordered_share"
+      },
+      {
+       "formula": "sum(iif(n_orders == 0, account_balance, 0)) / sum(iif(n_orders == 0, 1, 0))",
+       "name": "avg_balance_never_ordered"
+      },
+      {
+       "formula": "sum(iif(n_orders > 0, account_balance, 0)) / sum(iif(n_orders > 0, 1, 0))",
+       "name": "avg_balance_ordered"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "market_segment": "per_customer.market_segment",
+    "never_ordered_count": "per_customer.never_ordered_count",
+    "never_ordered_share": "per_customer.never_ordered_share",
+    "avg_balance_never_ordered": "per_customer.avg_balance_never_ordered",
+    "avg_balance_ordered": "per_customer.avg_balance_ordered"
+   },
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B75",
+   "status": "attempted",
+   "interface": "query",
+   "query": [
+    {
+     "name": "per_customer",
+     "source_model": "lineitem",
+     "dimensions": [
+      "orders.customer_key"
+     ],
+     "measures": [
+      {
+       "formula": "count_distinct(part.brand)",
+       "name": "brand_count"
+      },
+      "revenue"
+     ],
+     "filters": [
+      "orders.order_date in '1997'"
+     ],
+     "to_many_handling": "associate"
+    },
+    {
+     "source_model": "per_customer",
+     "dimensions": [
+      {
+       "expression": "iif(brand_count <= 2, '1-2', iif(brand_count <= 5, '3-5', iif(brand_count <= 10, '6-10', '11+')))",
+       "name": "brand_count_bucket"
+      }
+     ],
+     "measures": [
+      {
+       "formula": "count(*)",
+       "name": "customer_count"
+      },
+      {
+       "formula": "sum(revenue) / count(*)",
+       "name": "avg_revenue_per_customer"
+      },
+      {
+       "formula": "sum(revenue) / sum(revenue, partition_by=[])",
+       "name": "revenue_share"
+      }
+     ]
+    }
+   ],
+   "columns": {
+    "brand_count_bucket": "per_customer.brand_count_bucket",
+    "customer_count": "per_customer.customer_count",
+    "avg_revenue_per_customer": "per_customer.avg_revenue_per_customer",
+    "revenue_share": "per_customer.revenue_share"
+   },
+   "notes": "count_distinct(part.brand) from lineitem is by default computed over part's own rows and broadcast; to_many_handling='associate' makes it the per-customer count of brands bought.",
    "domain": "marketing",
    "difficulty": "hard",
    "result": "answered"

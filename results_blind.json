@@ -1,5 +1,5 @@
 {
- "questions_sha256": "c13e6227c6a0b17927f877ecf60ad9f4c821dcd8a000751f0548468098ca7cb8",
+ "questions_sha256": "559c3e303801e3b809cc90503244d8cc5a6f516a9a00a506556d3038fab4555b",
  "questions": [
   {
    "id": "B01",
@@ -300,13 +300,163 @@
    "domain": "marketing",
    "difficulty": "hard",
    "question": "How has each segment's share of our revenue changed between 1993 and 1997?"
+  },
+  {
+   "id": "B51",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "How many of our suppliers account for 80% of the revenue we booked on orders placed in 1997?"
+  },
+  {
+   "id": "B52",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "For lines shipped in 1997, what are the median and 90th-percentile transit times for each shipping mode?"
+  },
+  {
+   "id": "B53",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "What share of our orders arrived complete and on time (every line by its promised date), by year and order priority, from 1993 to 1997?"
+  },
+  {
+   "id": "B54",
+   "domain": "operations",
+   "difficulty": "medium",
+   "question": "For orders placed in 1997, how long a lead time do we promise on average versus how long customers actually wait, by order priority?"
+  },
+  {
+   "id": "B55",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "Month by month over 1996 and 1997, what was our late-delivery rate and its rolling three-month rate?"
+  },
+  {
+   "id": "B56",
+   "domain": "operations",
+   "difficulty": "medium",
+   "question": "For lines received in 1993 and 1994, how does the return rate for each combination of shipping mode and shipping instruction compare with our overall return rate?"
+  },
+  {
+   "id": "B57",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "In 1997, how many suppliers in each region had a late-delivery rate at least 10 points worse than their region's overall rate?"
+  },
+  {
+   "id": "B58",
+   "domain": "operations",
+   "difficulty": "hard",
+   "question": "For multi-line orders placed in 1996, how many days separate the first and last shipment of an order, by order priority?"
+  },
+  {
+   "id": "B59",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "Breaking down the change in revenue from 1996 to 1997 for each manufacturer, how much came from volume and how much from price per unit?"
+  },
+  {
+   "id": "B60",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "Among customers who placed at least three orders in 1997, how widely did their margin rate vary within each segment?"
+  },
+  {
+   "id": "B61",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "Month by month through July 1998, how did year-to-date revenue compare with year-to-date revenue at the same point of 1997?"
+  },
+  {
+   "id": "B62",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "Who are our 20 most profitable customers over the whole history, and what cumulative share of total margin do they represent?"
+  },
+  {
+   "id": "B63",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "At the end of each month of 1997, what was our trailing twelve-month revenue and how did it compare with the trailing twelve months a year earlier?"
+  },
+  {
+   "id": "B64",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "In 1997, what share of each customer region's order value came from orders in the top 10% by size company-wide?"
+  },
+  {
+   "id": "B65",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "For orders placed in 1997, how much would our cost of goods have fallen if every line had been bought at the cheapest supplier offer for that part, by manufacturer?"
+  },
+  {
+   "id": "B66",
+   "domain": "finance",
+   "difficulty": "medium",
+   "question": "For orders placed in 1997, what average discount and margin rate did we achieve at each order priority?"
+  },
+  {
+   "id": "B67",
+   "domain": "finance",
+   "difficulty": "hard",
+   "question": "If we split 1997 orders into ten equal-sized groups by order value, how much of total order value does each group account for?"
+  },
+  {
+   "id": "B68",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "For customers grouped by the year of their first order (1992 to 1995), how did the cohort's revenue in each later year compare with its first-year revenue?"
+  },
+  {
+   "id": "B69",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "How long does it typically take a customer to place their second order after the first, by segment?"
+  },
+  {
+   "id": "B70",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "In 1997 orders, which pairs of manufacturers were bought together in the same order more often than chance would predict?"
+  },
+  {
+   "id": "B71",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "Of the customers who bought in 1994 but not in 1995, how many came back in 1996 or 1997, by segment?"
+  },
+  {
+   "id": "B72",
+   "domain": "marketing",
+   "difficulty": "medium",
+   "question": "How does the value of a customer's first order compare with the value of their later orders, by segment?"
+  },
+  {
+   "id": "B73",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "Among customers who bought in both 1996 and 1997, how did they move between revenue quartiles from one year to the next?"
+  },
+  {
+   "id": "B74",
+   "domain": "marketing",
+   "difficulty": "medium",
+   "question": "How many customers on file have never placed an order, by segment, and how do their account balances compare with customers who have ordered?"
+  },
+  {
+   "id": "B75",
+   "domain": "marketing",
+   "difficulty": "hard",
+   "question": "In 1997, how did customers who bought across many brands compare in spend with those who bought from only a few?"
   }
  ],
  "layers": {
   "slayer": {
    "layer": "slayer",
    "summary": {
-    "answered": 50,
+    "answered": 75,
     "wrong": 0,
     "unsupported": 0,
     "not_attempted": 0
@@ -2038,6 +2188,1579 @@
      "domain": "marketing",
      "difficulty": "hard",
      "result": "answered"
+    },
+    {
+     "id": "B51",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "ps",
+       "source_model": "lineitem",
+       "dimensions": [
+        "supplier.supplier_key"
+       ],
+       "measures": [
+        "revenue",
+        {
+         "formula": "rank(revenue, direction='desc')",
+         "name": "rev_rank"
+        },
+        {
+         "formula": "sum(extended_price * (1 - discount), partition_by=[])",
+         "name": "total_revenue"
+        },
+        {
+         "formula": "min(orders.order_date, partition_by=[])",
+         "name": "base_date"
+        }
+       ],
+       "filters": [
+        "orders.order_date in '1997'"
+       ]
+      },
+      {
+       "name": "axis",
+       "source_model": "ps",
+       "dimensions": [
+        "supplier__supplier_key",
+        "base_date",
+        "total_revenue",
+        {
+         "expression": "date_add(base_date, rev_rank, 'day')",
+         "name": "rank_axis"
+        }
+       ],
+       "measures": [
+        {
+         "formula": "sum(revenue)",
+         "name": "rev"
+        }
+       ]
+      },
+      {
+       "name": "cum",
+       "source_model": "axis",
+       "dimensions": [
+        "base_date",
+        "total_revenue"
+       ],
+       "time_dimensions": [
+        {
+         "dimension": "rank_axis",
+         "granularity": "day"
+        }
+       ],
+       "measures": [
+        {
+         "formula": "sum(rev)",
+         "name": "rev_in_rank"
+        },
+        {
+         "formula": "cumsum(sum(rev))",
+         "name": "cum_revenue"
+        }
+       ]
+      },
+      {
+       "source_model": "cum",
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "active_supplier_count"
+        },
+        {
+         "formula": "min(iif(cum_revenue >= 0.8 * total_revenue, date_diff('day', base_date, rank_axis), 1000000000))",
+         "name": "suppliers_for_80pct_revenue"
+        },
+        {
+         "formula": "min(iif(cum_revenue >= 0.8 * total_revenue, date_diff('day', base_date, rank_axis), 1000000000)) * 1.0 / count(*)",
+         "name": "supplier_share_for_80pct"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "active_supplier_count": "cum.active_supplier_count",
+      "suppliers_for_80pct_revenue": "cum.suppliers_for_80pct_revenue",
+      "supplier_share_for_80pct": "cum.supplier_share_for_80pct"
+     },
+     "notes": "SLayer's running total (cumsum) needs a time axis, so the supplier revenue rank is turned into a day offset (date_add(base_date, rev_rank, 'day'), base_date = earliest 1997 order date, a declared field) and cumsum runs over that day axis; the rank is read back with date_diff. All inside one multi-stage request, no raw SQL. Tie-break approximated: rank(revenue, desc) has no secondary key (supplier_key asc); no revenue ties among the 10,000 suppliers, so the result is exact here.",
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B52",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "dimensions": [
+       "ship_mode"
+      ],
+      "measures": [
+       "line_count",
+       {
+        "formula": "percentile(date_diff('day', ship_date, receipt_date), p=0.5)",
+        "name": "median_transit_days"
+       },
+       {
+        "formula": "percentile(date_diff('day', ship_date, receipt_date), p=0.9)",
+        "name": "p90_transit_days"
+       }
+      ],
+      "filters": [
+       "ship_date in '1997'"
+      ]
+     },
+     "columns": {
+      "ship_mode": "lineitem.ship_mode",
+      "line_count": "lineitem.line_count",
+      "median_transit_days": "lineitem.median_transit_days",
+      "p90_transit_days": "lineitem.p90_transit_days"
+     },
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B53",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.order_key",
+        "orders.order_priority",
+        {
+         "expression": "date_part('year', orders.order_date)",
+         "name": "order_year"
+        }
+       ],
+       "measures": [
+        {
+         "formula": "max(iif(receipt_date > commit_date, 1, 0))",
+         "name": "any_late"
+        }
+       ],
+       "filters": [
+        "orders.order_date >= '1993'",
+        "orders.order_date <= '1997'"
+       ]
+      },
+      {
+       "source_model": "per_order",
+       "dimensions": [
+        "order_year",
+        "orders__order_priority"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "order_count"
+        },
+        {
+         "formula": "avg(iif(any_late == 0, 1.0, 0.0))",
+         "name": "perfect_order_share"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "order_year": "per_order.order_year",
+      "order_priority": "per_order.orders__order_priority",
+      "order_count": "per_order.order_count",
+      "perfect_order_share": "per_order.perfect_order_share"
+     },
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B54",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "dimensions": [
+       "orders.order_priority"
+      ],
+      "measures": [
+       {
+        "formula": "avg(date_diff('day', orders.order_date, commit_date))",
+        "name": "avg_promised_days"
+       },
+       {
+        "formula": "avg(date_diff('day', orders.order_date, receipt_date))",
+        "name": "avg_actual_days"
+       },
+       {
+        "formula": "avg(date_diff('day', orders.order_date, receipt_date)) - avg(date_diff('day', orders.order_date, commit_date))",
+        "name": "avg_gap_days"
+       }
+      ],
+      "filters": [
+       "orders.order_date in '1997'"
+      ]
+     },
+     "columns": {
+      "order_priority": "lineitem.orders.order_priority",
+      "avg_promised_days": "lineitem.avg_promised_days",
+      "avg_actual_days": "lineitem.avg_actual_days",
+      "avg_gap_days": "lineitem.avg_gap_days"
+     },
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "answered"
+    },
+    {
+     "id": "B55",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "time_dimensions": [
+       {
+        "dimension": "ship_date",
+        "granularity": "month",
+        "date_range": [
+         "1996-01",
+         "1997-12"
+        ]
+       }
+      ],
+      "measures": [
+       {
+        "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0))",
+        "name": "late_share"
+       },
+       {
+        "formula": "sum(iif(receipt_date > commit_date, 1.0, 0.0), window='3m') / count(*, window='3m')",
+        "name": "rolling_3m_late_share"
+       }
+      ]
+     },
+     "columns": {
+      "ship_month": "lineitem.ship_date",
+      "late_share": "lineitem.late_share",
+      "rolling_3m_late_share": "lineitem.rolling_3m_late_share"
+     },
+     "notes": "Rolling 3-month pooled share = sum(late, window='3m') / count(*, window='3m') on the monthly ship_date axis.",
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B56",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "dimensions": [
+       "ship_mode",
+       "ship_instruct"
+      ],
+      "measures": [
+       "line_count",
+       {
+        "formula": "avg(iif(return_flag == 'R', 1.0, 0.0))",
+        "name": "returned_share"
+       },
+       {
+        "formula": "avg(iif(return_flag == 'R', 1.0, 0.0)) / avg(iif(return_flag == 'R', 1.0, 0.0), partition_by=[])",
+        "name": "return_rate_index"
+       }
+      ],
+      "filters": [
+       "receipt_date >= '1993'",
+       "receipt_date <= '1994'"
+      ]
+     },
+     "columns": {
+      "ship_mode": "lineitem.ship_mode",
+      "ship_instruct": "lineitem.ship_instruct",
+      "line_count": "lineitem.line_count",
+      "returned_share": "lineitem.returned_share",
+      "return_rate_index": "lineitem.return_rate_index"
+     },
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "answered"
+    },
+    {
+     "id": "B57",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_supplier",
+       "source_model": "lineitem",
+       "dimensions": [
+        "supplier.supplier_nation.supplier_region.supplier_region_name",
+        "supplier.supplier_key"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "n_lines"
+        },
+        {
+         "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0))",
+         "name": "late_share"
+        },
+        {
+         "formula": "avg(iif(receipt_date > commit_date, 1.0, 0.0), partition_by=supplier.supplier_nation.supplier_region.supplier_region_name)",
+         "name": "region_late_share"
+        }
+       ],
+       "filters": [
+        "ship_date in '1997'"
+       ]
+      },
+      {
+       "source_model": "per_supplier",
+       "dimensions": [
+        "supplier__supplier_nation__supplier_region__supplier_region_name",
+        "region_late_share"
+       ],
+       "measures": [
+        {
+         "formula": "sum(iif(n_lines >= 50, 1, 0))",
+         "name": "qualifying_supplier_count"
+        },
+        {
+         "formula": "sum(iif(n_lines >= 50 and late_share >= region_late_share + 0.10, 1, 0))",
+         "name": "outlier_supplier_count"
+        },
+        {
+         "formula": "sum(iif(n_lines >= 50 and late_share >= region_late_share + 0.10, 1, 0)) * 1.0 / sum(iif(n_lines >= 50, 1, 0))",
+         "name": "outlier_share"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "supplier_region_name": "per_supplier.supplier__supplier_nation__supplier_region__supplier_region_name",
+      "region_late_share": "per_supplier.region_late_share",
+      "qualifying_supplier_count": "per_supplier.qualifying_supplier_count",
+      "outlier_supplier_count": "per_supplier.outlier_supplier_count",
+      "outlier_share": "per_supplier.outlier_share"
+     },
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B58",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.order_key",
+        "orders.order_priority"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "n_lines"
+        },
+        {
+         "formula": "date_diff('day', min(ship_date), max(ship_date))",
+         "name": "ship_span_days"
+        }
+       ],
+       "filters": [
+        "orders.order_date in '1996'",
+        "count(*) >= 2"
+       ]
+      },
+      {
+       "source_model": "per_order",
+       "dimensions": [
+        "orders__order_priority"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "order_count"
+        },
+        {
+         "formula": "percentile(ship_span_days, p=0.5)",
+         "name": "median_ship_span_days"
+        },
+        {
+         "formula": "percentile(ship_span_days, p=0.9)",
+         "name": "p90_ship_span_days"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "order_priority": "per_order.orders__order_priority",
+      "order_count": "per_order.order_count",
+      "median_ship_span_days": "per_order.median_ship_span_days",
+      "p90_ship_span_days": "per_order.p90_ship_span_days"
+     },
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B59",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "dimensions": [
+       "part.manufacturer"
+      ],
+      "measures": [
+       {
+        "formula": "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+        "name": "revenue_1996"
+       },
+       {
+        "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0))",
+        "name": "revenue_1997"
+       },
+       {
+        "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) - sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+        "name": "revenue_change"
+       },
+       {
+        "formula": "(sum(iif(orders.order_date in '1997', quantity, 0)) - sum(iif(orders.order_date in '1996', quantity, 0))) * sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1996', quantity, 0))",
+        "name": "volume_effect"
+       },
+       {
+        "formula": "(sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1997', quantity, 0)) - sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1996', quantity, 0))) * sum(iif(orders.order_date in '1997', quantity, 0))",
+        "name": "price_effect"
+       }
+      ],
+      "filters": [
+       "orders.order_date >= '1996'",
+       "orders.order_date <= '1997'"
+      ]
+     },
+     "columns": {
+      "manufacturer": "lineitem.part.manufacturer",
+      "revenue_1996": "lineitem.revenue_1996",
+      "revenue_1997": "lineitem.revenue_1997",
+      "revenue_change": "lineitem.revenue_change",
+      "volume_effect": "lineitem.volume_effect",
+      "price_effect": "lineitem.price_effect"
+     },
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B60",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.customer_key",
+        "orders.customer.market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "count_distinct(orders.order_key)",
+         "name": "n_orders"
+        },
+        {
+         "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+         "name": "margin_rate"
+        }
+       ],
+       "filters": [
+        "orders.order_date in '1997'"
+       ]
+      },
+      {
+       "source_model": "per_customer",
+       "dimensions": [
+        "orders__customer__market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "customer_count"
+        },
+        {
+         "formula": "percentile(margin_rate, p=0.25)",
+         "name": "p25_margin_rate"
+        },
+        {
+         "formula": "percentile(margin_rate, p=0.5)",
+         "name": "median_margin_rate"
+        },
+        {
+         "formula": "percentile(margin_rate, p=0.75)",
+         "name": "p75_margin_rate"
+        }
+       ],
+       "filters": [
+        "n_orders >= 3"
+       ]
+      }
+     ],
+     "columns": {
+      "market_segment": "per_customer.orders__customer__market_segment",
+      "customer_count": "per_customer.customer_count",
+      "p25_margin_rate": "per_customer.p25_margin_rate",
+      "median_margin_rate": "per_customer.median_margin_rate",
+      "p75_margin_rate": "per_customer.p75_margin_rate"
+     },
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B61",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "ytd",
+       "source_model": "lineitem",
+       "dimensions": [
+        {
+         "expression": "date_part('year', orders.order_date)",
+         "name": "order_year"
+        }
+       ],
+       "time_dimensions": [
+        {
+         "dimension": "orders.order_date",
+         "granularity": "month",
+         "date_range": [
+          "1997-01",
+          "1998-07"
+         ]
+        }
+       ],
+       "filters": [
+        "date_part('month', orders.order_date) <= 7"
+       ],
+       "measures": [
+        {
+         "formula": "cumsum(revenue)",
+         "name": "ytd_revenue"
+        }
+       ]
+      },
+      {
+       "source_model": "ytd",
+       "time_dimensions": [
+        {
+         "dimension": "orders__order_date",
+         "granularity": "month",
+         "date_range": [
+          "1998-01",
+          "1998-07"
+         ]
+        }
+       ],
+       "measures": [
+        {
+         "formula": "sum(ytd_revenue)",
+         "name": "ytd_revenue_1998"
+        },
+        {
+         "formula": "time_shift(sum(ytd_revenue), -1, 'year')",
+         "name": "ytd_revenue_1997"
+        },
+        {
+         "formula": "sum(ytd_revenue) / time_shift(sum(ytd_revenue), -1, 'year') - 1",
+         "name": "ytd_growth"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "order_month": "ytd.orders__order_date",
+      "ytd_revenue_1998": "ytd.ytd_revenue_1998",
+      "ytd_revenue_1997": "ytd.ytd_revenue_1997",
+      "ytd_growth": "ytd.ytd_growth"
+     },
+     "notes": "YTD = cumsum per calendar year (year as an extra dimension), then time_shift(-1, 'year') in a second stage.",
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B62",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.customer_key",
+        "orders.customer.customer_name"
+       ],
+       "measures": [
+        {
+         "formula": "revenue - sum(partsupp.supply_cost * quantity)",
+         "name": "margin"
+        },
+        {
+         "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+         "name": "margin_rate"
+        },
+        {
+         "formula": "rank(revenue - sum(partsupp.supply_cost * quantity), direction='desc')",
+         "name": "margin_rank"
+        },
+        {
+         "formula": "sum(extended_price * (1 - discount) - partsupp.supply_cost * quantity, partition_by=[])",
+         "name": "total_margin"
+        },
+        {
+         "formula": "min(orders.order_date, partition_by=[])",
+         "name": "base_date"
+        }
+       ]
+      },
+      {
+       "name": "rank_axis",
+       "source_model": "per_customer",
+       "dimensions": [
+        "orders__customer_key",
+        "orders__customer__customer_name",
+        "margin",
+        "margin_rank",
+        "margin_rate",
+        "base_date",
+        "total_margin",
+        {
+         "expression": "date_add(base_date, margin_rank, 'day')",
+         "name": "rank_day"
+        }
+       ]
+      },
+      {
+       "name": "running",
+       "source_model": "rank_axis",
+       "dimensions": [
+        "total_margin"
+       ],
+       "time_dimensions": [
+        {
+         "dimension": "rank_day",
+         "granularity": "day"
+        }
+       ],
+       "measures": [
+        {
+         "formula": "cumsum(sum(margin))",
+         "name": "cum_margin"
+        }
+       ]
+      },
+      {
+       "source_model": {
+        "source_name": "rank_axis",
+        "joins": [
+         {
+          "target_model": "running",
+          "join_pairs": [
+           [
+            "rank_day",
+            "rank_day"
+           ]
+          ],
+          "cardinality": "many_to_one"
+         }
+        ]
+       },
+       "dimensions": [
+        "margin_rank",
+        "orders__customer__customer_name",
+        "margin",
+        "margin_rate",
+        {
+         "expression": "running.cum_margin / total_margin",
+         "name": "cumulative_margin_share"
+        }
+       ],
+       "filters": [
+        "margin_rank <= 20"
+       ],
+       "order": [
+        {
+         "column": "margin_rank",
+         "direction": "asc"
+        }
+       ],
+       "limit": 20
+      }
+     ],
+     "columns": {
+      "margin_rank": "rank_axis.margin_rank",
+      "customer_name": "rank_axis.orders__customer__customer_name",
+      "margin": "rank_axis.margin",
+      "margin_rate": "rank_axis.margin_rate",
+      "cumulative_margin_share": "rank_axis.cumulative_margin_share"
+     },
+     "notes": "Running margin over the rank order uses the same device as B51: the rank becomes a day offset from a declared date (earliest order date), cumsum runs over that day axis, and the running total is joined back to each customer by that day. Tie-break approximated: rank(margin, desc) has no secondary key (customer_key asc); no ties affect the top 20, so it matches.",
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B63",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "time_dimensions": [
+       {
+        "dimension": "orders.order_date",
+        "granularity": "month",
+        "date_range": "1997"
+       }
+      ],
+      "measures": [
+       {
+        "formula": "sum(extended_price * (1 - discount), window='12m')",
+        "name": "ttm_revenue"
+       },
+       {
+        "formula": "time_shift(sum(extended_price * (1 - discount), window='12m'), -1, 'year')",
+        "name": "ttm_revenue_prior_year"
+       },
+       {
+        "formula": "sum(extended_price * (1 - discount), window='12m') / time_shift(sum(extended_price * (1 - discount), window='12m'), -1, 'year') - 1",
+        "name": "ttm_growth"
+       }
+      ]
+     },
+     "columns": {
+      "order_month": "lineitem.orders.order_date",
+      "ttm_revenue": "lineitem.ttm_revenue",
+      "ttm_revenue_prior_year": "lineitem.ttm_revenue_prior_year",
+      "ttm_growth": "lineitem.ttm_growth"
+     },
+     "notes": "TTM = sum(..., window='12m') on a monthly order_date axis; prior year via time_shift(-1, 'year').",
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B64",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "orders",
+       "dimensions": [
+        "order_key",
+        "customer.customer_nation.customer_region.customer_region_name",
+        "total_price"
+       ],
+       "measures": [
+        {
+         "formula": "percentile(total_price, p=0.9, partition_by=[])",
+         "name": "large_order_threshold"
+        }
+       ],
+       "filters": [
+        "order_date in '1997'"
+       ]
+      },
+      {
+       "source_model": "per_order",
+       "dimensions": [
+        "customer__customer_nation__customer_region__customer_region_name"
+       ],
+       "measures": [
+        {
+         "formula": "max(large_order_threshold)",
+         "name": "threshold"
+        },
+        {
+         "formula": "sum(total_price)",
+         "name": "order_value"
+        },
+        {
+         "formula": "sum(iif(total_price > large_order_threshold, 1, 0))",
+         "name": "large_order_count"
+        },
+        {
+         "formula": "sum(iif(total_price > large_order_threshold, total_price, 0)) / sum(total_price)",
+         "name": "large_order_value_share"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "customer_region_name": "per_order.customer__customer_nation__customer_region__customer_region_name",
+      "large_order_threshold": "per_order.threshold",
+      "order_value": "per_order.order_value",
+      "large_order_count": "per_order.large_order_count",
+      "large_order_value_share": "per_order.large_order_value_share"
+     },
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B65",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "min_cost",
+       "source_model": "partsupp",
+       "dimensions": [
+        "part.part_name",
+        "part.manufacturer"
+       ],
+       "measures": [
+        {
+         "formula": "min(supply_cost)",
+         "name": "min_supply_cost"
+        }
+       ]
+      },
+      {
+       "name": "part_lines",
+       "source_model": "lineitem",
+       "dimensions": [
+        "part.part_name",
+        "part.manufacturer"
+       ],
+       "measures": [
+        "total_quantity",
+        {
+         "formula": "sum(partsupp.supply_cost * quantity)",
+         "name": "actual_cost"
+        }
+       ],
+       "filters": [
+        "orders.order_date in '1997'"
+       ]
+      },
+      {
+       "source_model": {
+        "source_name": "part_lines",
+        "joins": [
+         {
+          "target_model": "min_cost",
+          "join_pairs": [
+           [
+            "part__part_name",
+            "part__part_name"
+           ],
+           [
+            "part__manufacturer",
+            "part__manufacturer"
+           ]
+          ],
+          "cardinality": "many_to_one"
+         }
+        ]
+       },
+       "dimensions": [
+        "part__manufacturer"
+       ],
+       "measures": [
+        {
+         "formula": "sum(actual_cost)",
+         "name": "actual_cost_total"
+        },
+        {
+         "formula": "sum(min_cost.min_supply_cost * total_quantity)",
+         "name": "cheapest_cost"
+        },
+        {
+         "formula": "sum(actual_cost) - sum(min_cost.min_supply_cost * total_quantity)",
+         "name": "savings_opportunity"
+        },
+        {
+         "formula": "(sum(actual_cost) - sum(min_cost.min_supply_cost * total_quantity)) / sum(actual_cost)",
+         "name": "savings_share"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "manufacturer": "part_lines.part__manufacturer",
+      "actual_cost": "part_lines.actual_cost_total",
+      "cheapest_cost": "part_lines.cheapest_cost",
+      "savings_opportunity": "part_lines.savings_opportunity",
+      "savings_share": "part_lines.savings_share"
+     },
+     "notes": "The model declares no part key, so a part is identified by part_name + manufacturer (unique over all 200,000 parts), as in B17.\n",
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B66",
+     "status": "attempted",
+     "interface": "query",
+     "query": {
+      "source_model": "lineitem",
+      "dimensions": [
+       "orders.order_priority"
+      ],
+      "measures": [
+       "avg_discount",
+       "revenue",
+       {
+        "formula": "(revenue - sum(partsupp.supply_cost * quantity)) / revenue",
+        "name": "margin_rate"
+       }
+      ],
+      "filters": [
+       "orders.order_date in '1997'"
+      ]
+     },
+     "columns": {
+      "order_priority": "lineitem.orders.order_priority",
+      "avg_discount": "lineitem.avg_discount",
+      "revenue": "lineitem.revenue",
+      "margin_rate": "lineitem.margin_rate"
+     },
+     "domain": "finance",
+     "difficulty": "medium",
+     "result": "answered"
+    },
+    {
+     "id": "B67",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "orders",
+       "dimensions": [
+        "order_key"
+       ],
+       "measures": [
+        {
+         "formula": "sum(total_price)",
+         "name": "order_total"
+        },
+        {
+         "formula": "ntile(-sum(total_price), n=10)",
+         "name": "value_decile"
+        }
+       ],
+       "filters": [
+        "order_date in '1997'"
+       ]
+      },
+      {
+       "source_model": "per_order",
+       "dimensions": [
+        "value_decile"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "order_count"
+        },
+        {
+         "formula": "sum(order_total)",
+         "name": "order_value"
+        },
+        {
+         "formula": "sum(order_total) / sum(order_total, partition_by=[])",
+         "name": "order_value_share"
+        },
+        {
+         "formula": "min(order_total)",
+         "name": "min_total_price"
+        },
+        {
+         "formula": "max(order_total)",
+         "name": "max_total_price"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "value_decile": "per_order.value_decile",
+      "order_count": "per_order.order_count",
+      "order_value": "per_order.order_value",
+      "order_value_share": "per_order.order_value_share",
+      "min_total_price": "per_order.min_total_price",
+      "max_total_price": "per_order.max_total_price"
+     },
+     "notes": "ntile always orders ascending, so the decile is ntile(-sum(total_price), n=10), i.e. largest first. Tie-break approximated: ntile cannot take the secondary key (order_key asc); ties in total_price do not change any decile's count, sum, min or max here.",
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B68",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer_year",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.customer_key",
+        {
+         "expression": "date_part('year', orders.order_date)",
+         "name": "order_year"
+        }
+       ],
+       "measures": [
+        "revenue",
+        {
+         "formula": "date_part('year', min(orders.order_date, partition_by=orders.customer_key))",
+         "name": "first_order_year"
+        }
+       ]
+      },
+      {
+       "source_model": "per_customer_year",
+       "dimensions": [
+        "first_order_year",
+        "order_year"
+       ],
+       "measures": [
+        {
+         "formula": "sum(revenue)",
+         "name": "cohort_revenue"
+        },
+        {
+         "formula": "sum(revenue) / sum(iif(order_year == first_order_year, revenue, 0), partition_by=first_order_year)",
+         "name": "revenue_index"
+        }
+       ],
+       "filters": [
+        "first_order_year >= 1992",
+        "first_order_year <= 1995",
+        "order_year <= 1997"
+       ]
+      }
+     ],
+     "columns": {
+      "first_order_year": "per_customer_year.first_order_year",
+      "order_year": "per_customer_year.order_year",
+      "revenue": "per_customer_year.cohort_revenue",
+      "revenue_index": "per_customer_year.revenue_index"
+     },
+     "notes": "first_order_year is min(orders.order_date) over the customer's lines with no row filter; every order has at least one line, so it equals the customer's earliest order date.",
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B69",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "orders",
+       "dimensions": [
+        "customer_key",
+        "customer.market_segment",
+        "order_key",
+        "order_date"
+       ],
+       "measures": [
+        {
+         "formula": "min(order_date, partition_by=customer_key)",
+         "name": "first_order_date"
+        }
+       ]
+      },
+      {
+       "name": "per_customer",
+       "source_model": "per_order",
+       "dimensions": [
+        "customer_key",
+        "customer__market_segment",
+        "first_order_date"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "n_orders"
+        },
+        {
+         "formula": "sum(iif(order_date == first_order_date, 1, 0))",
+         "name": "n_on_first_date"
+        },
+        {
+         "formula": "min(iif(order_date > first_order_date, date_diff('day', first_order_date, order_date), 100000))",
+         "name": "days_to_next_date"
+        }
+       ]
+      },
+      {
+       "source_model": "per_customer",
+       "dimensions": [
+        "customer__market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "customer_count"
+        },
+        {
+         "formula": "percentile(iif(n_on_first_date >= 2, 0, days_to_next_date), p=0.5)",
+         "name": "median_days_to_second_order"
+        },
+        {
+         "formula": "percentile(iif(n_on_first_date >= 2, 0, days_to_next_date), p=0.9)",
+         "name": "p90_days_to_second_order"
+        }
+       ],
+       "filters": [
+        "n_orders >= 2"
+       ]
+      }
+     ],
+     "columns": {
+      "market_segment": "per_customer.customer__market_segment",
+      "customer_count": "per_customer.customer_count",
+      "median_days_to_second_order": "per_customer.median_days_to_second_order",
+      "p90_days_to_second_order": "per_customer.p90_days_to_second_order"
+     },
+     "notes": "Position 2 by (order_date, order_key) is expressed without row_number: if the customer has 2+ orders on the first date, days = 0, else days = first later order date minus the first date. Exact by construction. The 100000 sentinel is never reached for customers with 2+ orders.",
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B70",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "order_mfr",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.order_key",
+        "part.manufacturer"
+       ],
+       "filters": [
+        "orders.order_date in '1997'"
+       ]
+      },
+      {
+       "name": "om_a",
+       "source_model": "order_mfr",
+       "dimensions": [
+        "orders__order_key",
+        "part__manufacturer"
+       ],
+       "measures": [
+        {
+         "formula": "count(*, partition_by=part__manufacturer)",
+         "name": "orders_with_mfr"
+        },
+        {
+         "formula": "count_distinct(orders__order_key, partition_by=[])",
+         "name": "order_total"
+        }
+       ]
+      },
+      {
+       "name": "om_b",
+       "source_model": "order_mfr",
+       "dimensions": [
+        "orders__order_key",
+        "part__manufacturer"
+       ],
+       "measures": [
+        {
+         "formula": "count(*, partition_by=part__manufacturer)",
+         "name": "orders_with_mfr"
+        }
+       ]
+      },
+      {
+       "source_model": {
+        "source_name": "om_a",
+        "joins": [
+         {
+          "target_model": "om_b",
+          "join_pairs": [
+           [
+            "orders__order_key",
+            "orders__order_key"
+           ]
+          ],
+          "cardinality": "many_to_many"
+         }
+        ]
+       },
+       "dimensions": [
+        "part__manufacturer",
+        "om_b.part__manufacturer"
+       ],
+       "measures": [
+        {
+         "formula": "count(om_b.orders__order_key)",
+         "name": "orders_with_both"
+        },
+        {
+         "formula": "(count(om_b.orders__order_key) * 1.0 / max(order_total)) / ((max(orders_with_mfr) * 1.0 / max(order_total)) * (max(om_b.orders_with_mfr) * 1.0 / max(order_total)))",
+         "name": "lift"
+        }
+       ],
+       "filters": [
+        "part__manufacturer < om_b.part__manufacturer"
+       ],
+       "to_many_handling": "associate"
+      }
+     ],
+     "columns": {
+      "manufacturer_a": "om_a.part__manufacturer",
+      "manufacturer_b": "om_a.om_b.part__manufacturer",
+      "orders_with_both": "om_a.orders_with_both",
+      "lift": "om_a.lift"
+     },
+     "notes": "The two manufacturer roles come from two copies of the (order, manufacturer) stage joined on order key with a declared many_to_many cardinality and to_many_handling='associate'. N = distinct 1997 orders seen through lineitem; every order has at least one line, so this equals the number of 1997 orders.\n",
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B71",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "orders",
+       "dimensions": [
+        "customer_key",
+        "customer.market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "max(iif(order_date in '1994', 1, 0))",
+         "name": "has_1994"
+        },
+        {
+         "formula": "max(iif(order_date in '1995', 1, 0))",
+         "name": "has_1995"
+        },
+        {
+         "formula": "max(iif(order_date >= '1996' and order_date <= '1997', 1, 0))",
+         "name": "has_1996_1997"
+        }
+       ]
+      },
+      {
+       "source_model": "per_customer",
+       "dimensions": [
+        "customer__market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "lapsed_customer_count"
+        },
+        {
+         "formula": "sum(has_1996_1997)",
+         "name": "reactivated_customer_count"
+        },
+        {
+         "formula": "sum(has_1996_1997) * 1.0 / count(*)",
+         "name": "reactivation_share"
+        }
+       ],
+       "filters": [
+        "has_1994 == 1",
+        "has_1995 == 0"
+       ]
+      }
+     ],
+     "columns": {
+      "market_segment": "per_customer.customer__market_segment",
+      "lapsed_customer_count": "per_customer.lapsed_customer_count",
+      "reactivated_customer_count": "per_customer.reactivated_customer_count",
+      "reactivation_share": "per_customer.reactivation_share"
+     },
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B72",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_order",
+       "source_model": "orders",
+       "dimensions": [
+        "customer_key",
+        "customer.market_segment",
+        "order_key",
+        "order_date",
+        "total_price"
+       ],
+       "measures": [
+        {
+         "formula": "min(order_date, partition_by=customer_key)",
+         "name": "first_order_date"
+        }
+       ]
+      },
+      {
+       "name": "per_order_ranked",
+       "source_model": "per_order",
+       "dimensions": [
+        "customer_key",
+        "customer__market_segment",
+        "order_key",
+        "total_price"
+       ],
+       "measures": [
+        {
+         "formula": "min(iif(order_date == first_order_date, order_key, 999999999), partition_by=customer_key)",
+         "name": "first_order_key"
+        }
+       ]
+      },
+      {
+       "source_model": "per_order_ranked",
+       "dimensions": [
+        "customer__market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "sum(iif(order_key == first_order_key, total_price, 0)) / sum(iif(order_key == first_order_key, 1, 0))",
+         "name": "first_order_avg_value"
+        },
+        {
+         "formula": "sum(iif(order_key != first_order_key, total_price, 0)) / sum(iif(order_key != first_order_key, 1, 0))",
+         "name": "repeat_order_avg_value"
+        },
+        {
+         "formula": "(sum(iif(order_key == first_order_key, total_price, 0)) / sum(iif(order_key == first_order_key, 1, 0))) / (sum(iif(order_key != first_order_key, total_price, 0)) / sum(iif(order_key != first_order_key, 1, 0)))",
+         "name": "first_to_repeat_ratio"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "market_segment": "per_order_ranked.customer__market_segment",
+      "first_order_avg_value": "per_order_ranked.first_order_avg_value",
+      "repeat_order_avg_value": "per_order_ranked.repeat_order_avg_value",
+      "first_to_repeat_ratio": "per_order_ranked.first_to_repeat_ratio"
+     },
+     "notes": "First order = min order_key among orders on the customer's earliest date (two partition_by stages), equal to row_number by (order_date, order_key) = 1. The 999999999 sentinel never wins a min.",
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "answered"
+    },
+    {
+     "id": "B73",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.customer_key"
+       ],
+       "measures": [
+        {
+         "formula": "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))",
+         "name": "revenue_1996"
+        },
+        {
+         "formula": "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0))",
+         "name": "revenue_1997"
+        },
+        {
+         "formula": "sum(iif(orders.order_date in '1996', 1, 0))",
+         "name": "lines_1996"
+        },
+        {
+         "formula": "sum(iif(orders.order_date in '1997', 1, 0))",
+         "name": "lines_1997"
+        }
+       ],
+       "filters": [
+        "orders.order_date >= '1996'",
+        "orders.order_date <= '1997'"
+       ]
+      },
+      {
+       "name": "quartiles",
+       "source_model": "per_customer",
+       "dimensions": [
+        "orders__customer_key"
+       ],
+       "measures": [
+        {
+         "formula": "ntile(-sum(revenue_1996), n=4)",
+         "name": "revenue_quartile_1996"
+        },
+        {
+         "formula": "ntile(-sum(revenue_1997), n=4)",
+         "name": "revenue_quartile_1997"
+        }
+       ],
+       "filters": [
+        "lines_1996 > 0",
+        "lines_1997 > 0"
+       ]
+      },
+      {
+       "source_model": "quartiles",
+       "dimensions": [
+        "revenue_quartile_1996",
+        "revenue_quartile_1997"
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "customer_count"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "revenue_quartile_1996": "quartiles.revenue_quartile_1996",
+      "revenue_quartile_1997": "quartiles.revenue_quartile_1997",
+      "customer_count": "quartiles.customer_count"
+     },
+     "notes": "ntile always orders ascending, so quartiles use ntile(-revenue, n=4) (quartile 1 = highest). Tie-break approximated: ntile cannot take the secondary key (customer_key asc); matches ground truth. All 16 combinations are non-empty, so no zero-filling was needed.",
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
+    },
+    {
+     "id": "B74",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "customer",
+       "dimensions": [
+        "customer_key",
+        "market_segment",
+        "account_balance"
+       ],
+       "measures": [
+        {
+         "formula": "count(orders.order_key)",
+         "name": "n_orders"
+        }
+       ]
+      },
+      {
+       "source_model": "per_customer",
+       "dimensions": [
+        "market_segment"
+       ],
+       "measures": [
+        {
+         "formula": "sum(iif(n_orders == 0, 1, 0))",
+         "name": "never_ordered_count"
+        },
+        {
+         "formula": "avg(iif(n_orders == 0, 1.0, 0.0))",
+         "name": "never_ordered_share"
+        },
+        {
+         "formula": "sum(iif(n_orders == 0, account_balance, 0)) / sum(iif(n_orders == 0, 1, 0))",
+         "name": "avg_balance_never_ordered"
+        },
+        {
+         "formula": "sum(iif(n_orders > 0, account_balance, 0)) / sum(iif(n_orders > 0, 1, 0))",
+         "name": "avg_balance_ordered"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "market_segment": "per_customer.market_segment",
+      "never_ordered_count": "per_customer.never_ordered_count",
+      "never_ordered_share": "per_customer.never_ordered_share",
+      "avg_balance_never_ordered": "per_customer.avg_balance_never_ordered",
+      "avg_balance_ordered": "per_customer.avg_balance_ordered"
+     },
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "answered"
+    },
+    {
+     "id": "B75",
+     "status": "attempted",
+     "interface": "query",
+     "query": [
+      {
+       "name": "per_customer",
+       "source_model": "lineitem",
+       "dimensions": [
+        "orders.customer_key"
+       ],
+       "measures": [
+        {
+         "formula": "count_distinct(part.brand)",
+         "name": "brand_count"
+        },
+        "revenue"
+       ],
+       "filters": [
+        "orders.order_date in '1997'"
+       ],
+       "to_many_handling": "associate"
+      },
+      {
+       "source_model": "per_customer",
+       "dimensions": [
+        {
+         "expression": "iif(brand_count <= 2, '1-2', iif(brand_count <= 5, '3-5', iif(brand_count <= 10, '6-10', '11+')))",
+         "name": "brand_count_bucket"
+        }
+       ],
+       "measures": [
+        {
+         "formula": "count(*)",
+         "name": "customer_count"
+        },
+        {
+         "formula": "sum(revenue) / count(*)",
+         "name": "avg_revenue_per_customer"
+        },
+        {
+         "formula": "sum(revenue) / sum(revenue, partition_by=[])",
+         "name": "revenue_share"
+        }
+       ]
+      }
+     ],
+     "columns": {
+      "brand_count_bucket": "per_customer.brand_count_bucket",
+      "customer_count": "per_customer.customer_count",
+      "avg_revenue_per_customer": "per_customer.avg_revenue_per_customer",
+      "revenue_share": "per_customer.revenue_share"
+     },
+     "notes": "count_distinct(part.brand) from lineitem is by default computed over part's own rows and broadcast; to_many_handling='associate' makes it the per-customer count of brands bought.",
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "answered"
     }
    ]
   },
@@ -2046,7 +3769,7 @@
    "summary": {
     "answered": 11,
     "wrong": 0,
-    "unsupported": 39,
+    "unsupported": 64,
     "not_attempted": 0
    },
    "questions": [
@@ -2811,6 +4534,353 @@
      "domain": "marketing",
      "difficulty": "hard",
      "result": "unsupported"
+    },
+    {
+     "id": "B51",
+     "status": "unsupported",
+     "reason": "Needs distinct supplier count, a revenue ranking with a running sum and an 80% cut-off. mf query has no window/cumulative over a ranked list, no count distinct at query time and no arithmetic.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics revenue --group-by supplier --where <order_date 1997> --order -revenue -> lists suppliers by revenue, cannot accumulate or count the 80% set",
+      "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B52",
+     "status": "unsupported",
+     "reason": "line_count by ship_mode for 1997 shipments runs, but median and p90 of a per-line date difference (receipt_date - ship_date) are percentiles of an undeclared expression; mf query only requests declared metrics.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "notes": "Would need a new percentile measure over a date difference, not a native metric type on declared measures.",
+     "tried": [
+      "--metrics line_count --group-by lineitem__ship_mode --where <ship_date 1997> -> runs (7 rows, line_count matches); no way to add the percentiles",
+      "ARITH: ad-hoc metric expressions -> 'does not exactly match any known metrics'"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B53",
+     "status": "unsupported",
+     "reason": "Perfect orders need a per-order test that no line is late (nested aggregation: late lines per order, then count orders with zero) and a share; mf query aggregates once and has no arithmetic.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics order_count --group-by orders__order_priority,\"Dimension('orders__order_date').date_part('year')\" -> runs (order_count only)",
+      "METRIC_GB: grouping by a per-order metric -> 'does not match any of the known formats'"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B54",
+     "status": "unsupported",
+     "reason": "Averages of date differences across lineitem and orders (commit_date - order_date, receipt_date - order_date) are not declared metrics and cannot be computed at query time; the gap is arithmetic.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "ARITH: --metrics 'revenue/total_quantity' -> 'does not exactly match any known metrics' (no expressions in mf query)"
+     ],
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B55",
+     "status": "unsupported",
+     "reason": "late_share is a filtered-count ratio and the rolling 3-month share needs a window over months; mf query has one where clause, no arithmetic and no query-time cumulative/window metrics.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "notes": "fixable_in_model yes = ratio metric (filtered line_count / line_count) plus a cumulative window 3 months on both legs; metric_time is ship_date, which is what this question uses.",
+     "tried": [
+      "--metrics line_count --group-by metric_time__month --where \"receipt_date > commit_date\" -> late counts per ship month only",
+      "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B56",
+     "status": "unsupported",
+     "reason": "returned_share is a filtered-count ratio and return_rate_index divides it by the period-wide share (a total across groups); not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "notes": "A ratio metric fixes returned_share, but the index over an ungrouped total still needs query-time arithmetic.",
+     "tried": [
+      "--metrics line_count --group-by lineitem__ship_mode,lineitem__ship_instruct --where <receipt_date 1993-1994> -> runs (line_count only)",
+      "ARITH -> 'does not exactly match any known metrics'"
+     ],
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B57",
+     "status": "unsupported",
+     "reason": "Per-supplier late shares compared with a regional late share, a >= 50 lines threshold and counts of outlier suppliers: nested aggregation plus arithmetic. supplier_region_name is also 3 hops from lineitem.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics line_count --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'does not match any of the available group-by-items'",
+      "--metrics line_count --group-by supplier__supplier_nation__supplier_region -> runs, but returns region keys 0..4, not names"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B58",
+     "status": "unsupported",
+     "reason": "Ship span per order (max - min ship_date), a >= 2 lines filter and percentiles of the span over orders: nested aggregation of an undeclared expression; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB: grouping by a per-order value -> 'does not match any of the known formats'"
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B59",
+     "status": "unsupported",
+     "reason": "revenue and total_quantity per manufacturer and year are expressible, but two years side by side, unit prices and the volume/price effects are arithmetic between metrics.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "notes": "fixable_in_model yes = filtered-by-year derived metrics; metric filters on orders__order_date (2-hop dimension) are allowed in a metric's filter.",
+     "tried": [
+      "--metrics revenue,total_quantity --group-by part__manufacturer,\"Dimension('orders__order_date').date_part('year')\" -> runs (one row per manufacturer-year)",
+      "ARITH: --metrics 'revenue/total_quantity' -> 'does not exactly match any known metrics'"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B60",
+     "status": "unsupported",
+     "reason": "Customer margin rate needs sum(supply_cost * quantity) across lineitem and partsupp (no declared metric, measures cannot use joined columns), a per-customer distinct-order threshold and percentiles over customers.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension",
+      "METRIC_GB -> 'does not match any of the known formats'"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B61",
+     "status": "unsupported",
+     "reason": "Year-to-date revenue for 1998 and 1997 side by side needs a grain-to-date cumulative metric and a one-year offset, plus a ratio. None exist at query time; metric_time for revenue is ship_date, not order_date.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "notes": "fixable_in_model yes only if revenue's agg_time_dimension is order_date (cumulative grain_to_date year + offset_window 1 year + derived ratio).",
+     "tried": [
+      "--metrics revenue --group-by orders__order_date__month -> monthly revenue only",
+      "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B62",
+     "status": "unsupported",
+     "reason": "Customer margin needs sum(supply_cost * quantity) (not declared, not computable), then a ranking with a running share of total; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension",
+      "CUM -> 'does not match any of the known formats'"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B63",
+     "status": "unsupported",
+     "reason": "Trailing twelve-month revenue and the same window a year earlier need a 12-month cumulative window and an offset on order_date, plus a ratio; not available at query time.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "notes": "Model fix also needs revenue's agg_time_dimension = order_date (metric_time is ship_date).",
+     "tried": [
+      "--metrics revenue --group-by orders__order_date__month -> monthly revenue only",
+      "CUM -> 'does not match any of the known formats'"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B64",
+     "status": "unsupported",
+     "reason": "customer_region_name is 3 hops from orders (orders -> customer -> customer_nation -> customer_region), beyond the 2-hop limit; the company-wide percentile threshold and the large-order share are also not expressible.",
+     "category": "topology",
+     "fixable_in_model": false,
+     "notes": "Even with the region name reachable, PERCENTILE_CONT over orders and a threshold filter derived from it are expressivity failures.",
+     "tried": [
+      "--metrics order_value --group-by customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items for SimpleMetric(order_value)'; suggestions stop at customer__customer_nation__customer_region (the key)"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B65",
+     "status": "unsupported",
+     "reason": "actual_cost (supply_cost * quantity) and cheapest_cost (per-part min supply_cost across offers * quantity) are aggregations of expressions over a joined dataset and a nested aggregation; no declared metric covers them.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics total_quantity --group-by part__manufacturer,partsupp__supply_cost -> supply_cost only as a group-by dimension"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B66",
+     "status": "unsupported",
+     "reason": "avg_discount and revenue by order_priority for 1997 run, but margin_rate needs sum(supply_cost * quantity), which is not a declared metric and cannot be computed at query time.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics avg_discount,revenue --group-by orders__order_priority --where <order_date 1997> -> runs (2 of 3 metric columns)",
+      "--metrics revenue --group-by partsupp__supply_cost -> supply_cost only as a group-by dimension"
+     ],
+     "domain": "finance",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B67",
+     "status": "unsupported",
+     "reason": "Deciles of orders by total_price (NTILE) and shares of total order value: a ranking-derived dimension, a total across groups and arithmetic; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'",
+      "--metrics order_value --group-by orders --order -order_value -> per-order values, no bucketing"
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B68",
+     "status": "unsupported",
+     "reason": "Cohort by first-order year is a dimension derived from min(order_date) per customer (multi-stage), plus an index over the cohort's first year; mf query cannot group by a metric and has no arithmetic.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B69",
+     "status": "unsupported",
+     "reason": "Days to second order needs per-customer order positions (row_number) and percentiles; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B70",
+     "status": "unsupported",
+     "reason": "Manufacturer pair co-occurrence per order is a self-join of lineitem through orders, and lift needs ratios over N; not expressible in mf query.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics order_count --group-by part__manufacturer -> 'does not match any of the available group-by-items' (order_count is on orders; part is only reachable from lineitem, a fan-out MetricFlow does not join)",
+      "ARITH -> 'does not exactly match any known metrics'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B71",
+     "status": "unsupported",
+     "reason": "Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts; customer_count was dropped in translation and metric filters do not inherit the outer where nor take a date filter.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B72",
+     "status": "unsupported",
+     "reason": "First order per customer (earliest order_date, ties by key) is a row-number-derived dimension; averages of first versus later orders and their ratio are not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'"
+     ],
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B73",
+     "status": "unsupported",
+     "reason": "Revenue quartiles per year (NTILE) for customers active in both years, cross-tabulated with zero-filled cells: multi-stage ranking and existence tests; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B74",
+     "status": "unsupported",
+     "reason": "Customers on file with no orders need customer_count (dropped in translation: customer has no aggregation time dimension) and an anti-join; avg account_balance is not a declared metric either.",
+     "category": "topology",
+     "fixable_in_model": false,
+     "tried": [
+      "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+     ],
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B75",
+     "status": "unsupported",
+     "reason": "Bucketing customers by number of distinct brands bought is a dimension derived from a per-customer count distinct (multi-stage), then customer counts, averages and shares; not expressible.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      "METRIC_GB -> 'does not match any of the known formats'",
+      "ARITH -> 'does not exactly match any known metrics'"
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
     }
    ]
   },
@@ -2819,7 +4889,7 @@
    "summary": {
     "answered": 15,
     "wrong": 0,
-    "unsupported": 35,
+    "unsupported": 60,
     "not_attempted": 0
    },
    "questions": [
@@ -3812,6 +5882,428 @@
      "domain": "marketing",
      "difficulty": "hard",
      "result": "unsupported"
+    },
+    {
+     "id": "B51",
+     "status": "unsupported",
+     "reason": "Pareto count needs a running sum of revenue over suppliers ranked by revenue, compared with 80% of the total, then counted. Windows and an aggregate over a ranked sub-result; REST aggregates once.\n",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "query": "REST: {measures: [lineitem.revenue], dimensions: [supplier.supplier_name], timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01','1997-12-31']}], order: {lineitem.revenue: desc}}",
+       "error": "Runs (per-supplier revenue list); the cumulative share, the 80% cut and the counts are post-processing."
+      },
+      {
+       "query": "SQL API: SELECT supplier_name, MEASURE(revenue), SUM(MEASURE(revenue)) OVER (ORDER BY MEASURE(revenue) DESC, supplier_name ROWS UNBOUNDED PRECEDING) FROM lineitem CROSS JOIN supplier CROSS JOIN orders WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Can't find join path to join 'lineitem,supplier', 'supplier,orders', ... (and a window could only run as CubeScanWrappedSql, see B23/B31)."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B52",
+     "status": "unsupported",
+     "reason": "Percentiles of a row-level date difference (receipt_date - ship_date). No percentile measure and no ad-hoc aggregate of dimensions at query time. line_count by ship_mode alone is one REST query.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT ship_mode, MEASURE(line_count), PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF('day', ship_date, receipt_date)) FROM lineitem WHERE ship_date >= '1997-01-01' AND ship_date < '1998-01-01' GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (PERCENTILE_CONT pushed down): does not count."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B53",
+     "status": "unsupported",
+     "reason": "A perfect order is a per-order flag derived from its lines (no line with receipt_date > commit_date, a member-vs-member condition), then averaged per year and priority: aggregate of an aggregate plus a ratio. order_count by year and priority alone is one REST query.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "REST: {measures: [orders.order_count], dimensions: [orders.order_priority], timeDimensions: [{dimension: orders.order_date, granularity: year, dateRange: ['1993-01-01','1997-12-31']}]}",
+       "error": "Runs (order_count matches, e.g. 1993 1-URGENT 45363); no perfect_order_share column."
+      },
+      {
+       "note": "The late-line condition is pushdown-only (B07) and re-aggregating per order is post-processing (B42). A subquery dimension on orders (any_late) plus a filtered count and ratio would fix it."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B54",
+     "status": "unsupported",
+     "reason": "Averages of row-level date differences across lineitem and orders (commit_date - order_date, receipt_date - order_date) and their difference; no such measures, no ad-hoc aggregates, no calculated measures.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT order_priority, AVG(DATEDIFF('day', order_date, commit_date)) FROM lineitem CROSS JOIN orders WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Expected single cube for dimension-only measure lineitem.avg_datediff_utf, got orders,lineitem."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B55",
+     "status": "unsupported",
+     "reason": "Monthly late_share (member-vs-member conditional count / count) and a 3-month rolling ratio; no conditional measure, no calculated measure, no query-time rolling window.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT DATE_TRUNC('month', ship_date), MEASURE(line_count), SUM(CASE WHEN receipt_date > commit_date THEN 1 ELSE 0 END) FROM lineitem WHERE ship_date >= '1995-11-01' AND ship_date < '1998-01-01' GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (SUM(CASE ...) pushed down): does not count; the rolling sums would also need a window (B23)."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B56",
+     "status": "unsupported",
+     "reason": "returned_share needs a filtered count (return_flag 'R') beside the unfiltered count and a ratio, and return_rate_index needs the period-wide share on every row. line_count per ship_mode x ship_instruct is one plain CubeScan, the shares are not.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT ship_mode, ship_instruct, MEASURE(line_count) FROM lineitem WHERE receipt_date >= '1993-01-01' AND receipt_date < '1995-01-01' GROUP BY 1,2",
+       "error": "Plain CubeScan (line_count only). SUM(CASE WHEN return_flag = 'R' ...) -> CubeScanWrappedSql (B02); the overall share needs a window or second query."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B57",
+     "status": "unsupported",
+     "reason": "Per-supplier late shares (conditional ratio), compared with the region's late share, filtered on line counts and counted per region: multi-stage aggregation with a member-vs-member condition.\n",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "note": "Late-line count is pushdown-only (B07, B55); counting suppliers per region over a per-supplier result is post-processing (B42)."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B58",
+     "status": "unsupported",
+     "reason": "Per-order ship span (MAX - MIN of ship_date over the order's lines), filtered to multi-line orders, then percentiles per priority; aggregate of an aggregate plus percentiles.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT order_priority, MEASURE(line_count), MAX(ship_date) FROM lineitem CROSS JOIN orders WHERE order_date >= '1996-01-01' AND order_date < '1997-01-01' GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (MAX over a dimension pushed down): does not count, and the per-order span then needs an outer percentile."
+      }
+     ],
+     "domain": "operations",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B59",
+     "status": "unsupported",
+     "reason": "Revenue and quantity per manufacturer and year come from one REST query, but the 1996 and 1997 values must sit side by side and be combined (change, volume and price effects): per-measure year filters and calculated measures, neither available at query time.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "REST: {measures: [lineitem.revenue, lineitem.total_quantity], dimensions: [part.manufacturer], timeDimensions: [{dimension: orders.order_date, granularity: year, dateRange: ['1996-01-01','1997-12-31']}]}",
+       "error": "Runs; revenue_1996 values match (e.g. Manufacturer#4 6636101626.0666), but as one row per year; pivoting and the effects are post-processing."
+      },
+      {
+       "query": "SQL API: SELECT manufacturer, SUM(CASE WHEN order_date < '1997-01-01' THEN revenue ELSE 0 END) FROM lineitem CROSS JOIN orders CROSS JOIN part WHERE order_date >= '1996-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,part', ... (an ad-hoc SUM(CASE) is pushdown-only anyway, B02)."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B60",
+     "status": "unsupported",
+     "reason": "Per-customer margin rate needs SUM(supply_cost * quantity) across lineitem and partsupp dimensions (no cost measure), a HAVING on distinct orders, then percentiles of the per-customer rate per segment: ad-hoc aggregate, ratio and aggregate of an aggregate.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT order_priority, MEASURE(avg_discount), MEASURE(revenue), SUM(supply_cost * quantity) FROM lineitem CROSS JOIN orders CROSS JOIN partsupp WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,partsupp', ... (cost is an ad-hoc aggregate of dimensions, pushdown-only, see B24)."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B61",
+     "status": "unsupported",
+     "reason": "Year-to-date running sums per month for 1998 and 1997 side by side and their ratio; no query-time rolling/to-date window, time shift or calculated measure.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "REST: {measures: [lineitem.revenue], timeDimensions: [{dimension: orders.order_date, granularity: month, dateRange: ['1998-01-01','1998-07-31']}], order: {orders.order_date: asc}}",
+       "error": "Runs; monthly revenue (January = ytd 2814192167.4988 matches), but later months are not cumulative and there is no 1997 column."
+      },
+      {
+       "note": "compareDateRange is rejected on /v1/load (B29); a running SUM OVER in the SQL API plans as CubeScanWrappedSql (see B63)."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B62",
+     "status": "unsupported",
+     "reason": "Per-customer margin (needs SUM(supply_cost * quantity), no cost measure), margin_rate ratio, rank and running share of total margin; ad-hoc aggregate, calculated measure and windows.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "note": "Cost is pushdown-only (B24, B60); a running share needs a window (CubeScanWrappedSql, B31)."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B63",
+     "status": "unsupported",
+     "reason": "Trailing-twelve-month revenue per month, the same window a year earlier, and growth; no query-time rolling window or time shift.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT DATE_TRUNC('month', order_date), MEASURE(revenue), SUM(MEASURE(revenue)) OVER (ORDER BY DATE_TRUNC('month', order_date) ROWS BETWEEN 11 PRECEDING AND CURRENT ROW) FROM lineitem CROSS JOIN orders GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (window pushed down): does not count."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B64",
+     "status": "unsupported",
+     "reason": "A company-wide percentile threshold on total_price, repeated per region, then a conditional count and value share relative to it. No percentile measure and no filter that references an aggregate. order_value per region alone is one REST query.\n",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "query": "SQL API: SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY total_price) FROM orders WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01'",
+       "error": "EXPLAIN -> CubeScanWrappedSql (PERCENTILE_CONT pushed down): does not count."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B65",
+     "status": "unsupported",
+     "reason": "actual_cost is SUM(supply_cost * quantity) over cross-cube dimensions, and cheapest_cost needs the per-part minimum supply_cost over all offers (an aggregate turned into a row value). Ad-hoc aggregates and subquery dimensions are not available at query time.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT manufacturer, MIN(supply_cost) FROM partsupp CROSS JOIN part GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (MIN over a dimension pushed down): does not count, and it is the per-manufacturer min, not the per-part min joined back to lines."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B66",
+     "status": "unsupported",
+     "reason": "avg_discount and revenue per order_priority for 1997 are one REST query, but margin_rate needs SUM(supply_cost * quantity) (no cost measure; cross-cube dimensions) and a ratio.\n",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT order_priority, MEASURE(avg_discount), MEASURE(revenue), SUM(supply_cost * quantity) FROM lineitem CROSS JOIN orders CROSS JOIN partsupp WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,partsupp', 'lineitem', 'partsupp', 'orders' (and the SUM is an ad-hoc aggregate, pushdown-only)."
+      },
+      {
+       "note": "REST {measures: [lineitem.avg_discount, lineitem.revenue], dimensions: [orders.order_priority], 1997} gives the first three columns only."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B67",
+     "status": "unsupported",
+     "reason": "NTILE(10) deciles of orders by total_price, then per-decile aggregates and shares; needs a window-derived dimension and re-aggregation.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "query": "SQL API: SELECT NTILE(10) OVER (ORDER BY total_price DESC) d, total_price FROM orders WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01'",
+       "error": "Planning Error: Coercion from [Int64] to the signature Exact([UInt64]) failed."
+      },
+      {
+       "query": "SQL API: ... ORDER BY total_price DESC, order_key",
+       "error": "Planning Error: Invalid identifier '#order_key' (the primary-key dimension is not exposed in the SQL API schema)."
+      }
+     ],
+     "domain": "finance",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B68",
+     "status": "unsupported",
+     "reason": "Cohort by first-order year is a dimension derived from a per-customer MIN(order_date), and revenue_index divides by the cohort's first-year revenue; no subquery dimensions, no calculated measures.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "note": "Same blocker as B46 (no MIN measure on order_date, no sub_query dimension); nesting in the SQL API is post-processing (B42)."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B69",
+     "status": "unsupported",
+     "reason": "Days between a customer's first and second order need order positions per customer (ROW_NUMBER), a self-join and percentiles; not expressible at query time.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "query": "SQL API: SELECT customer_key, order_date, total_price, ROW_NUMBER() OVER (PARTITION BY customer_key ORDER BY order_date) FROM orders",
+       "error": "Rewrite Error: Can't detect Cube query and it may be not supported yet."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B70",
+     "status": "unsupported",
+     "reason": "Manufacturer pair co-occurrence needs a per-order distinct manufacturer set, a self-join of it, and lift ratios; Cube queries have no self-join and no aggregate over sub-results.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "note": "Orders containing a manufacturer would need a distinct-order count over lineitem (no such measure; orders.order_count is rooted at orders, which has no join to part). Pairs would need a self-join, which neither REST nor a single-CubeScan SQL query can express."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B71",
+     "status": "unsupported",
+     "reason": "Lapsed and reactivated customers need per-customer existence flags across three periods (anti-join and semi-join), then counts per segment and a ratio.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "note": "Same blocker as B47: two or three REST customer lists would need set operations and re-aggregation (post-processing)."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B72",
+     "status": "unsupported",
+     "reason": "First order per customer (ROW_NUMBER by date, key), then conditional averages of total_price on first vs other orders and their ratio; no window, no conditional measure, no calculated measure.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT customer_key, order_date, total_price, ROW_NUMBER() OVER (PARTITION BY customer_key ORDER BY order_date) FROM orders",
+       "error": "Rewrite Error: Can't detect Cube query and it may be not supported yet."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B73",
+     "status": "unsupported",
+     "reason": "Two NTILE(4) assignments per customer (one per year, on per-year revenue), restricted to customers active in both years, cross-tabulated with zero cells; windows over sub-results and a dense grid.",
+     "category": "expressivity",
+     "fixable_in_model": false,
+     "tried": [
+      {
+       "note": "Per-customer revenue for one year is one REST query (dimensions: [orders.customer_key], see B30); NTILE fails in the SQL API (B67) and combining years is post-processing."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
+    },
+    {
+     "id": "B74",
+     "status": "unsupported",
+     "reason": "Never-ordered customers need an existence test from customer to orders (no join in that direction; orders -> customer only) and conditional averages of account_balance, a dimension with no avg measure.\n",
+     "category": "topology",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "REST: {measures: [customer.customer_count, orders.order_count], dimensions: [customer.market_segment]}",
+       "error": "Runs, but rooted at orders: customer_count counts only customers with orders (e.g. BUILDING 20177), never-ordered customers are invisible."
+      },
+      {
+       "query": "SQL API: SELECT market_segment, MEASURE(customer_count), AVG(account_balance) FROM customer GROUP BY 1",
+       "error": "EXPLAIN -> CubeScanWrappedSql (AVG over a dimension pushed down): does not count."
+      },
+      {
+       "note": "Also expressivity: per-measure filters and an avg-balance measure are missing. A customer -> orders join (or a sub_query dimension has_order) plus filtered measures would fix it."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "medium",
+     "result": "unsupported"
+    },
+    {
+     "id": "B75",
+     "status": "unsupported",
+     "reason": "Per-customer distinct brand count (an aggregate) bucketed into a dimension, then counts, averages and revenue shares per bucket; aggregate of an aggregate plus ratios.",
+     "category": "expressivity",
+     "fixable_in_model": true,
+     "tried": [
+      {
+       "query": "SQL API: SELECT customer_key, COUNT(DISTINCT brand), MEASURE(revenue) FROM lineitem CROSS JOIN orders CROSS JOIN part WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1",
+       "error": "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,part', ... (COUNT(DISTINCT brand) has no declared measure; pushdown-only at best)."
+      }
+     ],
+     "domain": "marketing",
+     "difficulty": "hard",
+     "result": "unsupported"
     }
    ]
   }
@@ -3820,56 +6312,56 @@
   "domain": {
    "slayer": {
     "finance": {
-     "answered": 17,
-     "total": 17
+     "answered": 26,
+     "total": 26
     },
     "marketing": {
-     "answered": 16,
-     "total": 16
+     "answered": 24,
+     "total": 24
     },
     "operations": {
-     "answered": 17,
-     "total": 17
+     "answered": 25,
+     "total": 25
     }
    },
    "metricflow": {
     "finance": {
      "answered": 5,
-     "total": 17
+     "total": 26
     },
     "marketing": {
      "answered": 4,
-     "total": 16
+     "total": 24
     },
     "operations": {
      "answered": 2,
-     "total": 17
+     "total": 25
     }
    },
    "cube": {
     "finance": {
      "answered": 6,
-     "total": 17
+     "total": 26
     },
     "marketing": {
      "answered": 6,
-     "total": 16
+     "total": 24
     },
     "operations": {
      "answered": 3,
-     "total": 17
+     "total": 25
     }
    }
   },
   "difficulty": {
    "slayer": {
     "hard": {
-     "answered": 15,
-     "total": 15
+     "answered": 35,
+     "total": 35
     },
     "medium": {
-     "answered": 20,
-     "total": 20
+     "answered": 25,
+     "total": 25
     },
     "simple": {
      "answered": 15,
@@ -3879,11 +6371,11 @@
    "metricflow": {
     "hard": {
      "answered": 0,
-     "total": 15
+     "total": 35
     },
     "medium": {
      "answered": 3,
-     "total": 20
+     "total": 25
     },
     "simple": {
      "answered": 8,
@@ -3893,11 +6385,11 @@
    "cube": {
     "hard": {
      "answered": 0,
-     "total": 15
+     "total": 35
     },
     "medium": {
      "answered": 3,
-     "total": 20
+     "total": 25
     },
     "simple": {
      "answered": 12,

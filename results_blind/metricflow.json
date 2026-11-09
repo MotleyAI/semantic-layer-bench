@@ -3,7 +3,7 @@
  "summary": {
   "answered": 11,
   "wrong": 0,
-  "unsupported": 39,
+  "unsupported": 64,
   "not_attempted": 0
  },
  "questions": [
@@ -764,6 +764,353 @@
    "fixable_in_model": false,
    "tried": [
     "--metrics revenue --group-by orders__customer__market_segment,\"Dimension('orders__order_date').date_part('year')\" -> runs (revenue per segment-year), but no share or change"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B51",
+   "status": "unsupported",
+   "reason": "Needs distinct supplier count, a revenue ranking with a running sum and an 80% cut-off. mf query has no window/cumulative over a ranked list, no count distinct at query time and no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by supplier --where <order_date 1997> --order -revenue -> lists suppliers by revenue, cannot accumulate or count the 80% set",
+    "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B52",
+   "status": "unsupported",
+   "reason": "line_count by ship_mode for 1997 shipments runs, but median and p90 of a per-line date difference (receipt_date - ship_date) are percentiles of an undeclared expression; mf query only requests declared metrics.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "notes": "Would need a new percentile measure over a date difference, not a native metric type on declared measures.",
+   "tried": [
+    "--metrics line_count --group-by lineitem__ship_mode --where <ship_date 1997> -> runs (7 rows, line_count matches); no way to add the percentiles",
+    "ARITH: ad-hoc metric expressions -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B53",
+   "status": "unsupported",
+   "reason": "Perfect orders need a per-order test that no line is late (nested aggregation: late lines per order, then count orders with zero) and a share; mf query aggregates once and has no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics order_count --group-by orders__order_priority,\"Dimension('orders__order_date').date_part('year')\" -> runs (order_count only)",
+    "METRIC_GB: grouping by a per-order metric -> 'does not match any of the known formats'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B54",
+   "status": "unsupported",
+   "reason": "Averages of date differences across lineitem and orders (commit_date - order_date, receipt_date - order_date) are not declared metrics and cannot be computed at query time; the gap is arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "ARITH: --metrics 'revenue/total_quantity' -> 'does not exactly match any known metrics' (no expressions in mf query)"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B55",
+   "status": "unsupported",
+   "reason": "late_share is a filtered-count ratio and the rolling 3-month share needs a window over months; mf query has one where clause, no arithmetic and no query-time cumulative/window metrics.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes = ratio metric (filtered line_count / line_count) plus a cumulative window 3 months on both legs; metric_time is ship_date, which is what this question uses.",
+   "tried": [
+    "--metrics line_count --group-by metric_time__month --where \"receipt_date > commit_date\" -> late counts per ship month only",
+    "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B56",
+   "status": "unsupported",
+   "reason": "returned_share is a filtered-count ratio and return_rate_index divides it by the period-wide share (a total across groups); not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "notes": "A ratio metric fixes returned_share, but the index over an ungrouped total still needs query-time arithmetic.",
+   "tried": [
+    "--metrics line_count --group-by lineitem__ship_mode,lineitem__ship_instruct --where <receipt_date 1993-1994> -> runs (line_count only)",
+    "ARITH -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B57",
+   "status": "unsupported",
+   "reason": "Per-supplier late shares compared with a regional late share, a >= 50 lines threshold and counts of outlier suppliers: nested aggregation plus arithmetic. supplier_region_name is also 3 hops from lineitem.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics line_count --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'does not match any of the available group-by-items'",
+    "--metrics line_count --group-by supplier__supplier_nation__supplier_region -> runs, but returns region keys 0..4, not names"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B58",
+   "status": "unsupported",
+   "reason": "Ship span per order (max - min ship_date), a >= 2 lines filter and percentiles of the span over orders: nested aggregation of an undeclared expression; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB: grouping by a per-order value -> 'does not match any of the known formats'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B59",
+   "status": "unsupported",
+   "reason": "revenue and total_quantity per manufacturer and year are expressible, but two years side by side, unit prices and the volume/price effects are arithmetic between metrics.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes = filtered-by-year derived metrics; metric filters on orders__order_date (2-hop dimension) are allowed in a metric's filter.",
+   "tried": [
+    "--metrics revenue,total_quantity --group-by part__manufacturer,\"Dimension('orders__order_date').date_part('year')\" -> runs (one row per manufacturer-year)",
+    "ARITH: --metrics 'revenue/total_quantity' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B60",
+   "status": "unsupported",
+   "reason": "Customer margin rate needs sum(supply_cost * quantity) across lineitem and partsupp (no declared metric, measures cannot use joined columns), a per-customer distinct-order threshold and percentiles over customers.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension",
+    "METRIC_GB -> 'does not match any of the known formats'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B61",
+   "status": "unsupported",
+   "reason": "Year-to-date revenue for 1998 and 1997 side by side needs a grain-to-date cumulative metric and a one-year offset, plus a ratio. None exist at query time; metric_time for revenue is ship_date, not order_date.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes only if revenue's agg_time_dimension is order_date (cumulative grain_to_date year + offset_window 1 year + derived ratio).",
+   "tried": [
+    "--metrics revenue --group-by orders__order_date__month -> monthly revenue only",
+    "CUM: --metrics 'cumulative(revenue)' -> 'does not match any of the known formats'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B62",
+   "status": "unsupported",
+   "reason": "Customer margin needs sum(supply_cost * quantity) (not declared, not computable), then a ranking with a running share of total; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension",
+    "CUM -> 'does not match any of the known formats'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B63",
+   "status": "unsupported",
+   "reason": "Trailing twelve-month revenue and the same window a year earlier need a 12-month cumulative window and an offset on order_date, plus a ratio; not available at query time.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "Model fix also needs revenue's agg_time_dimension = order_date (metric_time is ship_date).",
+   "tried": [
+    "--metrics revenue --group-by orders__order_date__month -> monthly revenue only",
+    "CUM -> 'does not match any of the known formats'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B64",
+   "status": "unsupported",
+   "reason": "customer_region_name is 3 hops from orders (orders -> customer -> customer_nation -> customer_region), beyond the 2-hop limit; the company-wide percentile threshold and the large-order share are also not expressible.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "notes": "Even with the region name reachable, PERCENTILE_CONT over orders and a threshold filter derived from it are expressivity failures.",
+   "tried": [
+    "--metrics order_value --group-by customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items for SimpleMetric(order_value)'; suggestions stop at customer__customer_nation__customer_region (the key)"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B65",
+   "status": "unsupported",
+   "reason": "actual_cost (supply_cost * quantity) and cheapest_cost (per-part min supply_cost across offers * quantity) are aggregations of expressions over a joined dataset and a nested aggregation; no declared metric covers them.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics total_quantity --group-by part__manufacturer,partsupp__supply_cost -> supply_cost only as a group-by dimension"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B66",
+   "status": "unsupported",
+   "reason": "avg_discount and revenue by order_priority for 1997 run, but margin_rate needs sum(supply_cost * quantity), which is not a declared metric and cannot be computed at query time.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics avg_discount,revenue --group-by orders__order_priority --where <order_date 1997> -> runs (2 of 3 metric columns)",
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost only as a group-by dimension"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B67",
+   "status": "unsupported",
+   "reason": "Deciles of orders by total_price (NTILE) and shares of total order value: a ranking-derived dimension, a total across groups and arithmetic; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'",
+    "--metrics order_value --group-by orders --order -order_value -> per-order values, no bucketing"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B68",
+   "status": "unsupported",
+   "reason": "Cohort by first-order year is a dimension derived from min(order_date) per customer (multi-stage), plus an index over the cohort's first year; mf query cannot group by a metric and has no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B69",
+   "status": "unsupported",
+   "reason": "Days to second order needs per-customer order positions (row_number) and percentiles; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B70",
+   "status": "unsupported",
+   "reason": "Manufacturer pair co-occurrence per order is a self-join of lineitem through orders, and lift needs ratios over N; not expressible in mf query.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics order_count --group-by part__manufacturer -> 'does not match any of the available group-by-items' (order_count is on orders; part is only reachable from lineitem, a fan-out MetricFlow does not join)",
+    "ARITH -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B71",
+   "status": "unsupported",
+   "reason": "Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts; customer_count was dropped in translation and metric filters do not inherit the outer where nor take a date filter.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B72",
+   "status": "unsupported",
+   "reason": "First order per customer (earliest order_date, ties by key) is a row-number-derived dimension; averages of first versus later orders and their ratio are not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B73",
+   "status": "unsupported",
+   "reason": "Revenue quartiles per year (NTILE) for customers active in both years, cross-tabulated with zero-filled cells: multi-stage ranking and existence tests; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B74",
+   "status": "unsupported",
+   "reason": "Customers on file with no orders need customer_count (dropped in translation: customer has no aggregation time dimension) and an anti-join; avg account_balance is not a declared metric either.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B75",
+   "status": "unsupported",
+   "reason": "Bucketing customers by number of distinct brands bought is a dimension derived from a per-customer count distinct (multi-stage), then customer counts, averages and shares; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "METRIC_GB -> 'does not match any of the known formats'",
+    "ARITH -> 'does not exactly match any known metrics'"
    ],
    "domain": "marketing",
    "difficulty": "hard",
