@@ -1146,3 +1146,730 @@ questions:
       select a.c_mktsegment as market_segment, a.share as revenue_share_1993, b.share as revenue_share_1997,
              b.share - a.share as share_change
       from sh a join sh b on a.c_mktsegment = b.c_mktsegment and a.yr = 1993 and b.yr = 1997
+
+  # ================================================================ EXTENSION B51-B75
+  # Written by a second isolated author (authored_extension.yaml, verbatim) after B01-B50 were
+  # scored, asked for a harder mix (5 medium, 20 hard), still blind to every semantic layer.
+  # Frozen with ground truth before any layer was tried on them.
+  # ---------------------------------------------------------------- OPERATIONS
+  - id: B51
+    domain: operations
+    difficulty: hard
+    persona: Supply Chain Director
+    decision: how many supplier relationships need strategic account management versus transactional handling
+    question: >-
+      How many of our suppliers account for 80% of the revenue we booked on
+      orders placed in 1997?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Revenue = sum of extended_price * (1 - discount) per supplier.
+      active_supplier_count = number of distinct suppliers with at least one such line.
+      Sort suppliers by revenue descending (ties by supplier_key ascending) and accumulate.
+      suppliers_for_80pct_revenue = the smallest number of top suppliers whose cumulative revenue is
+      >= 0.8 * total 1997 revenue.
+      supplier_share_for_80pct = suppliers_for_80pct_revenue / active_supplier_count, as a fraction. One row.
+    columns: [active_supplier_count, suppliers_for_80pct_revenue, supplier_share_for_80pct]
+    order_matters: false
+    sql: |
+      with s as (
+        select l_suppkey as k, sum(l_extendedprice * (1 - l_discount)) as r
+        from lineitem join orders on l_orderkey = o_orderkey
+        where o_orderdate between date '1997-01-01' and date '1997-12-31'
+        group by 1),
+      o as (
+        select k, r,
+               sum(r) over (order by r desc, k asc rows between unbounded preceding and current row) as cum,
+               row_number() over (order by r desc, k asc) as rn,
+               sum(r) over () as tot, count(*) over () as n
+        from s)
+      select max(n) as active_supplier_count,
+             min(case when cum >= 0.8 * tot then rn end) as suppliers_for_80pct_revenue,
+             min(case when cum >= 0.8 * tot then rn end) * 1.0 / max(n) as supplier_share_for_80pct
+      from o
+
+  - id: B52
+    domain: operations
+    difficulty: hard
+    persona: Head of Logistics
+    decision: what delivery-time guarantee each carrier type can safely support in customer contracts
+    question: >-
+      For lines shipped in 1997, what are the median and 90th-percentile
+      transit times for each shipping mode?
+    interpretation: |
+      Line items with ship_date between 1997-01-01 and 1997-12-31 inclusive.
+      transit days = receipt_date minus ship_date, in whole days.
+      median_transit_days and p90_transit_days = continuous-interpolation percentiles (PERCENTILE_CONT at 0.5
+      and 0.9) of transit days over the lines of each ship_mode. line_count = number of lines. 7 rows.
+    columns: [ship_mode, line_count, median_transit_days, p90_transit_days]
+    order_matters: false
+    sql: |
+      select l_shipmode as ship_mode, count(*) as line_count,
+             quantile_cont(l_receiptdate - l_shipdate, 0.5) as median_transit_days,
+             quantile_cont(l_receiptdate - l_shipdate, 0.9) as p90_transit_days
+      from lineitem where l_shipdate between date '1997-01-01' and date '1997-12-31'
+      group by 1
+
+  - id: B53
+    domain: operations
+    difficulty: hard
+    persona: COO
+    decision: whether perfect-order performance is improving and whether urgent orders get preferential treatment
+    question: >-
+      What share of our orders arrived complete and on time (every line by its
+      promised date), by year and order priority, from 1993 to 1997?
+    interpretation: |
+      Orders with order_date between 1993-01-01 and 1997-12-31 inclusive, all statuses; order_year = calendar
+      year of order_date (integer).
+      An order is perfect when none of its lines has receipt_date > commit_date.
+      perfect_order_share = perfect orders / all orders in that year and order_priority, as a fraction.
+      order_count = number of orders. 25 rows (5 years x 5 priorities).
+    columns: [order_year, order_priority, order_count, perfect_order_share]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_orderkey, year(o_orderdate) as yr, o_orderpriority,
+               max(case when l_receiptdate > l_commitdate then 1 else 0 end) as any_late
+        from orders join lineitem on l_orderkey = o_orderkey
+        where o_orderdate between date '1993-01-01' and date '1997-12-31'
+        group by 1, 2, 3)
+      select yr as order_year, o_orderpriority as order_priority, count(*) as order_count,
+             avg(case when any_late = 0 then 1.0 else 0.0 end) as perfect_order_share
+      from o group by 1, 2
+
+  - id: B54
+    domain: operations
+    difficulty: medium
+    persona: Customer Service Director
+    decision: whether our promised lead times are realistic for each priority level
+    question: >-
+      For orders placed in 1997, how long a lead time do we promise on average
+      versus how long customers actually wait, by order priority?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      promised days = commit_date minus order_date; actual days = receipt_date minus order_date (whole days).
+      avg_promised_days and avg_actual_days = means over lines; avg_gap_days = avg_actual_days - avg_promised_days.
+      One row per order_priority (5 rows).
+    columns: [order_priority, avg_promised_days, avg_actual_days, avg_gap_days]
+    order_matters: false
+    sql: |
+      select o_orderpriority as order_priority,
+             avg(l_commitdate - o_orderdate) as avg_promised_days,
+             avg(l_receiptdate - o_orderdate) as avg_actual_days,
+             avg(l_receiptdate - o_orderdate) - avg(l_commitdate - o_orderdate) as avg_gap_days
+      from lineitem join orders on l_orderkey = o_orderkey
+      where o_orderdate between date '1997-01-01' and date '1997-12-31'
+      group by 1
+
+  - id: B55
+    domain: operations
+    difficulty: hard
+    persona: Head of Logistics
+    decision: whether a month of bad on-time performance is noise or the start of a trend
+    question: >-
+      Month by month over 1996 and 1997, what was our late-delivery rate and
+      its rolling three-month rate?
+    interpretation: |
+      Line items bucketed by ship month; ship_month = first day of the ship month (date).
+      Late = receipt_date > commit_date.
+      late_share = late lines / all lines shipped in the month, as a fraction.
+      rolling_3m_late_share = late lines / all lines pooled over the month and the two preceding months
+      (so January 1996 uses November 1995 through January 1996 shipments).
+      Output months 1996-01-01 through 1997-12-01 (24 rows).
+    columns: [ship_month, late_share, rolling_3m_late_share]
+    order_matters: false
+    sql: |
+      with m as (
+        select date_trunc('month', l_shipdate)::date as ship_month,
+               sum(case when l_receiptdate > l_commitdate then 1 else 0 end) as late, count(*) as n
+        from lineitem where l_shipdate between date '1995-11-01' and date '1997-12-31'
+        group by 1),
+      w as (
+        select ship_month, late * 1.0 / n as late_share,
+               sum(late) over (order by ship_month rows between 2 preceding and current row) * 1.0
+                 / sum(n) over (order by ship_month rows between 2 preceding and current row) as rolling_3m_late_share
+        from m)
+      select ship_month, late_share, rolling_3m_late_share from w
+      where ship_month between date '1996-01-01' and date '1997-12-01'
+
+  - id: B56
+    domain: operations
+    difficulty: medium
+    persona: Quality Manager
+    decision: whether particular shipping methods or handling instructions cause damage and returns
+    question: >-
+      For lines received in 1993 and 1994, how does the return rate for each
+      combination of shipping mode and shipping instruction compare with our
+      overall return rate?
+    interpretation: |
+      Line items with receipt_date between 1993-01-01 and 1994-12-31 inclusive.
+      Returned = return_flag = 'R'. returned_share = returned lines / all lines for the ship_mode and ship_instruct
+      combination, as a fraction.
+      return_rate_index = returned_share / overall returned share of all lines in the period (1.0 = average).
+      One row per ship_mode x ship_instruct (28 rows).
+    columns: [ship_mode, ship_instruct, line_count, returned_share, return_rate_index]
+    order_matters: false
+    sql: |
+      with l as (
+        select l_shipmode, l_shipinstruct, case when l_returnflag = 'R' then 1.0 else 0.0 end as ret
+        from lineitem where l_receiptdate between date '1993-01-01' and date '1994-12-31'),
+      overall as (select avg(ret) as s from l)
+      select l_shipmode as ship_mode, l_shipinstruct as ship_instruct, count(*) as line_count,
+             avg(ret) as returned_share, avg(ret) / max(overall.s) as return_rate_index
+      from l, overall group by 1, 2
+
+  - id: B57
+    domain: operations
+    difficulty: hard
+    persona: Procurement Director
+    decision: how many suppliers in each region need a reliability review against their regional peers
+    question: >-
+      In 1997, how many suppliers in each region had a late-delivery rate at
+      least 10 points worse than their region's overall rate?
+    interpretation: |
+      Line items with ship_date between 1997-01-01 and 1997-12-31 inclusive. Late = receipt_date > commit_date.
+      region_late_share = late lines / all lines of all suppliers in that supplier_region_name.
+      Supplier late_share = late lines / all lines of the supplier; only suppliers with at least 50 such lines qualify.
+      qualifying_supplier_count = qualifying suppliers in the region.
+      outlier_supplier_count = qualifying suppliers with late_share >= region_late_share + 0.10.
+      outlier_share = outlier_supplier_count / qualifying_supplier_count, as a fraction. 5 rows.
+    columns: [supplier_region_name, region_late_share, qualifying_supplier_count, outlier_supplier_count, outlier_share]
+    order_matters: false
+    sql: |
+      with l as (
+        select r_name, l_suppkey, case when l_receiptdate > l_commitdate then 1.0 else 0.0 end as late
+        from lineitem join supplier on l_suppkey = s_suppkey
+        join nation on s_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+        where l_shipdate between date '1997-01-01' and date '1997-12-31'),
+      reg as (select r_name, avg(late) as region_late_share from l group by 1),
+      sup as (select r_name, l_suppkey, avg(late) as late_share, count(*) as n from l group by 1, 2)
+      select reg.r_name as supplier_region_name, region_late_share,
+             count(*) filter (where n >= 50) as qualifying_supplier_count,
+             count(*) filter (where n >= 50 and late_share >= region_late_share + 0.10) as outlier_supplier_count,
+             count(*) filter (where n >= 50 and late_share >= region_late_share + 0.10) * 1.0
+               / count(*) filter (where n >= 50) as outlier_share
+      from reg join sup using (r_name)
+      group by reg.r_name, region_late_share
+
+  - id: B58
+    domain: operations
+    difficulty: hard
+    persona: Warehouse Operations Manager
+    decision: whether split shipments are stretching out multi-line orders and need consolidation rules
+    question: >-
+      For multi-line orders placed in 1996, how many days separate the first
+      and last shipment of an order, by order priority?
+    interpretation: |
+      Orders with order_date between 1996-01-01 and 1996-12-31 inclusive that have at least 2 line items.
+      ship_span_days = latest ship_date minus earliest ship_date among the order's lines, in whole days.
+      order_count = number of such orders; median_ship_span_days and p90_ship_span_days = PERCENTILE_CONT 0.5 and 0.9
+      of ship_span_days over the orders of each order_priority. 5 rows.
+    columns: [order_priority, order_count, median_ship_span_days, p90_ship_span_days]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_orderkey, o_orderpriority, count(*) as n, max(l_shipdate) - min(l_shipdate) as span
+        from orders join lineitem on l_orderkey = o_orderkey
+        where o_orderdate between date '1996-01-01' and date '1996-12-31'
+        group by 1, 2 having count(*) >= 2)
+      select o_orderpriority as order_priority, count(*) as order_count,
+             quantile_cont(span, 0.5) as median_ship_span_days, quantile_cont(span, 0.9) as p90_ship_span_days
+      from o group by 1
+
+  # ---------------------------------------------------------------- FINANCE
+  - id: B59
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether revenue growth by manufacturer came from selling more units or from higher realised prices
+    question: >-
+      Breaking down the change in revenue from 1996 to 1997 for each
+      manufacturer, how much came from volume and how much from price per unit?
+    interpretation: |
+      Line items assigned to year by the order's order_date (1996 and 1997 calendar years).
+      Per manufacturer and year: revenue = sum of extended_price * (1 - discount); total_quantity = sum of quantity;
+      net price per unit = revenue / total_quantity.
+      volume_effect = (total_quantity_1997 - total_quantity_1996) * net price per unit 1996.
+      price_effect = (net price per unit 1997 - net price per unit 1996) * total_quantity_1997.
+      revenue_change = revenue_1997 - revenue_1996 (equals volume_effect + price_effect). 5 rows.
+    columns: [manufacturer, revenue_1996, revenue_1997, revenue_change, volume_effect, price_effect]
+    order_matters: false
+    sql: |
+      with y as (
+        select p_mfgr,
+               sum(case when year(o_orderdate) = 1996 then l_extendedprice * (1 - l_discount) else 0 end) as r96,
+               sum(case when year(o_orderdate) = 1997 then l_extendedprice * (1 - l_discount) else 0 end) as r97,
+               sum(case when year(o_orderdate) = 1996 then l_quantity else 0 end) as q96,
+               sum(case when year(o_orderdate) = 1997 then l_quantity else 0 end) as q97
+        from lineitem join orders on l_orderkey = o_orderkey join part on l_partkey = p_partkey
+        where o_orderdate between date '1996-01-01' and date '1997-12-31'
+        group by 1)
+      select p_mfgr as manufacturer, r96 as revenue_1996, r97 as revenue_1997, r97 - r96 as revenue_change,
+             (q97 - q96) * (r96 / q96) as volume_effect,
+             (r97 / q97 - r96 / q96) * q97 as price_effect
+      from y
+
+  - id: B60
+    domain: finance
+    difficulty: hard
+    persona: Head of Pricing
+    decision: whether margin dispersion across regular customers in a segment calls for account-level pricing
+    question: >-
+      Among customers who placed at least three orders in 1997, how widely did
+      their margin rate vary within each segment?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Only customers with at least 3 distinct orders dated in 1997.
+      Customer margin rate = (revenue - sum of supply_cost * quantity) / revenue over the customer's 1997 lines,
+      with revenue = sum of extended_price * (1 - discount) and supply_cost from the line's part + supplier offer.
+      Per market_segment: customer_count = qualifying customers; p25_margin_rate, median_margin_rate,
+      p75_margin_rate = PERCENTILE_CONT 0.25, 0.5, 0.75 of customer margin rates. 5 rows.
+    columns: [market_segment, customer_count, p25_margin_rate, median_margin_rate, p75_margin_rate]
+    order_matters: false
+    sql: |
+      with c as (
+        select o_custkey, c_mktsegment, count(distinct o_orderkey) as n_orders,
+               sum(l_extendedprice * (1 - l_discount)) as rev, sum(ps_supplycost * l_quantity) as cost
+        from lineitem join orders on l_orderkey = o_orderkey join customer on o_custkey = c_custkey
+        join partsupp on l_partkey = ps_partkey and l_suppkey = ps_suppkey
+        where o_orderdate between date '1997-01-01' and date '1997-12-31'
+        group by 1, 2 having count(distinct o_orderkey) >= 3)
+      select c_mktsegment as market_segment, count(*) as customer_count,
+             quantile_cont((rev - cost) / rev, 0.25) as p25_margin_rate,
+             quantile_cont((rev - cost) / rev, 0.5) as median_margin_rate,
+             quantile_cont((rev - cost) / rev, 0.75) as p75_margin_rate
+      from c group by 1
+
+  - id: B61
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether 1998 is tracking ahead of 1997 as the year progresses
+    question: >-
+      Month by month through July 1998, how did year-to-date revenue compare
+      with year-to-date revenue at the same point of 1997?
+    interpretation: |
+      Revenue = sum of extended_price * (1 - discount), assigned by order_date.
+      order_month = first day of each month 1998-01-01 through 1998-07-01 (7 rows).
+      ytd_revenue_1998 = revenue from 1998-01-01 through the last day of that month.
+      ytd_revenue_1997 = revenue from 1997-01-01 through the last day of the same month in 1997.
+      ytd_growth = ytd_revenue_1998 / ytd_revenue_1997 - 1, as a fraction. August 1998 is excluded (partial).
+    columns: [order_month, ytd_revenue_1998, ytd_revenue_1997, ytd_growth]
+    order_matters: false
+    sql: |
+      with m as (
+        select date_trunc('month', o_orderdate)::date as mo, sum(l_extendedprice * (1 - l_discount)) as r
+        from lineitem join orders on l_orderkey = o_orderkey
+        where o_orderdate between date '1997-01-01' and date '1997-07-31'
+           or o_orderdate between date '1998-01-01' and date '1998-07-31'
+        group by 1),
+      c as (select mo, sum(r) over (partition by year(mo) order by mo) as ytd from m)
+      select a.mo as order_month, a.ytd as ytd_revenue_1998, b.ytd as ytd_revenue_1997,
+             a.ytd / b.ytd - 1 as ytd_growth
+      from c a join c b on b.mo = a.mo - interval 1 year
+      where year(a.mo) = 1998
+
+  - id: B62
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: how dependent lifetime profit is on a handful of key accounts
+    question: >-
+      Who are our 20 most profitable customers over the whole history, and
+      what cumulative share of total margin do they represent?
+    interpretation: |
+      All line items, full history (orders 1992-01-01 to 1998-08-02).
+      Per customer: revenue = sum of extended_price * (1 - discount); margin = revenue - sum of supply_cost * quantity
+      (supply_cost from the line's part + supplier offer); margin_rate = margin / revenue.
+      Rank customers by margin descending, ties by customer_key ascending; margin_rank = 1..20.
+      cumulative_margin_share = running sum of margin from rank 1 through this rank / total margin of all customers,
+      as a fraction. 20 rows ordered by margin_rank.
+    columns: [margin_rank, customer_name, margin, margin_rate, cumulative_margin_share]
+    order_matters: true
+    sql: |
+      with c as (
+        select o_custkey, sum(l_extendedprice * (1 - l_discount)) as rev,
+               sum(l_extendedprice * (1 - l_discount)) - sum(ps_supplycost * l_quantity) as margin
+        from lineitem join orders on l_orderkey = o_orderkey
+        join partsupp on l_partkey = ps_partkey and l_suppkey = ps_suppkey
+        group by 1),
+      r as (
+        select o_custkey, rev, margin,
+               row_number() over (order by margin desc, o_custkey asc) as margin_rank,
+               sum(margin) over (order by margin desc, o_custkey asc rows between unbounded preceding and current row) as cum,
+               sum(margin) over () as tot
+        from c)
+      select margin_rank, c_name as customer_name, margin, margin / rev as margin_rate, cum / tot as cumulative_margin_share
+      from r join customer on o_custkey = c_custkey
+      where margin_rank <= 20 order by margin_rank
+
+  - id: B63
+    domain: finance
+    difficulty: hard
+    persona: FP&A Manager
+    decision: reading the underlying revenue trend without monthly seasonality for the board pack
+    question: >-
+      At the end of each month of 1997, what was our trailing twelve-month
+      revenue and how did it compare with the trailing twelve months a year
+      earlier?
+    interpretation: |
+      Revenue = sum of extended_price * (1 - discount), assigned by order_date.
+      order_month = first day of each month of 1997 (12 rows).
+      ttm_revenue = revenue on orders dated in the 12 calendar months ending with that month
+      (e.g. for 1997-03-01: 1996-04-01 through 1997-03-31 inclusive).
+      ttm_revenue_prior_year = the same 12-month window shifted back one year.
+      ttm_growth = ttm_revenue / ttm_revenue_prior_year - 1, as a fraction.
+    columns: [order_month, ttm_revenue, ttm_revenue_prior_year, ttm_growth]
+    order_matters: false
+    sql: |
+      with m as (
+        select date_trunc('month', o_orderdate)::date as mo, sum(l_extendedprice * (1 - l_discount)) as r
+        from lineitem join orders on l_orderkey = o_orderkey
+        group by 1),
+      t as (select mo, sum(r) over (order by mo rows between 11 preceding and current row) as ttm from m)
+      select a.mo as order_month, a.ttm as ttm_revenue, b.ttm as ttm_revenue_prior_year, a.ttm / b.ttm - 1 as ttm_growth
+      from t a join t b on b.mo = a.mo - interval 1 year
+      where year(a.mo) = 1997
+
+  - id: B64
+    domain: finance
+    difficulty: hard
+    persona: VP Sales
+    decision: how exposed each region is to a small number of very large orders
+    question: >-
+      In 1997, what share of each customer region's order value came from
+      orders in the top 10% by size company-wide?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive.
+      large_order_threshold = PERCENTILE_CONT 0.9 of total_price over all those orders (one company-wide value).
+      A large order has total_price > large_order_threshold.
+      Per customer_region_name: order_value = sum of total_price; large_order_value_share = order value of large orders /
+      order_value, as a fraction; large_order_count = number of large orders.
+      The threshold is repeated on every row. 5 rows.
+    columns: [customer_region_name, large_order_threshold, order_value, large_order_count, large_order_value_share]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_orderkey, o_totalprice, r_name
+        from orders join customer on o_custkey = c_custkey
+        join nation on c_nationkey = n_nationkey join region on n_regionkey = r_regionkey
+        where o_orderdate between date '1997-01-01' and date '1997-12-31'),
+      th as (select quantile_cont(o_totalprice, 0.9) as t from o)
+      select r_name as customer_region_name, max(th.t) as large_order_threshold, sum(o_totalprice) as order_value,
+             count(*) filter (where o_totalprice > th.t) as large_order_count,
+             sum(case when o_totalprice > th.t then o_totalprice else 0 end) / sum(o_totalprice) as large_order_value_share
+      from o, th group by 1
+
+  - id: B65
+    domain: finance
+    difficulty: hard
+    persona: Head of Procurement Finance
+    decision: sizing the cost savings available from routing purchases to the cheapest supplier offer
+    question: >-
+      For orders placed in 1997, how much would our cost of goods have fallen
+      if every line had been bought at the cheapest supplier offer for that
+      part, by manufacturer?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      actual_cost = sum of supply_cost * quantity, using the supply_cost of the line's own part + supplier offer.
+      cheapest_cost = sum of (minimum supply_cost across all supplier offers for that part) * quantity.
+      savings_opportunity = actual_cost - cheapest_cost.
+      savings_share = savings_opportunity / actual_cost, as a fraction. One row per part manufacturer (5 rows).
+    columns: [manufacturer, actual_cost, cheapest_cost, savings_opportunity, savings_share]
+    order_matters: false
+    sql: |
+      with mincost as (select ps_partkey, min(ps_supplycost) as min_cost from partsupp group by 1)
+      select p_mfgr as manufacturer,
+             sum(ps.ps_supplycost * l_quantity) as actual_cost,
+             sum(m.min_cost * l_quantity) as cheapest_cost,
+             sum(ps.ps_supplycost * l_quantity) - sum(m.min_cost * l_quantity) as savings_opportunity,
+             (sum(ps.ps_supplycost * l_quantity) - sum(m.min_cost * l_quantity)) / sum(ps.ps_supplycost * l_quantity) as savings_share
+      from lineitem join orders on l_orderkey = o_orderkey
+      join partsupp ps on l_partkey = ps.ps_partkey and l_suppkey = ps.ps_suppkey
+      join mincost m on l_partkey = m.ps_partkey
+      join part on l_partkey = p_partkey
+      where o_orderdate between date '1997-01-01' and date '1997-12-31'
+      group by 1
+
+  - id: B66
+    domain: finance
+    difficulty: medium
+    persona: Sales Finance Analyst
+    decision: whether urgent orders are being given away on price and should carry a surcharge
+    question: >-
+      For orders placed in 1997, what average discount and margin rate did we
+      achieve at each order priority?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      avg_discount = simple average of line discount (fraction).
+      revenue = sum of extended_price * (1 - discount); margin = revenue - sum of supply_cost * quantity
+      (supply_cost from the line's part + supplier offer); margin_rate = margin / revenue.
+      One row per order_priority (5 rows).
+    columns: [order_priority, avg_discount, revenue, margin_rate]
+    order_matters: false
+    sql: |
+      select o_orderpriority as order_priority, avg(l_discount) as avg_discount,
+             sum(l_extendedprice * (1 - l_discount)) as revenue,
+             (sum(l_extendedprice * (1 - l_discount)) - sum(ps_supplycost * l_quantity))
+               / sum(l_extendedprice * (1 - l_discount)) as margin_rate
+      from lineitem join orders on l_orderkey = o_orderkey
+      join partsupp on l_partkey = ps_partkey and l_suppkey = ps_suppkey
+      where o_orderdate between date '1997-01-01' and date '1997-12-31'
+      group by 1
+
+  - id: B67
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether order value is concentrated enough to justify a separate key-order desk
+    question: >-
+      If we split 1997 orders into ten equal-sized groups by order value, how
+      much of total order value does each group account for?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Rank orders by total_price descending (ties by order_key ascending) and split into 10 groups of as-equal-as-possible
+      size (NTILE(10) semantics: earlier groups get the extra order when the count is not divisible by 10);
+      value_decile = 1 for the largest orders through 10 for the smallest.
+      Per decile: order_count; order_value = sum of total_price; order_value_share = order_value / total 1997 order value;
+      min_total_price and max_total_price. 10 rows.
+    columns: [value_decile, order_count, order_value, order_value_share, min_total_price, max_total_price]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_totalprice, ntile(10) over (order by o_totalprice desc, o_orderkey asc) as value_decile
+        from orders where o_orderdate between date '1997-01-01' and date '1997-12-31')
+      select value_decile, count(*) as order_count, sum(o_totalprice) as order_value,
+             sum(o_totalprice) / (select sum(o_totalprice) from o) as order_value_share,
+             min(o_totalprice) as min_total_price, max(o_totalprice) as max_total_price
+      from o group by 1
+
+  # ---------------------------------------------------------------- MARKETING
+  - id: B68
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: how much lifetime value each acquisition cohort delivers to justify acquisition spend
+    question: >-
+      For customers grouped by the year of their first order (1992 to 1995),
+      how did the cohort's revenue in each later year compare with its
+      first-year revenue?
+    interpretation: |
+      first_order_year = calendar year of the customer's earliest order_date. Cohorts 1992..1995.
+      For each cohort and each order_year from first_order_year through 1997 inclusive:
+      revenue = revenue (sum of extended_price * (1 - discount)) of the cohort's customers on orders dated in order_year.
+      revenue_index = revenue / the cohort's revenue in its first_order_year (first year = 1.0).
+      18 rows (6 + 5 + 4 + 3).
+    columns: [first_order_year, order_year, revenue, revenue_index]
+    order_matters: false
+    sql: |
+      with f as (select o_custkey, year(min(o_orderdate)) as fy from orders group by 1),
+      r as (
+        select f.fy, year(o_orderdate) as yr, sum(l_extendedprice * (1 - l_discount)) as revenue
+        from lineitem join orders on l_orderkey = o_orderkey join f on f.o_custkey = orders.o_custkey
+        where f.fy between 1992 and 1995 and year(o_orderdate) <= 1997
+        group by 1, 2)
+      select a.fy as first_order_year, a.yr as order_year, a.revenue, a.revenue / b.revenue as revenue_index
+      from r a join r b on a.fy = b.fy and b.yr = b.fy
+
+  - id: B69
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: when to trigger the second-purchase nurture email for each segment
+    question: >-
+      How long does it typically take a customer to place their second order
+      after the first, by segment?
+    interpretation: |
+      All orders, full history. Only customers with at least 2 orders.
+      Order a customer's orders by order_date then order_key; first order = position 1, second order = position 2.
+      days_to_second_order = order_date of second order minus order_date of first order (whole days, can be 0).
+      Per market_segment: customer_count = customers with a second order;
+      median_days_to_second_order and p90_days_to_second_order = PERCENTILE_CONT 0.5 and 0.9. 5 rows.
+    columns: [market_segment, customer_count, median_days_to_second_order, p90_days_to_second_order]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_custkey, o_orderdate,
+               row_number() over (partition by o_custkey order by o_orderdate, o_orderkey) as pos
+        from orders),
+      d as (
+        select a.o_custkey, b.o_orderdate - a.o_orderdate as days
+        from o a join o b on a.o_custkey = b.o_custkey and a.pos = 1 and b.pos = 2)
+      select c_mktsegment as market_segment, count(*) as customer_count,
+             quantile_cont(days, 0.5) as median_days_to_second_order,
+             quantile_cont(days, 0.9) as p90_days_to_second_order
+      from d join customer on o_custkey = c_custkey group by 1
+
+  - id: B70
+    domain: marketing
+    difficulty: hard
+    persona: Category Manager
+    decision: which manufacturer lines to bundle or cross-promote together
+    question: >-
+      In 1997 orders, which pairs of manufacturers were bought together in the
+      same order more often than chance would predict?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive; N = number of such orders.
+      An order contains a manufacturer if at least one of its lines is for a part of that manufacturer.
+      For every unordered pair (manufacturer_a < manufacturer_b alphabetically):
+      orders_with_both = orders containing both; lift = (orders_with_both / N) /
+      ((orders containing a / N) * (orders containing b / N)). 10 rows, all pairs shown.
+    columns: [manufacturer_a, manufacturer_b, orders_with_both, lift]
+    order_matters: false
+    sql: |
+      with om as (
+        select distinct l_orderkey, p_mfgr
+        from lineitem join orders on l_orderkey = o_orderkey join part on l_partkey = p_partkey
+        where o_orderdate between date '1997-01-01' and date '1997-12-31'),
+      n as (select count(*) as n from orders where o_orderdate between date '1997-01-01' and date '1997-12-31'),
+      cnt as (select p_mfgr, count(*) as c from om group by 1),
+      pairs as (
+        select a.p_mfgr as ma, b.p_mfgr as mb, count(*) as both_n
+        from om a join om b on a.l_orderkey = b.l_orderkey and a.p_mfgr < b.p_mfgr
+        group by 1, 2)
+      select ma as manufacturer_a, mb as manufacturer_b, both_n as orders_with_both,
+             (both_n * 1.0 / n.n) / ((ca.c * 1.0 / n.n) * (cb.c * 1.0 / n.n)) as lift
+      from pairs join cnt ca on ca.p_mfgr = ma join cnt cb on cb.p_mfgr = mb, n
+
+  - id: B71
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: whether lapsed customers come back on their own or need a win-back program
+    question: >-
+      Of the customers who bought in 1994 but not in 1995, how many came back
+      in 1996 or 1997, by segment?
+    interpretation: |
+      Lapsed customer = at least one order with order_date in 1994 and no order dated in 1995.
+      Reactivated = a lapsed customer with at least one order dated between 1996-01-01 and 1997-12-31 inclusive.
+      Per market_segment: lapsed_customer_count, reactivated_customer_count,
+      reactivation_share = reactivated / lapsed, as a fraction. 5 rows.
+    columns: [market_segment, lapsed_customer_count, reactivated_customer_count, reactivation_share]
+    order_matters: false
+    sql: |
+      with c94 as (select distinct o_custkey from orders where year(o_orderdate) = 1994),
+      c95 as (select distinct o_custkey from orders where year(o_orderdate) = 1995),
+      c9697 as (select distinct o_custkey from orders where o_orderdate between date '1996-01-01' and date '1997-12-31'),
+      lapsed as (select o_custkey from c94 where o_custkey not in (select o_custkey from c95))
+      select c_mktsegment as market_segment, count(*) as lapsed_customer_count,
+             count(*) filter (where lapsed.o_custkey in (select o_custkey from c9697)) as reactivated_customer_count,
+             count(*) filter (where lapsed.o_custkey in (select o_custkey from c9697)) * 1.0 / count(*) as reactivation_share
+      from lapsed join customer on lapsed.o_custkey = c_custkey
+      group by 1
+
+  - id: B72
+    domain: marketing
+    difficulty: medium
+    persona: VP Sales
+    decision: whether first orders are trial-sized and onboarding offers should push bigger opening baskets
+    question: >-
+      How does the value of a customer's first order compare with the value of
+      their later orders, by segment?
+    interpretation: |
+      All orders, full history. First order = the customer's earliest order by order_date, ties by order_key ascending.
+      first_order_avg_value = average total_price of first orders; repeat_order_avg_value = average total_price of all
+      other orders. first_to_repeat_ratio = first_order_avg_value / repeat_order_avg_value. Per market_segment (5 rows).
+    columns: [market_segment, first_order_avg_value, repeat_order_avg_value, first_to_repeat_ratio]
+    order_matters: false
+    sql: |
+      with o as (
+        select o_custkey, o_totalprice,
+               row_number() over (partition by o_custkey order by o_orderdate, o_orderkey) as pos
+        from orders)
+      select c_mktsegment as market_segment,
+             avg(case when pos = 1 then o_totalprice end) as first_order_avg_value,
+             avg(case when pos > 1 then o_totalprice end) as repeat_order_avg_value,
+             avg(case when pos = 1 then o_totalprice end) / avg(case when pos > 1 then o_totalprice end) as first_to_repeat_ratio
+      from o join customer on o_custkey = c_custkey group by 1
+
+  - id: B73
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: how stable customer value tiers are year to year, to set the tier-review cadence
+    question: >-
+      Among customers who bought in both 1996 and 1997, how did they move
+      between revenue quartiles from one year to the next?
+    interpretation: |
+      Customers with at least one order dated in 1996 and at least one dated in 1997.
+      For each year separately, rank these customers by that year's revenue (sum of extended_price * (1 - discount) on
+      orders dated in that year) descending, ties by customer_key ascending, and split into 4 groups with NTILE(4)
+      semantics; quartile 1 = highest revenue.
+      customer_count = customers in each (revenue_quartile_1996, revenue_quartile_1997) combination.
+      16 rows; combinations with zero customers appear with 0.
+    columns: [revenue_quartile_1996, revenue_quartile_1997, customer_count]
+    order_matters: false
+    sql: |
+      with r as (
+        select o_custkey,
+               sum(case when year(o_orderdate) = 1996 then l_extendedprice * (1 - l_discount) else 0 end) as r96,
+               sum(case when year(o_orderdate) = 1997 then l_extendedprice * (1 - l_discount) else 0 end) as r97,
+               max(case when year(o_orderdate) = 1996 then 1 else 0 end) as in96,
+               max(case when year(o_orderdate) = 1997 then 1 else 0 end) as in97
+        from lineitem join orders on l_orderkey = o_orderkey
+        where o_orderdate between date '1996-01-01' and date '1997-12-31'
+        group by 1),
+      b as (select * from r where in96 = 1 and in97 = 1),
+      q as (
+        select ntile(4) over (order by r96 desc, o_custkey asc) as q96,
+               ntile(4) over (order by r97 desc, o_custkey asc) as q97
+        from b),
+      grid as (select a.i as q96, b.i as q97 from range(1, 5) a(i), range(1, 5) b(i))
+      select grid.q96 as revenue_quartile_1996, grid.q97 as revenue_quartile_1997,
+             count(q.q96) as customer_count
+      from grid left join q on q.q96 = grid.q96 and q.q97 = grid.q97
+      group by 1, 2
+
+  - id: B74
+    domain: marketing
+    difficulty: medium
+    persona: Marketing Director
+    decision: how big the untapped prospect base is in each segment for an activation campaign
+    question: >-
+      How many customers on file have never placed an order, by segment, and
+      how do their account balances compare with customers who have ordered?
+    interpretation: |
+      All customers on file. Never ordered = no orders at all.
+      never_ordered_count = such customers per market_segment;
+      never_ordered_share = never_ordered_count / all customers in the segment, as a fraction.
+      avg_balance_never_ordered = mean account_balance of never-ordered customers;
+      avg_balance_ordered = mean account_balance of customers with at least one order. 5 rows.
+    columns: [market_segment, never_ordered_count, never_ordered_share, avg_balance_never_ordered, avg_balance_ordered]
+    order_matters: false
+    sql: |
+      with c as (
+        select c_custkey, c_mktsegment, c_acctbal,
+               exists (select 1 from orders where o_custkey = c_custkey) as has_order
+        from customer)
+      select c_mktsegment as market_segment,
+             count(*) filter (where not has_order) as never_ordered_count,
+             count(*) filter (where not has_order) * 1.0 / count(*) as never_ordered_share,
+             avg(c_acctbal) filter (where not has_order) as avg_balance_never_ordered,
+             avg(c_acctbal) filter (where has_order) as avg_balance_ordered
+      from c group by 1
+
+  - id: B75
+    domain: marketing
+    difficulty: hard
+    persona: Category Manager
+    decision: whether broadening the brands a customer buys is worth targeting as a growth lever
+    question: >-
+      In 1997, how did customers who bought across many brands compare in
+      spend with those who bought from only a few?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Per customer: brand count = number of distinct part brands bought; revenue = sum of extended_price * (1 - discount).
+      brand_count_bucket labels: '1-2', '3-5', '6-10', '11+'.
+      customer_count = customers in the bucket; avg_revenue_per_customer = bucket revenue / customer_count;
+      revenue_share = bucket revenue / total 1997 revenue, as a fraction. 4 rows.
+    columns: [brand_count_bucket, customer_count, avg_revenue_per_customer, revenue_share]
+    order_matters: false
+    sql: |
+      with c as (
+        select o_custkey, count(distinct p_brand) as nb, sum(l_extendedprice * (1 - l_discount)) as rev
+        from lineitem join orders on l_orderkey = o_orderkey join part on l_partkey = p_partkey
+        where o_orderdate between date '1997-01-01' and date '1997-12-31'
+        group by 1)
+      select case when nb <= 2 then '1-2' when nb <= 5 then '3-5' when nb <= 10 then '6-10' else '11+' end as brand_count_bucket,
+             count(*) as customer_count, sum(rev) / count(*) as avg_revenue_per_customer,
+             sum(rev) / (select sum(rev) from c) as revenue_share
+      from c group by 1

@@ -1,0 +1,6 @@
+market_segment,customer_count,median_days_to_second_order,p90_days_to_second_order
+AUTOMOBILE,19872,115.0,436.0
+HOUSEHOLD,20024,116.0,429.0
+BUILDING,20176,117.0,424.0
+FURNITURE,19962,117.0,428.0
+MACHINERY,19945,116.0,426.0

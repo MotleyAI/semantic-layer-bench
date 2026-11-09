@@ -1,0 +1,437 @@
+questions:
+  # ---------------------------------------------------------------- OPERATIONS
+  - id: B51
+    domain: operations
+    difficulty: hard
+    persona: Supply Chain Director
+    decision: how many supplier relationships need strategic account management versus transactional handling
+    question: >-
+      How many of our suppliers account for 80% of the revenue we booked on
+      orders placed in 1997?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Revenue = sum of extended_price * (1 - discount) per supplier.
+      active_supplier_count = number of distinct suppliers with at least one such line.
+      Sort suppliers by revenue descending (ties by supplier_key ascending) and accumulate.
+      suppliers_for_80pct_revenue = the smallest number of top suppliers whose cumulative revenue is
+      >= 0.8 * total 1997 revenue.
+      supplier_share_for_80pct = suppliers_for_80pct_revenue / active_supplier_count, as a fraction. One row.
+    columns: [active_supplier_count, suppliers_for_80pct_revenue, supplier_share_for_80pct]
+    order_matters: false
+
+  - id: B52
+    domain: operations
+    difficulty: hard
+    persona: Head of Logistics
+    decision: what delivery-time guarantee each carrier type can safely support in customer contracts
+    question: >-
+      For lines shipped in 1997, what are the median and 90th-percentile
+      transit times for each shipping mode?
+    interpretation: |
+      Line items with ship_date between 1997-01-01 and 1997-12-31 inclusive.
+      transit days = receipt_date minus ship_date, in whole days.
+      median_transit_days and p90_transit_days = continuous-interpolation percentiles (PERCENTILE_CONT at 0.5
+      and 0.9) of transit days over the lines of each ship_mode. line_count = number of lines. 7 rows.
+    columns: [ship_mode, line_count, median_transit_days, p90_transit_days]
+    order_matters: false
+
+  - id: B53
+    domain: operations
+    difficulty: hard
+    persona: COO
+    decision: whether perfect-order performance is improving and whether urgent orders get preferential treatment
+    question: >-
+      What share of our orders arrived complete and on time (every line by its
+      promised date), by year and order priority, from 1993 to 1997?
+    interpretation: |
+      Orders with order_date between 1993-01-01 and 1997-12-31 inclusive, all statuses; order_year = calendar
+      year of order_date (integer).
+      An order is perfect when none of its lines has receipt_date > commit_date.
+      perfect_order_share = perfect orders / all orders in that year and order_priority, as a fraction.
+      order_count = number of orders. 25 rows (5 years x 5 priorities).
+    columns: [order_year, order_priority, order_count, perfect_order_share]
+    order_matters: false
+
+  - id: B54
+    domain: operations
+    difficulty: medium
+    persona: Customer Service Director
+    decision: whether our promised lead times are realistic for each priority level
+    question: >-
+      For orders placed in 1997, how long a lead time do we promise on average
+      versus how long customers actually wait, by order priority?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      promised days = commit_date minus order_date; actual days = receipt_date minus order_date (whole days).
+      avg_promised_days and avg_actual_days = means over lines; avg_gap_days = avg_actual_days - avg_promised_days.
+      One row per order_priority (5 rows).
+    columns: [order_priority, avg_promised_days, avg_actual_days, avg_gap_days]
+    order_matters: false
+
+  - id: B55
+    domain: operations
+    difficulty: hard
+    persona: Head of Logistics
+    decision: whether a month of bad on-time performance is noise or the start of a trend
+    question: >-
+      Month by month over 1996 and 1997, what was our late-delivery rate and
+      its rolling three-month rate?
+    interpretation: |
+      Line items bucketed by ship month; ship_month = first day of the ship month (date).
+      Late = receipt_date > commit_date.
+      late_share = late lines / all lines shipped in the month, as a fraction.
+      rolling_3m_late_share = late lines / all lines pooled over the month and the two preceding months
+      (so January 1996 uses November 1995 through January 1996 shipments).
+      Output months 1996-01-01 through 1997-12-01 (24 rows).
+    columns: [ship_month, late_share, rolling_3m_late_share]
+    order_matters: false
+
+  - id: B56
+    domain: operations
+    difficulty: medium
+    persona: Quality Manager
+    decision: whether particular shipping methods or handling instructions cause damage and returns
+    question: >-
+      For lines received in 1993 and 1994, how does the return rate for each
+      combination of shipping mode and shipping instruction compare with our
+      overall return rate?
+    interpretation: |
+      Line items with receipt_date between 1993-01-01 and 1994-12-31 inclusive.
+      Returned = return_flag = 'R'. returned_share = returned lines / all lines for the ship_mode and ship_instruct
+      combination, as a fraction.
+      return_rate_index = returned_share / overall returned share of all lines in the period (1.0 = average).
+      One row per ship_mode x ship_instruct (28 rows).
+    columns: [ship_mode, ship_instruct, line_count, returned_share, return_rate_index]
+    order_matters: false
+
+  - id: B57
+    domain: operations
+    difficulty: hard
+    persona: Procurement Director
+    decision: how many suppliers in each region need a reliability review against their regional peers
+    question: >-
+      In 1997, how many suppliers in each region had a late-delivery rate at
+      least 10 points worse than their region's overall rate?
+    interpretation: |
+      Line items with ship_date between 1997-01-01 and 1997-12-31 inclusive. Late = receipt_date > commit_date.
+      region_late_share = late lines / all lines of all suppliers in that supplier_region_name.
+      Supplier late_share = late lines / all lines of the supplier; only suppliers with at least 50 such lines qualify.
+      qualifying_supplier_count = qualifying suppliers in the region.
+      outlier_supplier_count = qualifying suppliers with late_share >= region_late_share + 0.10.
+      outlier_share = outlier_supplier_count / qualifying_supplier_count, as a fraction. 5 rows.
+    columns: [supplier_region_name, region_late_share, qualifying_supplier_count, outlier_supplier_count, outlier_share]
+    order_matters: false
+
+  - id: B58
+    domain: operations
+    difficulty: hard
+    persona: Warehouse Operations Manager
+    decision: whether split shipments are stretching out multi-line orders and need consolidation rules
+    question: >-
+      For multi-line orders placed in 1996, how many days separate the first
+      and last shipment of an order, by order priority?
+    interpretation: |
+      Orders with order_date between 1996-01-01 and 1996-12-31 inclusive that have at least 2 line items.
+      ship_span_days = latest ship_date minus earliest ship_date among the order's lines, in whole days.
+      order_count = number of such orders; median_ship_span_days and p90_ship_span_days = PERCENTILE_CONT 0.5 and 0.9
+      of ship_span_days over the orders of each order_priority. 5 rows.
+    columns: [order_priority, order_count, median_ship_span_days, p90_ship_span_days]
+    order_matters: false
+
+  # ---------------------------------------------------------------- FINANCE
+  - id: B59
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether revenue growth by manufacturer came from selling more units or from higher realised prices
+    question: >-
+      Breaking down the change in revenue from 1996 to 1997 for each
+      manufacturer, how much came from volume and how much from price per unit?
+    interpretation: |
+      Line items assigned to year by the order's order_date (1996 and 1997 calendar years).
+      Per manufacturer and year: revenue = sum of extended_price * (1 - discount); total_quantity = sum of quantity;
+      net price per unit = revenue / total_quantity.
+      volume_effect = (total_quantity_1997 - total_quantity_1996) * net price per unit 1996.
+      price_effect = (net price per unit 1997 - net price per unit 1996) * total_quantity_1997.
+      revenue_change = revenue_1997 - revenue_1996 (equals volume_effect + price_effect). 5 rows.
+    columns: [manufacturer, revenue_1996, revenue_1997, revenue_change, volume_effect, price_effect]
+    order_matters: false
+
+  - id: B60
+    domain: finance
+    difficulty: hard
+    persona: Head of Pricing
+    decision: whether margin dispersion across regular customers in a segment calls for account-level pricing
+    question: >-
+      Among customers who placed at least three orders in 1997, how widely did
+      their margin rate vary within each segment?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Only customers with at least 3 distinct orders dated in 1997.
+      Customer margin rate = (revenue - sum of supply_cost * quantity) / revenue over the customer's 1997 lines,
+      with revenue = sum of extended_price * (1 - discount) and supply_cost from the line's part + supplier offer.
+      Per market_segment: customer_count = qualifying customers; p25_margin_rate, median_margin_rate,
+      p75_margin_rate = PERCENTILE_CONT 0.25, 0.5, 0.75 of customer margin rates. 5 rows.
+    columns: [market_segment, customer_count, p25_margin_rate, median_margin_rate, p75_margin_rate]
+    order_matters: false
+
+  - id: B61
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether 1998 is tracking ahead of 1997 as the year progresses
+    question: >-
+      Month by month through July 1998, how did year-to-date revenue compare
+      with year-to-date revenue at the same point of 1997?
+    interpretation: |
+      Revenue = sum of extended_price * (1 - discount), assigned by order_date.
+      order_month = first day of each month 1998-01-01 through 1998-07-01 (7 rows).
+      ytd_revenue_1998 = revenue from 1998-01-01 through the last day of that month.
+      ytd_revenue_1997 = revenue from 1997-01-01 through the last day of the same month in 1997.
+      ytd_growth = ytd_revenue_1998 / ytd_revenue_1997 - 1, as a fraction. August 1998 is excluded (partial).
+    columns: [order_month, ytd_revenue_1998, ytd_revenue_1997, ytd_growth]
+    order_matters: false
+
+  - id: B62
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: how dependent lifetime profit is on a handful of key accounts
+    question: >-
+      Who are our 20 most profitable customers over the whole history, and
+      what cumulative share of total margin do they represent?
+    interpretation: |
+      All line items, full history (orders 1992-01-01 to 1998-08-02).
+      Per customer: revenue = sum of extended_price * (1 - discount); margin = revenue - sum of supply_cost * quantity
+      (supply_cost from the line's part + supplier offer); margin_rate = margin / revenue.
+      Rank customers by margin descending, ties by customer_key ascending; margin_rank = 1..20.
+      cumulative_margin_share = running sum of margin from rank 1 through this rank / total margin of all customers,
+      as a fraction. 20 rows ordered by margin_rank.
+    columns: [margin_rank, customer_name, margin, margin_rate, cumulative_margin_share]
+    order_matters: true
+
+  - id: B63
+    domain: finance
+    difficulty: hard
+    persona: FP&A Manager
+    decision: reading the underlying revenue trend without monthly seasonality for the board pack
+    question: >-
+      At the end of each month of 1997, what was our trailing twelve-month
+      revenue and how did it compare with the trailing twelve months a year
+      earlier?
+    interpretation: |
+      Revenue = sum of extended_price * (1 - discount), assigned by order_date.
+      order_month = first day of each month of 1997 (12 rows).
+      ttm_revenue = revenue on orders dated in the 12 calendar months ending with that month
+      (e.g. for 1997-03-01: 1996-04-01 through 1997-03-31 inclusive).
+      ttm_revenue_prior_year = the same 12-month window shifted back one year.
+      ttm_growth = ttm_revenue / ttm_revenue_prior_year - 1, as a fraction.
+    columns: [order_month, ttm_revenue, ttm_revenue_prior_year, ttm_growth]
+    order_matters: false
+
+  - id: B64
+    domain: finance
+    difficulty: hard
+    persona: VP Sales
+    decision: how exposed each region is to a small number of very large orders
+    question: >-
+      In 1997, what share of each customer region's order value came from
+      orders in the top 10% by size company-wide?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive.
+      large_order_threshold = PERCENTILE_CONT 0.9 of total_price over all those orders (one company-wide value).
+      A large order has total_price > large_order_threshold.
+      Per customer_region_name: order_value = sum of total_price; large_order_value_share = order value of large orders /
+      order_value, as a fraction; large_order_count = number of large orders.
+      The threshold is repeated on every row. 5 rows.
+    columns: [customer_region_name, large_order_threshold, order_value, large_order_count, large_order_value_share]
+    order_matters: false
+
+  - id: B65
+    domain: finance
+    difficulty: hard
+    persona: Head of Procurement Finance
+    decision: sizing the cost savings available from routing purchases to the cheapest supplier offer
+    question: >-
+      For orders placed in 1997, how much would our cost of goods have fallen
+      if every line had been bought at the cheapest supplier offer for that
+      part, by manufacturer?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      actual_cost = sum of supply_cost * quantity, using the supply_cost of the line's own part + supplier offer.
+      cheapest_cost = sum of (minimum supply_cost across all supplier offers for that part) * quantity.
+      savings_opportunity = actual_cost - cheapest_cost.
+      savings_share = savings_opportunity / actual_cost, as a fraction. One row per part manufacturer (5 rows).
+    columns: [manufacturer, actual_cost, cheapest_cost, savings_opportunity, savings_share]
+    order_matters: false
+
+  - id: B66
+    domain: finance
+    difficulty: medium
+    persona: Sales Finance Analyst
+    decision: whether urgent orders are being given away on price and should carry a surcharge
+    question: >-
+      For orders placed in 1997, what average discount and margin rate did we
+      achieve at each order priority?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      avg_discount = simple average of line discount (fraction).
+      revenue = sum of extended_price * (1 - discount); margin = revenue - sum of supply_cost * quantity
+      (supply_cost from the line's part + supplier offer); margin_rate = margin / revenue.
+      One row per order_priority (5 rows).
+    columns: [order_priority, avg_discount, revenue, margin_rate]
+    order_matters: false
+
+  - id: B67
+    domain: finance
+    difficulty: hard
+    persona: CFO
+    decision: whether order value is concentrated enough to justify a separate key-order desk
+    question: >-
+      If we split 1997 orders into ten equal-sized groups by order value, how
+      much of total order value does each group account for?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Rank orders by total_price descending (ties by order_key ascending) and split into 10 groups of as-equal-as-possible
+      size (NTILE(10) semantics: earlier groups get the extra order when the count is not divisible by 10);
+      value_decile = 1 for the largest orders through 10 for the smallest.
+      Per decile: order_count; order_value = sum of total_price; order_value_share = order_value / total 1997 order value;
+      min_total_price and max_total_price. 10 rows.
+    columns: [value_decile, order_count, order_value, order_value_share, min_total_price, max_total_price]
+    order_matters: false
+
+  # ---------------------------------------------------------------- MARKETING
+  - id: B68
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: how much lifetime value each acquisition cohort delivers to justify acquisition spend
+    question: >-
+      For customers grouped by the year of their first order (1992 to 1995),
+      how did the cohort's revenue in each later year compare with its
+      first-year revenue?
+    interpretation: |
+      first_order_year = calendar year of the customer's earliest order_date. Cohorts 1992..1995.
+      For each cohort and each order_year from first_order_year through 1997 inclusive:
+      revenue = revenue (sum of extended_price * (1 - discount)) of the cohort's customers on orders dated in order_year.
+      revenue_index = revenue / the cohort's revenue in its first_order_year (first year = 1.0).
+      18 rows (6 + 5 + 4 + 3).
+    columns: [first_order_year, order_year, revenue, revenue_index]
+    order_matters: false
+
+  - id: B69
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: when to trigger the second-purchase nurture email for each segment
+    question: >-
+      How long does it typically take a customer to place their second order
+      after the first, by segment?
+    interpretation: |
+      All orders, full history. Only customers with at least 2 orders.
+      Order a customer's orders by order_date then order_key; first order = position 1, second order = position 2.
+      days_to_second_order = order_date of second order minus order_date of first order (whole days, can be 0).
+      Per market_segment: customer_count = customers with a second order;
+      median_days_to_second_order and p90_days_to_second_order = PERCENTILE_CONT 0.5 and 0.9. 5 rows.
+    columns: [market_segment, customer_count, median_days_to_second_order, p90_days_to_second_order]
+    order_matters: false
+
+  - id: B70
+    domain: marketing
+    difficulty: hard
+    persona: Category Manager
+    decision: which manufacturer lines to bundle or cross-promote together
+    question: >-
+      In 1997 orders, which pairs of manufacturers were bought together in the
+      same order more often than chance would predict?
+    interpretation: |
+      Orders with order_date between 1997-01-01 and 1997-12-31 inclusive; N = number of such orders.
+      An order contains a manufacturer if at least one of its lines is for a part of that manufacturer.
+      For every unordered pair (manufacturer_a < manufacturer_b alphabetically):
+      orders_with_both = orders containing both; lift = (orders_with_both / N) /
+      ((orders containing a / N) * (orders containing b / N)). 10 rows, all pairs shown.
+    columns: [manufacturer_a, manufacturer_b, orders_with_both, lift]
+    order_matters: false
+
+  - id: B71
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: whether lapsed customers come back on their own or need a win-back program
+    question: >-
+      Of the customers who bought in 1994 but not in 1995, how many came back
+      in 1996 or 1997, by segment?
+    interpretation: |
+      Lapsed customer = at least one order with order_date in 1994 and no order dated in 1995.
+      Reactivated = a lapsed customer with at least one order dated between 1996-01-01 and 1997-12-31 inclusive.
+      Per market_segment: lapsed_customer_count, reactivated_customer_count,
+      reactivation_share = reactivated / lapsed, as a fraction. 5 rows.
+    columns: [market_segment, lapsed_customer_count, reactivated_customer_count, reactivation_share]
+    order_matters: false
+
+  - id: B72
+    domain: marketing
+    difficulty: medium
+    persona: VP Sales
+    decision: whether first orders are trial-sized and onboarding offers should push bigger opening baskets
+    question: >-
+      How does the value of a customer's first order compare with the value of
+      their later orders, by segment?
+    interpretation: |
+      All orders, full history. First order = the customer's earliest order by order_date, ties by order_key ascending.
+      first_order_avg_value = average total_price of first orders; repeat_order_avg_value = average total_price of all
+      other orders. first_to_repeat_ratio = first_order_avg_value / repeat_order_avg_value. Per market_segment (5 rows).
+    columns: [market_segment, first_order_avg_value, repeat_order_avg_value, first_to_repeat_ratio]
+    order_matters: false
+
+  - id: B73
+    domain: marketing
+    difficulty: hard
+    persona: Head of CRM
+    decision: how stable customer value tiers are year to year, to set the tier-review cadence
+    question: >-
+      Among customers who bought in both 1996 and 1997, how did they move
+      between revenue quartiles from one year to the next?
+    interpretation: |
+      Customers with at least one order dated in 1996 and at least one dated in 1997.
+      For each year separately, rank these customers by that year's revenue (sum of extended_price * (1 - discount) on
+      orders dated in that year) descending, ties by customer_key ascending, and split into 4 groups with NTILE(4)
+      semantics; quartile 1 = highest revenue.
+      customer_count = customers in each (revenue_quartile_1996, revenue_quartile_1997) combination.
+      16 rows; combinations with zero customers appear with 0.
+    columns: [revenue_quartile_1996, revenue_quartile_1997, customer_count]
+    order_matters: false
+
+  - id: B74
+    domain: marketing
+    difficulty: medium
+    persona: Marketing Director
+    decision: how big the untapped prospect base is in each segment for an activation campaign
+    question: >-
+      How many customers on file have never placed an order, by segment, and
+      how do their account balances compare with customers who have ordered?
+    interpretation: |
+      All customers on file. Never ordered = no orders at all.
+      never_ordered_count = such customers per market_segment;
+      never_ordered_share = never_ordered_count / all customers in the segment, as a fraction.
+      avg_balance_never_ordered = mean account_balance of never-ordered customers;
+      avg_balance_ordered = mean account_balance of customers with at least one order. 5 rows.
+    columns: [market_segment, never_ordered_count, never_ordered_share, avg_balance_never_ordered, avg_balance_ordered]
+    order_matters: false
+
+  - id: B75
+    domain: marketing
+    difficulty: hard
+    persona: Category Manager
+    decision: whether broadening the brands a customer buys is worth targeting as a growth lever
+    question: >-
+      In 1997, how did customers who bought across many brands compare in
+      spend with those who bought from only a few?
+    interpretation: |
+      Line items whose order has order_date between 1997-01-01 and 1997-12-31 inclusive.
+      Per customer: brand count = number of distinct part brands bought; revenue = sum of extended_price * (1 - discount).
+      brand_count_bucket labels: '1-2', '3-5', '6-10', '11+'.
+      customer_count = customers in the bucket; avg_revenue_per_customer = bucket revenue / customer_count;
+      revenue_share = bucket revenue / total 1997 revenue, as a fraction. 4 rows.
+    columns: [brand_count_bucket, customer_count, avg_revenue_per_customer, revenue_share]
+    order_matters: false

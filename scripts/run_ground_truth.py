@@ -14,7 +14,8 @@ import duckdb
 import yaml
 
 root = Path(__file__).resolve().parent.parent
-# --blind: questions_blind/questions.yaml -> ground_truth_blind/ (questions carry domain and
+# Optional question ids after the flags regenerate only those answers and keep the rest of the
+# manifest. --blind: questions_blind/questions.yaml -> ground_truth_blind/ (questions carry domain and
 # difficulty instead of a pattern).
 BLIND = "--blind" in sys.argv
 suffix = "_blind" if BLIND else ""
@@ -40,8 +41,14 @@ ids = [q["id"] for q in spec["questions"]]
 if len(ids) != len(set(ids)):
     errors.append("duplicate question ids")
 
+ONLY = {a for a in sys.argv[1:] if not a.startswith("--")}  # optional ids: run only these
+if ONLY and (outdir / "MANIFEST.json").exists():
+    manifest = json.loads((outdir / "MANIFEST.json").read_text())["answers"]
+
 for q in spec["questions"]:
     qid = q["id"]
+    if ONLY and qid not in ONLY:
+        continue
     if BLIND:
         if q.get("domain") not in DOMAINS or q.get("difficulty") not in DIFFICULTIES:
             errors.append(f"{qid}: bad domain/difficulty")

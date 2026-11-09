@@ -1,0 +1,6 @@
+order_priority,order_count,median_ship_span_days,p90_ship_span_days
+1-URGENT,39454,77.0,106.0
+4-NOT SPECIFIED,39429,77.0,106.0
+5-LOW,39035,77.0,106.0
+3-MEDIUM,39084,77.0,107.0
+2-HIGH,39065,77.0,106.0

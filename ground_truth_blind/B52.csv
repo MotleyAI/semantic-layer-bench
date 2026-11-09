@@ -1,0 +1,8 @@
+ship_mode,line_count,median_transit_days,p90_transit_days
+AIR,130141,16.0,28.0
+REG AIR,130299,15.0,27.0
+TRUCK,130981,16.0,27.0
+FOB,130327,16.0,27.0
+SHIP,129890,16.0,28.0
+RAIL,129871,16.0,27.0
+MAIL,129886,16.0,28.0
