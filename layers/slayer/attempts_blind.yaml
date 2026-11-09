@@ -1,0 +1,737 @@
+# SLayer 1.7.0 attempts, blind round (B01..B50). Only model-declared fields and metrics are
+# referenced (dataset fields such as ship_date, commit_date, customer_key; metrics such as revenue).
+# Physical columns that the OSSIE import also exposes (l_suppkey, o_custkey, ...) are never used.
+
+- id: B01
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [ship_mode]
+    measures:
+      - line_count
+      - {formula: "avg(iif(receipt_date > commit_date, 1.0, 0.0))", name: late_share}
+  columns: {ship_mode: lineitem.ship_mode, line_count: lineitem.line_count, late_share: lineitem.late_share}
+
+- id: B02
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [supplier.supplier_nation.supplier_region.supplier_region_name]
+    measures:
+      - {formula: "avg(iif(return_flag == 'R', 1.0, 0.0))", name: returned_share}
+  columns:
+    supplier_region_name: lineitem.supplier.supplier_nation.supplier_region.supplier_region_name
+    returned_share: lineitem.returned_share
+
+- id: B03
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [ship_mode]
+    measures: [total_quantity]
+    filters: ["ship_date in '1997'"]
+  columns: {ship_mode: lineitem.ship_mode, total_quantity: lineitem.total_quantity}
+
+- id: B04
+  status: attempted
+  interface: query
+  query:
+    source_model: partsupp
+    dimensions: [supplier.supplier_nation.supplier_region.supplier_region_name]
+    measures: [total_available_qty]
+  columns:
+    supplier_region_name: partsupp.supplier.supplier_nation.supplier_region.supplier_region_name
+    total_available_qty: partsupp.total_available_qty
+
+- id: B05
+  status: attempted
+  interface: query
+  query: {source_model: orders, dimensions: [order_status], measures: [order_count]}
+  columns: {order_status: orders.order_status, order_count: orders.order_count}
+
+- id: B06
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [ship_mode]
+    measures: [{formula: "avg(date_diff('day', ship_date, receipt_date))", name: avg_transit_days}]
+    filters: ["ship_date in '1997'"]
+  columns: {ship_mode: lineitem.ship_mode, avg_transit_days: lineitem.avg_transit_days}
+
+- id: B07
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [supplier.supplier_name]
+    measures:
+      - line_count
+      - {formula: "avg(iif(receipt_date > commit_date, 1.0, 0.0))", name: late_share}
+    filters: ["receipt_date >= '1996'", "receipt_date <= '1997'", "line_count >= 100"]
+    order:
+      - {column: late_share, direction: desc}
+      - {column: supplier.supplier_name, direction: asc}
+    limit: 10
+  columns:
+    supplier_name: lineitem.supplier.supplier_name
+    line_count: lineitem.line_count
+    late_share: lineitem.late_share
+
+- id: B08
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.order_priority]
+    measures:
+      - line_count
+      - {formula: "avg(iif(receipt_date > commit_date, 1.0, 0.0))", name: late_share}
+    filters: ["orders.order_date in '1995'"]
+  columns:
+    order_priority: lineitem.orders.order_priority
+    line_count: lineitem.line_count
+    late_share: lineitem.late_share
+
+- id: B09
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    time_dimensions: [{dimension: ship_date, granularity: month, date_range: "1997"}]
+    measures:
+      - {formula: "avg(iif(receipt_date > commit_date, 1.0, 0.0))", name: late_share}
+  columns: {ship_month: lineitem.ship_date, late_share: lineitem.late_share}
+
+- id: B10
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [part.manufacturer]
+    measures:
+      - {formula: "sum(iif(return_flag == 'R', quantity, 0)) / total_quantity", name: returned_qty_share}
+    filters: ["receipt_date in '1994'"]
+  columns: {manufacturer: lineitem.part.manufacturer, returned_qty_share: lineitem.returned_qty_share}
+
+- id: B11
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [supplier.supplier_nation.supplier_nation_name]
+    measures:
+      - {formula: line_count, name: late_line_count}
+      - {formula: "avg(date_diff('day', commit_date, receipt_date))", name: avg_days_late}
+    filters: ["ship_date in '1996'", "receipt_date > commit_date"]
+  columns:
+    supplier_nation_name: lineitem.supplier.supplier_nation.supplier_nation_name
+    late_line_count: lineitem.late_line_count
+    avg_days_late: lineitem.avg_days_late
+
+- id: B12
+  status: attempted
+  interface: query
+  query:
+    source_model: part
+    dimensions: [part_type]
+    measures:
+      - partsupp.total_available_qty
+      - {formula: "sum(iif(lineitem.orders.order_date in '1997', lineitem.quantity, 0))", name: total_quantity_1997}
+      - {formula: "partsupp.total_available_qty / sum(iif(lineitem.orders.order_date in '1997', lineitem.quantity, 0))", name: cover_ratio}
+    filters: ["part_type like '%BRASS%'"]
+  columns:
+    part_type: part.part_type
+    total_available_qty: part.partsupp.total_available_qty
+    total_quantity_1997: part.total_quantity_1997
+    cover_ratio: part.cover_ratio
+
+- id: B13
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [ship_mode]
+    measures:
+      - {formula: line_count, name: late_line_count}
+      - {formula: "avg(iif(ship_date > commit_date, 1.0, 0.0))", name: shipped_late_share}
+      - {formula: "avg(iif(ship_date <= commit_date, 1.0, 0.0))", name: transit_late_share}
+    filters: ["ship_date in '1997'", "receipt_date > commit_date"]
+  columns:
+    ship_mode: lineitem.ship_mode
+    late_line_count: lineitem.late_line_count
+    shipped_late_share: lineitem.shipped_late_share
+    transit_late_share: lineitem.transit_late_share
+
+- id: B14
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [supplier.supplier_name]
+    measures:
+      - {formula: "sum(iif(ship_date in '1995' and receipt_date > commit_date, 1.0, 0.0)) / sum(iif(ship_date in '1995', 1.0, 0.0))", name: late_share_1995}
+      - {formula: "sum(iif(ship_date in '1996' and receipt_date > commit_date, 1.0, 0.0)) / sum(iif(ship_date in '1996', 1.0, 0.0))", name: late_share_1996}
+      - {formula: "sum(iif(ship_date in '1996' and receipt_date > commit_date, 1.0, 0.0)) / sum(iif(ship_date in '1996', 1.0, 0.0)) - sum(iif(ship_date in '1995' and receipt_date > commit_date, 1.0, 0.0)) / sum(iif(ship_date in '1995', 1.0, 0.0))", name: late_share_change}
+    filters:
+      - "ship_date >= '1995'"
+      - "ship_date <= '1996'"
+      - "sum(iif(ship_date in '1995', 1, 0)) >= 50"
+      - "sum(iif(ship_date in '1996', 1, 0)) >= 50"
+    order:
+      - {column: late_share_change, direction: desc}
+      - {column: supplier.supplier_name, direction: asc}
+    limit: 10
+  columns:
+    supplier_name: lineitem.supplier.supplier_name
+    late_share_1995: lineitem.late_share_1995
+    late_share_1996: lineitem.late_share_1996
+    late_share_change: lineitem.late_share_change
+
+- id: B15
+  status: attempted
+  interface: query
+  query:
+    - name: per_order
+      source_model: lineitem
+      dimensions: [orders.order_key]
+      measures: [{formula: "sum(iif(receipt_date > commit_date, 1, 0))", name: late_lines}]
+      filters: ["orders.order_status == 'F'", "orders.order_date in '1994'"]
+    - source_model: per_order
+      dimensions: [late_lines]
+      measures: [{formula: "count(*)", name: order_count}]
+  columns: {late_lines_in_order: per_order.late_lines, order_count: per_order.order_count}
+
+- id: B16
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions:
+      - supplier.supplier_nation.supplier_region.supplier_region_name
+      - supplier.supplier_nation.supplier_nation_name
+    measures:
+      - {formula: "avg(iif(receipt_date > commit_date, 1.0, 0.0))", name: late_share}
+    filters:
+      - "ship_date in '1997'"
+      - "rank(avg(iif(receipt_date > commit_date, 1.0, 0.0)), partition_by=supplier.supplier_nation.supplier_region.supplier_region_name, direction='desc') == 1"
+  columns:
+    supplier_region_name: lineitem.supplier.supplier_nation.supplier_region.supplier_region_name
+    supplier_nation_name: lineitem.supplier.supplier_nation.supplier_nation_name
+    late_share: lineitem.late_share
+
+- id: B17
+  status: attempted
+  interface: query
+  query:
+    - name: min_cost
+      source_model: partsupp
+      dimensions: [part.part_name, part.manufacturer]
+      measures: [{formula: "min(supply_cost)", name: min_supply_cost}]
+    - name: offer_lines
+      source_model: lineitem
+      dimensions: [part.part_name, part.manufacturer, partsupp.supply_cost]
+      measures: [total_quantity]
+      filters: ["ship_date in '1997'"]
+    - source_model:
+        source_name: offer_lines
+        joins:
+          - target_model: min_cost
+            join_pairs: [[part__part_name, part__part_name], [part__manufacturer, part__manufacturer]]
+            cardinality: many_to_one
+      dimensions: [part__manufacturer]
+      measures:
+        - {formula: "sum(iif(partsupp__supply_cost == min_cost.min_supply_cost, total_quantity, 0)) / sum(total_quantity)", name: cheapest_source_qty_share}
+  columns:
+    manufacturer: offer_lines.part__manufacturer
+    cheapest_source_qty_share: offer_lines.cheapest_source_qty_share
+  notes: >
+    The model declares no part key, so a part is identified by part_name + manufacturer (unique
+    over all 200,000 parts). min_cost takes the minimum over every supplier offer of the part.
+
+- id: B18
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [{expression: "date_part('year', orders.order_date)", name: order_year}]
+    measures: [revenue]
+  columns: {order_year: lineitem.order_year, revenue: lineitem.revenue}
+
+- id: B19
+  status: attempted
+  interface: query
+  query: {source_model: lineitem, dimensions: [orders.customer.market_segment], measures: [avg_discount]}
+  columns: {market_segment: lineitem.orders.customer.market_segment, avg_discount: lineitem.avg_discount}
+
+- id: B20
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    measures: [gross_sales, revenue, {formula: "gross_sales - revenue", name: discount_amount}]
+    filters: ["orders.order_date in '1996'"]
+  columns: {gross_sales: lineitem.gross_sales, revenue: lineitem.revenue, discount_amount: lineitem.discount_amount}
+
+- id: B21
+  status: attempted
+  interface: query
+  query:
+    source_model: orders
+    dimensions: [order_priority]
+    measures: [avg_order_value]
+    filters: ["order_date in '1997'"]
+  columns: {order_priority: orders.order_priority, avg_order_value: orders.avg_order_value}
+
+- id: B22
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_region.customer_region_name]
+    measures: [revenue]
+    filters: ["orders.order_date in '1997'"]
+  columns:
+    customer_region_name: lineitem.orders.customer.customer_nation.customer_region.customer_region_name
+    revenue: lineitem.revenue
+
+- id: B23
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    time_dimensions: [{dimension: orders.order_date, granularity: year, date_range: ["1993", "1997"]}]
+    measures:
+      - revenue
+      - {formula: "revenue / time_shift(revenue, -1) - 1", name: revenue_growth}
+  columns: {order_year: lineitem.orders.order_date, revenue: lineitem.revenue, revenue_growth: lineitem.revenue_growth}
+
+- id: B24
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [supplier.supplier_nation.supplier_region.supplier_region_name]
+    measures:
+      - revenue
+      - {formula: "revenue - sum(partsupp.supply_cost * quantity)", name: margin}
+      - {formula: "(revenue - sum(partsupp.supply_cost * quantity)) / revenue", name: margin_rate}
+    filters: ["orders.order_date in '1997'"]
+  columns:
+    supplier_region_name: lineitem.supplier.supplier_nation.supplier_region.supplier_region_name
+    revenue: lineitem.revenue
+    margin: lineitem.margin
+    margin_rate: lineitem.margin_rate
+
+- id: B25
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [part.brand]
+    measures: [{formula: "revenue - sum(partsupp.supply_cost * quantity)", name: margin}]
+    filters: ["orders.order_date in '1996'"]
+    order:
+      - {column: margin, direction: desc}
+      - {column: part.brand, direction: asc}
+    limit: 10
+  columns: {brand: lineitem.part.brand, margin: lineitem.margin}
+
+- id: B26
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    time_dimensions: [{dimension: orders.order_date, granularity: month, date_range: "1997"}]
+    measures: [revenue]
+  columns: {order_month: lineitem.orders.order_date, revenue: lineitem.revenue}
+
+- id: B27
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [discount]
+    measures: [line_count, revenue]
+    filters: ["orders.order_date in '1997'"]
+  columns: {discount: lineitem.discount, line_count: lineitem.line_count, revenue: lineitem.revenue}
+
+- id: B28
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [{expression: "date_part('year', orders.order_date)", name: order_year}]
+    measures:
+      - {formula: "sum(iif(return_flag == 'R', extended_price * (1 - discount), 0))", name: returned_revenue}
+      - {formula: "sum(iif(return_flag == 'R', extended_price * (1 - discount), 0)) / revenue", name: returned_revenue_share}
+    filters: ["orders.order_date >= '1992'", "orders.order_date <= '1997'"]
+  columns:
+    order_year: lineitem.order_year
+    returned_revenue: lineitem.returned_revenue
+    returned_revenue_share: lineitem.returned_revenue_share
+
+- id: B29
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_region.customer_region_name]
+    measures:
+      - {formula: "sum(iif(orders.order_date >= '1997-01' and orders.order_date <= '1997-06', extended_price * (1 - discount), 0))", name: revenue_h1_1997}
+      - {formula: "sum(iif(orders.order_date >= '1998-01' and orders.order_date <= '1998-06', extended_price * (1 - discount), 0))", name: revenue_h1_1998}
+      - {formula: "sum(iif(orders.order_date >= '1998-01' and orders.order_date <= '1998-06', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date >= '1997-01' and orders.order_date <= '1997-06', extended_price * (1 - discount), 0)) - 1", name: revenue_growth}
+    filters: ["orders.order_date >= '1997-01'", "orders.order_date <= '1998-06'"]
+  columns:
+    customer_region_name: lineitem.orders.customer.customer_nation.customer_region.customer_region_name
+    revenue_h1_1997: lineitem.revenue_h1_1997
+    revenue_h1_1998: lineitem.revenue_h1_1998
+    revenue_growth: lineitem.revenue_growth
+
+- id: B30
+  status: attempted
+  interface: query
+  query:
+    - name: per_customer
+      source_model: lineitem
+      dimensions: [orders.customer_key]
+      measures:
+        - revenue
+        - {formula: "rank(revenue, direction='desc')", name: revenue_rank}
+      filters: ["orders.order_date in '1997'"]
+    - source_model: per_customer
+      measures:
+        - {formula: "sum(iif(revenue_rank <= 100, revenue, 0))", name: top100_revenue}
+        - {formula: "sum(revenue)", name: total_revenue}
+        - {formula: "sum(iif(revenue_rank <= 100, revenue, 0)) / sum(revenue)", name: top100_share}
+  columns:
+    top100_revenue: per_customer.top100_revenue
+    total_revenue: per_customer.total_revenue
+    top100_share: per_customer.top100_share
+
+- id: B31
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.market_segment, orders.customer.customer_nation.customer_nation_name]
+    measures:
+      - revenue
+      - {formula: "revenue / sum(extended_price * (1 - discount), partition_by=orders.customer.market_segment)", name: segment_revenue_share}
+      - {formula: "rank(revenue, partition_by=orders.customer.market_segment, direction='desc')", name: rank_in_segment}
+    filters: ["orders.order_date in '1997'", "rank_in_segment <= 3"]
+    order:
+      - {column: orders.customer.market_segment, direction: asc}
+      - {column: rank_in_segment, direction: asc}
+  columns:
+    market_segment: lineitem.orders.customer.market_segment
+    customer_nation_name: lineitem.orders.customer.customer_nation.customer_nation_name
+    revenue: lineitem.revenue
+    segment_revenue_share: lineitem.segment_revenue_share
+    rank_in_segment: lineitem.rank_in_segment
+
+- id: B32
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [part.brand]
+    measures:
+      - {formula: "avg(iif(extended_price * (1 - discount) - partsupp.supply_cost * quantity < 0, 1.0, 0.0))", name: below_cost_line_share}
+      - {formula: "sum(iif(extended_price * (1 - discount) - partsupp.supply_cost * quantity < 0, extended_price * (1 - discount) - partsupp.supply_cost * quantity, 0))", name: below_cost_margin}
+    filters: ["orders.order_date in '1997'"]
+  columns:
+    brand: lineitem.part.brand
+    below_cost_line_share: lineitem.below_cost_line_share
+    below_cost_margin: lineitem.below_cost_margin
+
+- id: B33
+  status: attempted
+  interface: query
+  query:
+    source_model: orders
+    dimensions: [clerk]
+    measures:
+      - {formula: "sum(iif(order_date in '1996', total_price, 0)) / sum(iif(order_date in '1996', 1, 0))", name: avg_order_value_1996}
+      - {formula: "sum(iif(order_date in '1997', total_price, 0)) / sum(iif(order_date in '1997', 1, 0))", name: avg_order_value_1997}
+      - {formula: "sum(iif(order_date in '1997', total_price, 0)) / sum(iif(order_date in '1997', 1, 0)) - sum(iif(order_date in '1996', total_price, 0)) / sum(iif(order_date in '1996', 1, 0))", name: avg_order_value_change}
+    filters:
+      - "order_date >= '1996'"
+      - "order_date <= '1997'"
+      - "sum(iif(order_date in '1996', 1, 0)) >= 100"
+      - "sum(iif(order_date in '1997', 1, 0)) >= 100"
+    order:
+      - {column: avg_order_value_change, direction: desc}
+      - {column: clerk, direction: asc}
+    limit: 10
+  columns:
+    clerk: orders.clerk
+    avg_order_value_1996: orders.avg_order_value_1996
+    avg_order_value_1997: orders.avg_order_value_1997
+    avg_order_value_change: orders.avg_order_value_change
+
+- id: B34
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_region.customer_region_name]
+    time_dimensions: [{dimension: orders.order_date, granularity: quarter, date_range: "1997"}]
+    measures:
+      - revenue
+      - {formula: "revenue / time_shift(revenue, -1, 'year') - 1", name: revenue_yoy_growth}
+  columns:
+    customer_region_name: lineitem.orders.customer.customer_nation.customer_region.customer_region_name
+    order_quarter: lineitem.orders.order_date
+    revenue: lineitem.revenue
+    revenue_yoy_growth: lineitem.revenue_yoy_growth
+
+- id: B35
+  status: attempted
+  interface: query
+  query: {source_model: customer, dimensions: [market_segment], measures: [customer_count]}
+  columns: {market_segment: customer.market_segment, customer_count: customer.customer_count}
+
+- id: B36
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [part.manufacturer]
+    measures: [revenue]
+    filters: ["orders.order_date in '1997'"]
+  columns: {manufacturer: lineitem.part.manufacturer, revenue: lineitem.revenue}
+
+- id: B37
+  status: attempted
+  interface: query
+  query:
+    source_model: orders
+    dimensions: [customer.customer_nation.customer_region.customer_region_name]
+    measures: [{formula: "count_distinct(customer_key)", name: customer_count}]
+    filters: ["order_date in '1997'"]
+  columns:
+    customer_region_name: orders.customer.customer_nation.customer_region.customer_region_name
+    customer_count: orders.customer_count
+
+- id: B38
+  status: attempted
+  interface: query
+  query:
+    source_model: orders
+    dimensions: [customer.market_segment]
+    measures: [order_count]
+    filters: ["order_date in '1996'"]
+  columns: {market_segment: orders.customer.market_segment, order_count: orders.order_count}
+
+- id: B39
+  status: attempted
+  interface: query
+  query:
+    source_model: orders
+    dimensions: [customer.market_segment]
+    measures: [avg_order_value]
+    filters: ["order_date in '1997'"]
+  columns: {market_segment: orders.customer.market_segment, avg_order_value: orders.avg_order_value}
+
+- id: B40
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [{expression: "substr(part.container, 1, instr(part.container, ' ') - 1)", name: container_size}]
+    measures:
+      - revenue
+      - {formula: "revenue / sum(extended_price * (1 - discount), partition_by=[])", name: revenue_share}
+    filters: ["orders.order_date in '1997'"]
+  columns: {container_size: lineitem.container_size, revenue: lineitem.revenue, revenue_share: lineitem.revenue_share}
+
+- id: B41
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_nation_name]
+    measures:
+      - {formula: "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))", name: revenue_1996}
+      - {formula: "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0))", name: revenue_1997}
+      - {formula: "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0)) - 1", name: revenue_growth}
+    filters: ["orders.order_date >= '1996'", "orders.order_date <= '1997'"]
+    order:
+      - {column: revenue_growth, direction: desc}
+      - {column: orders.customer.customer_nation.customer_nation_name, direction: asc}
+    limit: 10
+  columns:
+    customer_nation_name: lineitem.orders.customer.customer_nation.customer_nation_name
+    revenue_1996: lineitem.revenue_1996
+    revenue_1997: lineitem.revenue_1997
+    revenue_growth: lineitem.revenue_growth
+
+- id: B42
+  status: attempted
+  interface: query
+  query:
+    - name: per_customer
+      source_model: orders
+      dimensions: [customer_key, customer.market_segment]
+      measures: [order_count]
+      filters: ["order_date in '1997'"]
+    - source_model: per_customer
+      dimensions: [customer__market_segment]
+      measures:
+        - {formula: "count(*)", name: customer_count}
+        - {formula: "avg(iif(order_count >= 2, 1.0, 0.0))", name: repeat_customer_share}
+  columns:
+    market_segment: per_customer.customer__market_segment
+    customer_count: per_customer.customer_count
+    repeat_customer_share: per_customer.repeat_customer_share
+
+- id: B43
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [part.brand]
+    measures: [revenue]
+    filters: ["orders.order_date in '1997'", "orders.customer.market_segment == 'AUTOMOBILE'"]
+    order:
+      - {column: revenue, direction: desc}
+      - {column: part.brand, direction: asc}
+    limit: 5
+  columns: {brand: lineitem.part.brand, revenue: lineitem.revenue}
+
+- id: B44
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.market_segment]
+    measures:
+      - {formula: "sum(iif(orders.customer.account_balance < 0, extended_price * (1 - discount), 0)) / revenue", name: negative_balance_revenue_share}
+    filters: ["orders.order_date in '1997'"]
+  columns:
+    market_segment: lineitem.orders.customer.market_segment
+    negative_balance_revenue_share: lineitem.negative_balance_revenue_share
+
+- id: B45
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_region.customer_region_name]
+    measures:
+      - revenue
+      - {formula: "count_distinct(orders.customer_key)", name: customer_count}
+      - {formula: "revenue / count_distinct(orders.customer_key)", name: revenue_per_customer}
+    filters: ["orders.order_date in '1997'"]
+  columns:
+    customer_region_name: lineitem.orders.customer.customer_nation.customer_region.customer_region_name
+    revenue: lineitem.revenue
+    customer_count: lineitem.customer_count
+    revenue_per_customer: lineitem.revenue_per_customer
+
+- id: B46
+  status: attempted
+  interface: query
+  query:
+    - name: per_order
+      source_model: orders
+      dimensions: [customer_key, order_key, order_date]
+      measures: [{formula: "min(order_date, partition_by=customer_key)", name: first_order}]
+    - name: per_customer
+      source_model: per_order
+      dimensions: [customer_key, {expression: "date_part('year', first_order)", name: first_order_year}]
+      measures:
+        - {formula: "max(iif(date_part('year', order_date) == date_part('year', first_order) + 1, 1, 0))", name: retained}
+    - source_model: per_customer
+      dimensions: [first_order_year]
+      measures:
+        - {formula: "count(*)", name: customer_count}
+        - {formula: "avg(retained * 1.0)", name: retained_next_year_share}
+      filters: ["first_order_year >= 1992", "first_order_year <= 1996"]
+  columns:
+    first_order_year: per_customer.first_order_year
+    customer_count: per_customer.customer_count
+    retained_next_year_share: per_customer.retained_next_year_share
+
+- id: B47
+  status: attempted
+  interface: query
+  query:
+    - name: per_customer
+      source_model: lineitem
+      dimensions: [orders.customer_key, orders.customer.market_segment]
+      measures:
+        - {formula: "sum(iif(orders.order_date in '1996', 1, 0))", name: lines_1996}
+        - {formula: "sum(iif(orders.order_date in '1997', 1, 0))", name: lines_1997}
+        - {formula: "sum(iif(orders.order_date in '1996', extended_price * (1 - discount), 0))", name: revenue_1996}
+    - source_model: per_customer
+      dimensions: [orders__customer__market_segment]
+      measures:
+        - {formula: "count(*)", name: lapsed_customer_count}
+        - {formula: "sum(revenue_1996)", name: lapsed_revenue_1996}
+      filters: ["lines_1996 > 0", "lines_1997 == 0"]
+  columns:
+    market_segment: per_customer.orders__customer__market_segment
+    lapsed_customer_count: per_customer.lapsed_customer_count
+    lapsed_revenue_1996: per_customer.lapsed_revenue_1996
+  notes: Every order has at least one line, so "has a 1996 order" equals "has a 1996 line".
+
+- id: B48
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.customer_nation.customer_region.customer_region_name, part.brand]
+    measures:
+      - revenue
+      - {formula: "rank(revenue, partition_by=orders.customer.customer_nation.customer_region.customer_region_name, direction='desc')", name: brand_rank}
+    filters: ["orders.order_date in '1997'", "brand_rank <= 3"]
+    order:
+      - {column: orders.customer.customer_nation.customer_region.customer_region_name, direction: asc}
+      - {column: brand_rank, direction: asc}
+  columns:
+    customer_region_name: lineitem.orders.customer.customer_nation.customer_region.customer_region_name
+    brand: lineitem.part.brand
+    revenue: lineitem.revenue
+    brand_rank: lineitem.brand_rank
+
+- id: B49
+  status: attempted
+  interface: query
+  query:
+    - name: per_customer
+      source_model: lineitem
+      dimensions: [orders.customer_key]
+      measures:
+        - {formula: "count_distinct(orders.order_key)", name: lifetime_orders}
+        - revenue
+    - source_model: per_customer
+      dimensions:
+        - {expression: "iif(lifetime_orders < 10, '1-9', iif(lifetime_orders < 15, '10-14', iif(lifetime_orders < 20, '15-19', iif(lifetime_orders < 25, '20-24', '25+'))))", name: order_count_bucket}
+      measures:
+        - {formula: "count(*)", name: customer_count}
+        - {formula: "sum(revenue)", name: revenue_total}
+  columns:
+    order_count_bucket: per_customer.order_count_bucket
+    customer_count: per_customer.customer_count
+    revenue: per_customer.revenue_total
+
+- id: B50
+  status: attempted
+  interface: query
+  query:
+    source_model: lineitem
+    dimensions: [orders.customer.market_segment]
+    measures:
+      - {formula: "sum(iif(orders.order_date in '1993', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1993', extended_price * (1 - discount), 0), partition_by=[])", name: revenue_share_1993}
+      - {formula: "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0), partition_by=[])", name: revenue_share_1997}
+      - {formula: "sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1997', extended_price * (1 - discount), 0), partition_by=[]) - sum(iif(orders.order_date in '1993', extended_price * (1 - discount), 0)) / sum(iif(orders.order_date in '1993', extended_price * (1 - discount), 0), partition_by=[])", name: share_change}
+  columns:
+    market_segment: lineitem.orders.customer.market_segment
+    revenue_share_1993: lineitem.revenue_share_1993
+    revenue_share_1997: lineitem.revenue_share_1997
+    share_change: lineitem.share_change

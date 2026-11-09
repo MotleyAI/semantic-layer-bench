@@ -1,0 +1,773 @@
+{
+ "layer": "metricflow",
+ "summary": {
+  "answered": 11,
+  "wrong": 0,
+  "unsupported": 39,
+  "not_attempted": 0
+ },
+ "questions": [
+  {
+   "id": "B01",
+   "status": "unsupported",
+   "reason": "late_share is a ratio of a filtered count (receipt_date > commit_date) to the unfiltered line_count. mf query applies one where clause to the whole query and has no query-time arithmetic, so the late count and the total cannot be returned or divided in one query.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes = a ratio metric whose numerator is line_count with a filter receipt_date > commit_date.",
+   "tried": [
+    "--metrics line_count --group-by lineitem__ship_mode --where \"{{ TimeDimension('lineitem__receipt_date','day') }} > {{ TimeDimension('lineitem__commit_date','day') }}\" -> runs, gives late line counts only (not the share, and the unfiltered line_count is lost)",
+    "--metrics 'revenue/gross_sales' (test of ad-hoc metric arithmetic) -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B02",
+   "status": "unsupported",
+   "reason": "Needs a returned-line share (filtered count / count, query-time arithmetic) and supplier_region_name is 3 hops from lineitem (lineitem -> supplier -> supplier_nation -> supplier_region), beyond MetricFlow's 2-hop limit.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "notes": "A model ratio metric would fix the arithmetic, but the 3-hop supplier region would still be out of reach (topology).",
+   "tried": [
+    "--metrics line_count --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'The given input does not match any of the available group-by-items'",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics' (no ad-hoc arithmetic)"
+   ],
+   "domain": "operations",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B03",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "total_quantity"
+    ],
+    "group_by": [
+     "lineitem__ship_mode"
+    ],
+    "where": "{{ TimeDimension('lineitem__ship_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('lineitem__ship_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "ship_mode": "lineitem__ship_mode",
+    "total_quantity": "total_quantity"
+   },
+   "domain": "operations",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B04",
+   "status": "unsupported",
+   "reason": "total_available_qty is not in the MetricFlow project: MetricFlow requires an aggregation time dimension for every measure and partsupp has none, so the metric was dropped in translation (documented in TRANSLATION.md). supplier_region_name is also 3 hops from partsupp.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics total_available_qty --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B05",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "order_count"
+    ],
+    "group_by": [
+     "orders__order_status"
+    ]
+   },
+   "columns": {
+    "order_status": "orders__order_status",
+    "order_count": "order_count"
+   },
+   "domain": "operations",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B06",
+   "status": "unsupported",
+   "reason": "Average of a per-line date difference (receipt_date - ship_date) is a query-time aggregation of an expression over dimensions. mf query can only request declared metrics; no declared metric aggregates a date difference.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "notes": "Would need a new measure (avg of l_receiptdate - l_shipdate), not a native metric type.",
+   "tried": [
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics' (mf query accepts only metric names, no expressions)"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B07",
+   "status": "unsupported",
+   "reason": "late_share is a filtered-count ratio (no query-time arithmetic). The HAVING line_count >= 100 could be a metric filter on the supplier entity, but --explain shows that subquery ignores the outer receipt-date filter, so it counts all-time lines.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes = a ratio metric for late_share plus a line_count metric filtered to receipt dates 1996-1997 used as the metric filter.",
+   "tried": [
+    "--metrics line_count --group-by supplier__supplier_name --where \"<receipt_date 1996..1997> AND {{ Metric('line_count', group_by=['supplier']) }} >= 100\" --explain -> metric subquery 'SUM(__line_count) AS supplier__line_count ... GROUP BY supplier' has no date filter; outer WHERE applies the date filter only to the line rows",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B08",
+   "status": "unsupported",
+   "reason": "late_share is a ratio of a filtered line count to line_count; mf query has one where clause and no query-time arithmetic. line_count by order_priority with the 1995 filter alone is expressible.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics line_count --group-by lineitem__ship_mode --where \"receipt_date > commit_date\" -> runs, but only returns the late count, never the share",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B09",
+   "status": "unsupported",
+   "reason": "late_share per ship month is a ratio of a filtered line count to line_count; not expressible at query time (no arithmetic, single where).",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics line_count with where receipt_date > commit_date -> late count only",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B10",
+   "status": "unsupported",
+   "reason": "returned_qty_share = total_quantity on return_flag = 'R' lines / total_quantity: a filtered measure next to the unfiltered one and their ratio. Not expressible in mf query.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics' (no ad-hoc ratios)"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B11",
+   "status": "unsupported",
+   "reason": "late_line_count is expressible (line_count with receipt_date > commit_date, supplier_nation_name is 2 hops), but avg_days_late averages a per-line date difference, which is not a declared metric and cannot be computed at query time.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics line_count --group-by lineitem__ship_mode --where \"receipt_date > commit_date\" -> runs (late counts); no way to add the average of receipt_date - commit_date"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B12",
+   "status": "unsupported",
+   "reason": "total_available_qty was dropped in translation (partsupp has no aggregation time dimension), and cover_ratio divides two metrics from different facts, which mf query cannot do.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics total_available_qty -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B13",
+   "status": "unsupported",
+   "reason": "late_line_count is expressible, but shipped_late_share and transit_late_share are ratios of differently filtered counts; mf query has one where clause and no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics line_count --where \"receipt_date > commit_date\" -> late count only",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B14",
+   "status": "unsupported",
+   "reason": "Needs late_share (a filtered-count ratio) for two years side by side per supplier, their difference, a per-year >= 50 lines threshold, and a ranking on the difference. mf query has no arithmetic, no period-side-by-side filtered metrics and cannot order by a computed change.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'",
+    "grouping by supplier and year returns one row per supplier-year, not one row per supplier with both years"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B15",
+   "status": "unsupported",
+   "reason": "Distribution of orders by number of late lines is a nested aggregation (count lines per order, then count orders per value). mf query aggregates once and cannot group by a metric.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics line_count --group-by orders --where \"order_status = 'F' AND receipt_date > commit_date\" -> per-order late counts (orders with 0 late lines are missing), not a distribution",
+    "--group-by \"Metric('line_count', group_by=['orders'])\" -> 'does not match any of the known formats'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B16",
+   "status": "unsupported",
+   "reason": "Top-1 nation per supplier region needs ranking within groups and a filtered-count ratio; supplier_region_name is also 3 hops from lineitem.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics line_count --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B17",
+   "status": "unsupported",
+   "reason": "Needs the per-part minimum supply_cost across all offers and a comparison with each line's own offer cost, then a quantity share. That is a nested aggregation over partsupp plus a correlated comparison; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> runs (supply_cost is only a group-by dimension, cannot be aggregated or compared to a per-part minimum)"
+   ],
+   "domain": "operations",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B18",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "revenue"
+    ],
+    "group_by": [
+     "Dimension('orders__order_date').date_part('year')"
+    ]
+   },
+   "columns": {
+    "order_year": "orders__order_date__extract_year",
+    "revenue": "revenue"
+   },
+   "domain": "finance",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B19",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "avg_discount"
+    ],
+    "group_by": [
+     "orders__customer__market_segment"
+    ]
+   },
+   "columns": {
+    "market_segment": "orders__customer__market_segment",
+    "avg_discount": "avg_discount"
+   },
+   "domain": "finance",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B20",
+   "status": "unsupported",
+   "reason": "gross_sales and revenue are returned together, but discount_amount = gross_sales - revenue is arithmetic between metrics, which mf query cannot compute.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics gross_sales,revenue --where \"{{ Dimension('orders__order_date').date_part('year') }} = 1996\" -> runs (2 of the 3 columns)",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "finance",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B21",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "avg_order_value"
+    ],
+    "group_by": [
+     "orders__order_priority"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "order_priority": "orders__order_priority",
+    "avg_order_value": "avg_order_value"
+   },
+   "domain": "finance",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B22",
+   "status": "unsupported",
+   "reason": "customer_region_name is 4 hops from lineitem (lineitem -> orders -> customer -> customer_nation -> customer_region); MetricFlow caps joins at 2 hops (MAX_JOIN_HOPS = 2).",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'The given input does not match any of the available group-by-items'"
+   ],
+   "domain": "finance",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B23",
+   "status": "unsupported",
+   "reason": "Year-over-year growth needs the previous year's revenue (offset) and a ratio; mf query has neither offsets nor arithmetic at query time.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "An offset derived metric works on metric_time, which is ship_date for line-item metrics, so a model fix also needs the agg time dimension to be order_date.",
+   "tried": [
+    "--metrics revenue --group-by \"Dimension('orders__order_date').date_part('year')\" -> runs (revenue per year only)",
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B24",
+   "status": "unsupported",
+   "reason": "margin subtracts sum(partsupp.supply_cost * lineitem.quantity), an aggregate of an expression over a joined dimension. No declared metric computes it and measures cannot reference joined columns; margin_rate is also arithmetic. supplier_region_name is 3 hops from lineitem as well.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension",
+    "--metrics line_count --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B25",
+   "status": "unsupported",
+   "reason": "margin needs sum(supply_cost * quantity) across lineitem and partsupp; not a declared metric and not computable at query time.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B26",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "revenue"
+    ],
+    "group_by": [
+     "orders__order_date__month"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "order_month": "orders__order_date__month",
+    "revenue": "revenue"
+   },
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B27",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "line_count",
+     "revenue"
+    ],
+    "group_by": [
+     "lineitem__discount"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "discount": "lineitem__discount",
+    "line_count": "line_count",
+    "revenue": "revenue"
+   },
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B28",
+   "status": "unsupported",
+   "reason": "returned_revenue (revenue filtered to return_flag = 'R') next to total revenue and their ratio, per year; mf query has a single where and no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "tried": [
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B29",
+   "status": "unsupported",
+   "reason": "customer_region_name is 4 hops from lineitem (beyond the 2-hop limit), and the two half-year revenues side by side plus growth need filtered metrics and arithmetic.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "finance",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B30",
+   "status": "unsupported",
+   "reason": "Sum of the top-100 customers' revenue and its share of total is a nested aggregation (rank customers, then sum); mf query can list the top 100 but not aggregate over them.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer --order -revenue --limit 100 -> lists the customers (100 rows), cannot sum them or divide by the total"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B31",
+   "status": "unsupported",
+   "reason": "customer_nation_name is 3 hops from lineitem (beyond the 2-hop limit); the question also needs a share of the segment total and a top-3 per segment ranking, neither expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_nation_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B32",
+   "status": "unsupported",
+   "reason": "Line margin needs supply_cost * quantity per line, then a filter on the per-line margin and a share; not expressible (no expression aggregation, measures cannot use joined columns).",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by partsupp__supply_cost -> supply_cost is usable only as a group-by dimension"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B33",
+   "status": "unsupported",
+   "reason": "Needs avg_order_value for 1996 and 1997 side by side per clerk, their difference, a >= 100 orders per year threshold and a ranking on the difference. Metric filters only take entities as group_by (clerk is a dimension), and there is no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics avg_order_value --group-by orders__clerk --where \"{{ Metric('order_count', group_by=['orders__clerk']) }} >= 100\" -> 'does not match any of the available group-by-items for SimpleMetric(order_count)'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B34",
+   "status": "unsupported",
+   "reason": "customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); same-quarter-last-year growth also needs an offset and arithmetic.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "finance",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B35",
+   "status": "unsupported",
+   "reason": "customer_count is not in the MetricFlow project (customer has no time dimension, MetricFlow requires an aggregation time dimension per measure; documented drop). No other declared metric counts customers on file.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B36",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "revenue"
+    ],
+    "group_by": [
+     "part__manufacturer"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "manufacturer": "part__manufacturer",
+    "revenue": "revenue"
+   },
+   "domain": "marketing",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B37",
+   "status": "unsupported",
+   "reason": "customer_count was dropped in translation and mf query cannot count distinct customers at query time; customer_region_name is also 3 hops from orders (beyond the 2-hop limit).",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count -> 'does not exactly match any known metrics'",
+    "--metrics order_count --group-by customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items' (customer__customer_nation__customer_nation_name, 2 hops, works)"
+   ],
+   "domain": "marketing",
+   "difficulty": "simple",
+   "result": "unsupported"
+  },
+  {
+   "id": "B38",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "order_count"
+    ],
+    "group_by": [
+     "customer__market_segment"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1996-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1996-12-31'"
+   },
+   "columns": {
+    "market_segment": "customer__market_segment",
+    "order_count": "order_count"
+   },
+   "domain": "marketing",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B39",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "avg_order_value"
+    ],
+    "group_by": [
+     "customer__market_segment"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31'"
+   },
+   "columns": {
+    "market_segment": "customer__market_segment",
+    "avg_order_value": "avg_order_value"
+   },
+   "domain": "marketing",
+   "difficulty": "simple",
+   "result": "answered"
+  },
+  {
+   "id": "B40",
+   "status": "unsupported",
+   "reason": "container_size is a derived dimension (first word of container) that the model does not declare, and revenue_share needs a total across groups and a ratio. mf query groups only by declared dimensions and has no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by part__container -> runs, but returns the 40 full container values, not the 5 size classes, and no share"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B41",
+   "status": "unsupported",
+   "reason": "customer_nation_name is 3 hops from lineitem (beyond the 2-hop limit); revenue for two years side by side and their growth also need filtered metrics and arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_nation_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B42",
+   "status": "unsupported",
+   "reason": "Needs distinct customers (customer_count was dropped) and a per-customer order-count threshold (nested aggregation) turned into a share; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B43",
+   "status": "attempted",
+   "interface": "mf",
+   "query": {
+    "metrics": [
+     "revenue"
+    ],
+    "group_by": [
+     "part__brand"
+    ],
+    "where": "{{ TimeDimension('orders__order_date', 'day') }} >= '1997-01-01' AND {{ TimeDimension('orders__order_date', 'day') }} <= '1997-12-31' AND {{ Dimension('customer__market_segment', entity_path=['orders']) }} = 'AUTOMOBILE'",
+    "order": [
+     "-revenue",
+     "part__brand"
+    ],
+    "limit": 5
+   },
+   "columns": {
+    "brand": "part__brand",
+    "revenue": "revenue"
+   },
+   "notes": "Multi-hop dimension in a where filter needs entity_path; the dunder form orders__customer__market_segment is rejected inside Dimension() ('Name is in an incorrect format').",
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "answered"
+  },
+  {
+   "id": "B44",
+   "status": "unsupported",
+   "reason": "Revenue from negative-balance customers / total revenue per segment is a filtered measure next to the unfiltered one plus a ratio; mf query has one where clause and no arithmetic.",
+   "category": "expressivity",
+   "fixable_in_model": true,
+   "notes": "fixable_in_model yes = ratio metric with numerator revenue filtered on customer account_balance < 0 (2 hops, reachable).",
+   "tried": [
+    "--metrics 'revenue/gross_sales' -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B45",
+   "status": "unsupported",
+   "reason": "customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); customer_count was dropped and revenue_per_customer needs arithmetic.",
+   "category": "topology",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items'",
+    "--metrics customer_count -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "medium",
+   "result": "unsupported"
+  },
+  {
+   "id": "B46",
+   "status": "unsupported",
+   "reason": "Cohort by first-order year is a dimension derived from an aggregate (min order_date per customer), plus a next-year existence test and a share; mf query cannot group by a metric and has no existence filters.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--group-by \"Metric('line_count', group_by=['orders'])\" -> 'does not match any of the known formats' (no grouping by a metric)"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B47",
+   "status": "unsupported",
+   "reason": "Lapsed customers (ordered in 1996, not in 1997) need an anti-join per customer; customer_count was dropped and mf query has no existence filters.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics customer_count -> 'does not exactly match any known metrics'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B48",
+   "status": "unsupported",
+   "reason": "Top-3 brands per customer region needs ranking within groups (mf query has only a global order and limit), and customer_region_name is 4 hops from lineitem.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B49",
+   "status": "unsupported",
+   "reason": "Bucketing customers by lifetime order count is a dimension derived from a metric (multi-stage), then customer counts and revenue per bucket; mf query cannot group by a metric.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--group-by \"Metric('line_count', group_by=['orders'])\" -> 'does not match any of the known formats'"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  },
+  {
+   "id": "B50",
+   "status": "unsupported",
+   "reason": "Share of each year's revenue per segment needs a partitioned total and a ratio for two years side by side plus their difference; not expressible.",
+   "category": "expressivity",
+   "fixable_in_model": false,
+   "tried": [
+    "--metrics revenue --group-by orders__customer__market_segment,\"Dimension('orders__order_date').date_part('year')\" -> runs (revenue per segment-year), but no share or change"
+   ],
+   "domain": "marketing",
+   "difficulty": "hard",
+   "result": "unsupported"
+  }
+ ]
+}

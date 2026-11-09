@@ -1,0 +1,502 @@
+# Cube 1.6.76 attempts, blind round (B01..B50). Same conventions as attempts.yaml:
+# interface: rest = one Cube REST /v1/load query object.
+# interface: sql = Postgres-wire SQL API; counted only when `EXPLAIN` shows a bare
+# `CubeScan: request={...}`. Plans with a DataFusion Projection/Aggregate/Window over the CubeScan
+# (post-processing) or `CubeScanWrappedSql` (SQL pushdown of ad-hoc SQL) do not count.
+# All "SQL API" tries below were run through EXPLAIN on port 15432; the quoted plan heads are what
+# Cube returned.
+#
+# Recurring limits of the frozen model + Cube query API:
+#  - No query-time calculated measures in REST (ratios, differences between measures).
+#  - No per-measure filters at query time (conditional counts/sums such as "late lines").
+#  - No member-vs-member filters (receipt_date > commit_date); no segments in the model.
+#  - No ad-hoc aggregation of dimensions (supply_cost * quantity, date differences).
+#  - No windows / ranks / time shifts / multi-stage measures at query time; compareDateRange on
+#    /v1/load answers "'compareDateRangeQuery' query type is not supported by the client" and with
+#    queryType=multi returns separate result sets (combining them is post-processing).
+
+# ================================================================ OPERATIONS
+- id: B01
+  status: unsupported
+  reason: >
+    late_share needs a conditional count (receipt_date > commit_date) divided by line_count. The
+    REST query has no member-vs-member filter, no per-measure filter and no calculated measure.
+    line_count by ship_mode alone is one REST query; the share is not.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT ship_mode, MEASURE(line_count) FROM lineitem GROUP BY 1"
+      error: "Plain CubeScan (counts) - but only the line_count column."
+    - query: "SQL API: SELECT ship_mode, MEASURE(line_count), AVG(CASE WHEN receipt_date > commit_date THEN 1.0 ELSE 0.0 END) FROM lineitem GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (generated SQL computes AVG(CASE WHEN l_receiptdate > l_commitdate ...)): SQL pushdown over an undeclared expression, does not count."
+    - note: "A segment or boolean dimension is_late plus a filtered count measure and a ratio measure in the model would fix it."
+
+- id: B02
+  status: unsupported
+  reason: >
+    returned_share = lines with return_flag 'R' / all lines per supplier region needs a filtered
+    count next to the unfiltered one plus a ratio; REST filters apply to every measure and there are
+    no calculated measures.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT supplier_region_name, MEASURE(line_count), SUM(CASE WHEN return_flag = 'R' THEN 1 ELSE 0 END) FROM lineitem CROSS JOIN supplier CROSS JOIN supplier_nation CROSS JOIN supplier_region GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (SQL pushdown), does not count."
+    - note: "Two REST queries (with and without return_flag = 'R') give numerator and denominator; dividing them is post-processing."
+
+- id: B03
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.total_quantity]
+    dimensions: [lineitem.ship_mode]
+    timeDimensions: [{dimension: lineitem.ship_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {ship_mode: lineitem.ship_mode, total_quantity: lineitem.total_quantity}
+
+- id: B04
+  status: attempted
+  interface: rest
+  query:
+    measures: [partsupp.total_available_qty]
+    dimensions: [supplier_region.supplier_region_name]
+  columns: {supplier_region_name: supplier_region.supplier_region_name, total_available_qty: partsupp.total_available_qty}
+  notes: Rooted at partsupp (partsupp -> supplier -> supplier_nation -> supplier_region), so every offer counts.
+
+- id: B05
+  status: attempted
+  interface: rest
+  query: {measures: [orders.order_count], dimensions: [orders.order_status]}
+  columns: {order_status: orders.order_status, order_count: orders.order_count}
+
+- id: B06
+  status: unsupported
+  reason: >
+    Average of a row-level date difference (receipt_date - ship_date). No such measure is declared and
+    REST cannot aggregate an expression over dimensions at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT ship_mode, AVG(receipt_date - ship_date) FROM lineitem WHERE ship_date >= '1997-01-01' AND ship_date < '1998-01-01' GROUP BY 1"
+      error: "Planning Error: The function Avg does not support inputs of type Interval(MonthDayNano)."
+    - query: "SQL API: SELECT ship_mode, AVG(DATEDIFF('day', ship_date, receipt_date)) FROM lineitem WHERE ship_date >= '1997-01-01' AND ship_date < '1998-01-01' GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (AVG(DATEDIFF(day, l_shipdate, l_receiptdate)) pushed down): does not count."
+
+- id: B07
+  status: unsupported
+  reason: >
+    Needs late_share (conditional count / count, member-vs-member condition) per supplier, ranked by
+    that share. Neither the conditional count nor the ratio is expressible at query time. The
+    line_count >= 100 HAVING and the order/limit alone would be fine.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT supplier_name, MEASURE(line_count) FROM lineitem CROSS JOIN supplier WHERE receipt_date > commit_date GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (WHERE l_receiptdate > l_commitdate pushed down): does not count, and would still need a ratio with the unfiltered count."
+
+- id: B08
+  status: unsupported
+  reason: >
+    line_count by order_priority for 1995 orders is one REST query, but late_share needs a
+    member-vs-member conditional count and a ratio; not expressible at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT order_priority, MEASURE(line_count) FROM lineitem CROSS JOIN orders WHERE order_date >= '1995-01-01' AND order_date < '1996-01-01' GROUP BY 1"
+      error: "Plain CubeScan with joinHints [[lineitem, orders]]: correct line_count, but no late_share column."
+    - note: "Adding AVG(CASE WHEN receipt_date > commit_date ...) turns the plan into CubeScanWrappedSql (see B01)."
+
+- id: B09
+  status: unsupported
+  reason: Monthly late_share needs a member-vs-member conditional count and a ratio; same limit as B01.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Same SQL API shape as B01 with DATE_TRUNC('month', ship_date): CubeScanWrappedSql (pushdown). A REST query with a filter receipt_date > commit_date does not exist (filters take literal values only)."
+
+- id: B10
+  status: unsupported
+  reason: >
+    returned_qty_share = SUM(quantity) on return_flag 'R' lines / SUM(quantity) per manufacturer:
+    needs a filtered measure beside the unfiltered one and a ratio; neither exists at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Two REST queries ({measures: [lineitem.total_quantity], dimensions: [part.manufacturer], receipt_date 1994} with and without return_flag = 'R') give the inputs; dividing them is post-processing. SQL API SUM(CASE ...) plans as CubeScanWrappedSql (see B02)."
+
+- id: B11
+  status: unsupported
+  reason: >
+    Restricting to late lines needs a member-vs-member filter (receipt_date > commit_date), and
+    avg_days_late is an average of a row-level date difference; neither is expressible.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "SQL API WHERE receipt_date > commit_date -> CubeScanWrappedSql (see B07); AVG(receipt_date - commit_date) -> Planning Error on Interval (see B06)."
+
+- id: B12
+  status: unsupported
+  reason: >
+    Two facts with different filters (all partsupp offers, undated; lineitem quantity for 1997 orders)
+    plus a ratio. In one REST query the order_date filter forces a lineitem-rooted join tree, so
+    total_available_qty is computed only over offers that sold in 1997 (wrong), and cover_ratio would
+    need a calculated measure anyway.
+  category: topology
+  fixable_in_model: yes
+  tried:
+    - query: "REST: {measures: [partsupp.total_available_qty, lineitem.total_quantity], dimensions: [part.part_type], filters: [{member: part.part_type, operator: contains, values: [BRASS]}], timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01','1997-12-31']}]}"
+      error: "Runs; total_quantity matches, but total_available_qty is restricted to partsupp rows joined to 1997 lines (e.g. LARGE PLATED BRASS 19,577,748 vs 28,635,818 over all offers). No cover_ratio column."
+    - note: "Two REST queries (partsupp-rooted stock, lineitem-rooted sales) give correct inputs; joining them and dividing is post-processing. Also an expressivity gap (ratio)."
+
+- id: B13
+  status: unsupported
+  reason: >
+    Restricted to late lines (member-vs-member filter) with two conditional shares based on
+    ship_date vs commit_date (also member-vs-member). Not expressible at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Every variant needs WHERE receipt_date > commit_date and AVG(CASE WHEN ship_date > commit_date ...), which the SQL API only runs as CubeScanWrappedSql (see B01, B07)."
+
+- id: B14
+  status: unsupported
+  reason: >
+    Per-supplier late_share for two years side by side and their difference, ranked. Needs the
+    conditional ratio (B01), per-year columns (per-measure filters or time shift) and arithmetic.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "compareDateRange on /v1/load: \"'compareDateRangeQuery' query type is not supported by the client\"; with queryType=multi it returns separate result sets. late_share itself is not expressible (B01)."
+
+- id: B15
+  status: unsupported
+  reason: >
+    Distribution of orders by their count of late lines: a dimension derived from a per-order
+    conditional aggregate, then a count of orders per value. Aggregate of an aggregate plus
+    member-vs-member condition; not expressible.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "SQL API outer COUNT over an inner per-order MEASURE query plans as Projection/Aggregate over CubeScan (post-processing, same plan shape as B42); the inner late-line count is itself pushdown-only (B07)."
+
+- id: B16
+  status: unsupported
+  reason: Top-1 nation per supplier region by late_share needs a rank/window and the conditional ratio; REST has only a global order + limit.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Window functions in the SQL API plan as CubeScanWrappedSql (see B48), and late_share is not expressible (B01)."
+
+- id: B17
+  status: unsupported
+  reason: >
+    Needs the per-part minimum supply_cost (aggregate over all offers of a part) compared with the
+    line's own offer cost, then a conditional quantity share. Derived dimension from an aggregate,
+    member-vs-member comparison and a ratio: none expressible at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "supply_cost is a dimension; there is no MIN measure on it and no subquery dimension. SQL API attempts need a correlated subquery or window (pushdown/post-processing)."
+
+# ================================================================ FINANCE
+- id: B18
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.revenue]
+    timeDimensions: [{dimension: orders.order_date, granularity: year}]
+    order: {orders.order_date: asc}
+  columns: {order_year: orders.order_date.year, revenue: lineitem.revenue}
+  notes: Year bucket comes back as its first date (1992-01-01); the harness treats that as the integer year.
+
+- id: B19
+  status: attempted
+  interface: rest
+  query: {measures: [lineitem.avg_discount], dimensions: [customer.market_segment]}
+  columns: {market_segment: customer.market_segment, avg_discount: lineitem.avg_discount}
+
+- id: B20
+  status: unsupported
+  reason: >
+    gross_sales and revenue for 1996 orders come from one REST query, but discount_amount =
+    gross_sales - revenue is query-time arithmetic between measures; REST has no calculated measures.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT MEASURE(gross_sales), MEASURE(revenue), MEASURE(gross_sales) - MEASURE(revenue) FROM lineitem CROSS JOIN orders WHERE order_date >= '1996-01-01' AND order_date < '1997-01-01'"
+      error: "Runs, but EXPLAIN: `Projection: #measure(lineitem.gross_sales), #measure(lineitem.revenue), #measure(lineitem.gross_sales) - #measure(lineitem.revenue)` over the CubeScan: post-processing."
+
+- id: B21
+  status: attempted
+  interface: rest
+  query:
+    measures: [orders.avg_order_value]
+    dimensions: [orders.order_priority]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {order_priority: orders.order_priority, avg_order_value: orders.avg_order_value}
+
+- id: B22
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.revenue]
+    dimensions: [customer_region.customer_region_name]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {customer_region_name: customer_region.customer_region_name, revenue: lineitem.revenue}
+
+- id: B23
+  status: unsupported
+  reason: Year-over-year growth needs the previous year's revenue on each row (time shift / lag) and a ratio; neither exists at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT DATE_TRUNC('year', order_date), MEASURE(revenue), MEASURE(revenue) / LAG(MEASURE(revenue)) OVER (ORDER BY DATE_TRUNC('year', order_date)) - 1 FROM lineitem CROSS JOIN orders GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (LAG(sum(...)) OVER pushed down): does not count."
+    - note: "compareDateRange: \"'compareDateRangeQuery' query type is not supported by the client\" on /v1/load; multi-query results would need joining (post-processing). Revenue per year alone is B18."
+
+- id: B24
+  status: unsupported
+  reason: >
+    margin = revenue - SUM(supply_cost * quantity): supply_cost (partsupp) and quantity (lineitem) are
+    dimensions; REST cannot aggregate a cross-cube row-level expression, and margin_rate needs a
+    calculated measure.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT supplier_region_name, MEASURE(revenue), SUM(supply_cost * quantity) FROM lineitem CROSS JOIN orders CROSS JOIN partsupp CROSS JOIN supplier CROSS JOIN supplier_nation CROSS JOIN supplier_region WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1"
+      error: "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,partsupp', ... (and any plan with SUM(supply_cost * quantity) is an ad-hoc aggregate, CubeScanWrappedSql at best)."
+
+- id: B25
+  status: unsupported
+  reason: Brand margin needs SUM(supply_cost * quantity) across lineitem and partsupp dimensions and a difference with revenue; no ad-hoc measures at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Same blocker as B24: only expressible as SQL API pushdown of SUM(extended_price*(1-discount) - supply_cost*quantity), which does not count."
+
+- id: B26
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.revenue]
+    timeDimensions: [{dimension: orders.order_date, granularity: month, dateRange: ['1997-01-01', '1997-12-31']}]
+    order: {orders.order_date: asc}
+  columns: {order_month: orders.order_date.month, revenue: lineitem.revenue}
+
+- id: B27
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.line_count, lineitem.revenue]
+    dimensions: [lineitem.discount]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {discount: lineitem.discount, line_count: lineitem.line_count, revenue: lineitem.revenue}
+
+- id: B28
+  status: unsupported
+  reason: >
+    returned_revenue (revenue with return_flag 'R') next to the year's total revenue, plus their
+    ratio: needs a per-measure filter and a calculated measure. returned_revenue by year alone is one
+    REST query, the share is not.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "REST {measures: [lineitem.revenue], filters: [return_flag = R], timeDimensions: [order_date year 1992..1997]} gives returned_revenue only; the denominator needs a second query (post-processing). SQL API SUM(CASE ...) -> CubeScanWrappedSql (see B02)."
+
+- id: B29
+  status: unsupported
+  reason: Two period-filtered revenue columns per region and their growth; REST filters apply to the whole query and there is no calculated measure.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "REST: {measures: [lineitem.revenue], dimensions: [customer_region.customer_region_name], timeDimensions: [{dimension: orders.order_date, compareDateRange: [['1997-01-01','1997-06-30'], ['1998-01-01','1998-06-30']]}]}"
+      error: "\"'compareDateRangeQuery' query type is not supported by the client.Please update the client.\" (queryType=multi returns two separate result sets; combining them is post-processing)."
+
+- id: B30
+  status: unsupported
+  reason: Sum of the top-100 customers' revenue over the total is an aggregate over a ranked sub-result plus a ratio; REST aggregates once.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "The REST query {measures: [lineitem.revenue], dimensions: [orders.customer_key], 1997, order revenue desc, limit 100} lists the top 100 customers, but summing them and dividing by the total is post-processing (an outer SUM in the SQL API plans as Aggregate over CubeScan, cf. B42)."
+
+- id: B31
+  status: unsupported
+  reason: Top-3 nations per segment with rank and share of segment total; needs windows (rank, partitioned sum). REST has only a global order + limit.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT market_segment, MEASURE(revenue) / SUM(MEASURE(revenue)) OVER (PARTITION BY market_segment) FROM lineitem CROSS JOIN orders CROSS JOIN customer GROUP BY 1"
+      error: "EXPLAIN -> CubeScanWrappedSql (window pushed down): does not count."
+
+- id: B32
+  status: unsupported
+  reason: >
+    Line margin needs supply_cost * quantity per row (cross-cube dimensions), a filter on that
+    row-level value, a conditional count share and a conditional sum. None expressible at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Same blocker as B24 (ad-hoc row-level aggregates only via CubeScanWrappedSql pushdown)."
+
+- id: B33
+  status: unsupported
+  reason: Per-clerk avg_order_value for 1996 and 1997 side by side, their difference and per-year HAVING on counts; needs per-measure year filters and arithmetic.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "One REST query per year ({measures: [orders.avg_order_value, orders.order_count], dimensions: [orders.clerk], filter order_count >= 100}) works; joining the two and subtracting is post-processing. compareDateRange is rejected on /v1/load (see B29)."
+
+- id: B34
+  status: unsupported
+  reason: Same-quarter-prior-year revenue per row and growth; no time shift or calculated measure at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "compareDateRange [[1997],[1996]] with quarter granularity: rejected on /v1/load (see B29); LAG in the SQL API -> CubeScanWrappedSql (see B23)."
+
+# ================================================================ MARKETING
+- id: B35
+  status: attempted
+  interface: rest
+  query: {measures: [customer.customer_count], dimensions: [customer.market_segment]}
+  columns: {market_segment: customer.market_segment, customer_count: customer.customer_count}
+
+- id: B36
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.revenue]
+    dimensions: [part.manufacturer]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {manufacturer: part.manufacturer, revenue: lineitem.revenue}
+
+- id: B37
+  status: attempted
+  interface: rest
+  query:
+    measures: [customer.customer_count]
+    dimensions: [customer_region.customer_region_name]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {customer_region_name: customer_region.customer_region_name, customer_count: customer.customer_count}
+  notes: Rooted at orders (orders -> customer -> customer_nation -> customer_region); count_distinct counts customers with a 1997 order.
+
+- id: B38
+  status: attempted
+  interface: rest
+  query:
+    measures: [orders.order_count]
+    dimensions: [customer.market_segment]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1996-01-01', '1996-12-31']}]
+  columns: {market_segment: customer.market_segment, order_count: orders.order_count}
+
+- id: B39
+  status: attempted
+  interface: rest
+  query:
+    measures: [orders.avg_order_value]
+    dimensions: [customer.market_segment]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+  columns: {market_segment: customer.market_segment, avg_order_value: orders.avg_order_value}
+
+- id: B40
+  status: unsupported
+  reason: >
+    container_size (first word of container) is a derived dimension, and revenue_share needs the
+    grand total next to each row. REST has neither query-time dimensions nor windows.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT SPLIT_PART(container, ' ', 1) AS container_size, MEASURE(revenue) FROM lineitem CROSS JOIN orders CROSS JOIN part WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1"
+      error: "Internal Error: Can't find join path to join 'lineitem,orders', 'orders,part', ... (a SPLIT_PART dimension could only ever run as CubeScanWrappedSql pushdown, which does not count)."
+    - note: "Grouping by the full container (40 values) is one REST query; folding to 5 classes and sharing is post-processing."
+
+- id: B41
+  status: unsupported
+  reason: Revenue per nation for 1996 and 1997 side by side, growth ratio and ranking by it; needs per-measure year filters and a calculated measure.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "compareDateRange rejected on /v1/load (see B29); SQL API SUM(CASE WHEN year ...) -> CubeScanWrappedSql (see B02)."
+
+- id: B42
+  status: unsupported
+  reason: >
+    Repeat-customer share needs per-customer order counts (aggregate) turned into a flag and
+    re-aggregated per segment. Aggregate of an aggregate; not expressible in one REST query.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - query: "SQL API: SELECT customer_key, MEASURE(order_count) FROM orders WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1 HAVING MEASURE(order_count) >= 2"
+      error: "Plain CubeScan (one REST query with a measure filter): lists repeat customers, but counting them per segment needs an outer aggregate."
+    - query: "SQL API: SELECT market_segment, COUNT(*) FROM (SELECT market_segment, customer_key, MEASURE(order_count) n FROM orders CROSS JOIN customer WHERE order_date >= '1997-01-01' AND order_date < '1998-01-01' GROUP BY 1,2) t WHERE n >= 2 GROUP BY 1"
+      error: "EXPLAIN -> Projection + Aggregate (HashAggregateExec) over the CubeScan: post-processing."
+
+- id: B43
+  status: attempted
+  interface: rest
+  query:
+    measures: [lineitem.revenue]
+    dimensions: [part.brand]
+    filters: [{member: customer.market_segment, operator: equals, values: [AUTOMOBILE]}]
+    timeDimensions: [{dimension: orders.order_date, dateRange: ['1997-01-01', '1997-12-31']}]
+    order: [[lineitem.revenue, desc], [part.brand, asc]]
+    limit: 5
+  columns: {brand: part.brand, revenue: lineitem.revenue}
+
+- id: B44
+  status: unsupported
+  reason: Revenue from negative-balance customers over total revenue per segment; needs a per-measure filter (account_balance < 0) and a ratio.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Two REST queries (with and without account_balance lt 0) give the inputs; dividing is post-processing. SQL API SUM(CASE ...) -> CubeScanWrappedSql (see B02)."
+
+- id: B45
+  status: unsupported
+  reason: >
+    revenue and customer_count per region for 1997 come from one REST query, but
+    revenue_per_customer = revenue / customer_count is query-time arithmetic; no calculated measures.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "REST {measures: [lineitem.revenue, customer.customer_count], dimensions: [customer_region.customer_region_name], 1997} returns the first three columns; the division in the SQL API is a post-processing Projection (see B20)."
+
+- id: B46
+  status: unsupported
+  reason: Cohorts by first-order year (dimension derived from a per-customer MIN) and next-year retention (existence test); no subquery dimensions at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "No MIN measure on order_date and no sub_query dimension in the model; SQL API nesting is post-processing (see B42)."
+
+- id: B47
+  status: unsupported
+  reason: Lapsed customers (ordered in 1996, not in 1997) need per-customer existence flags across two periods (anti-join); not expressible in one query.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Two REST queries listing 1996 and 1997 customers would need a set difference and re-aggregation (post-processing)."
+
+- id: B48
+  status: unsupported
+  reason: Top-3 brands per customer region needs a rank within region; REST has only a global order + limit.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Window functions in the SQL API (ROW_NUMBER() OVER (PARTITION BY customer_region_name ...)) plan as CubeScanWrappedSql pushdown (same plan as B31), which does not count."
+
+- id: B49
+  status: unsupported
+  reason: Bucketing customers by lifetime order count is a dimension derived from an aggregate, then re-aggregated; no subquery dimensions at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Per-customer order_count and revenue is one REST query (dimensions: [orders.customer_key]); bucketing and summing it is post-processing (see B42 plan)."
+
+- id: B50
+  status: unsupported
+  reason: Segment share of each year's total for two years, side by side, and the change; needs partitioned totals and arithmetic at query time.
+  category: expressivity
+  fixable_in_model: yes
+  tried:
+    - note: "Window share in the SQL API -> CubeScanWrappedSql (see B31); compareDateRange rejected on /v1/load (see B29)."
