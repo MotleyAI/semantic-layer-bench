@@ -1,0 +1,10 @@
+version: 8
+name: customer_region
+sql_table: tpch.main.region
+data_source: tpch
+columns:
+  - name: customer_region_name
+    sql: r_name
+    type: TEXT
+    description: Region of the customer
+description: Region, in its role as the customer's region

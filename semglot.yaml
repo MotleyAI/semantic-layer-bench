@@ -1,0 +1,5 @@
+profiles:
+  ossie-roundtrip: {source: ./model, source-dialect: ossie, target-dialect: ossie, output: ./translated/ossie, model-name: tpch}
+  metricflow: {source: ./model, source-dialect: ossie, target-dialect: dbt, output: ./translated/metricflow, model-name: tpch}
+  snowflake: {source: ./model, source-dialect: ossie, target-dialect: snowflake-semantic-view, output: ./translated/snowflake, database: SNOWFLAKE_SAMPLE_DATA, schema: TPCH_SF1, model-name: tpch}
+  slayer: {source: ./model, source-dialect: ossie, target-dialect: slayer, output: ./translated/slayer, model-name: tpch}

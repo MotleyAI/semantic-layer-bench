@@ -1,0 +1,38 @@
+version: 8
+name: customer
+sql_table: tpch.main.customer
+data_source: tpch
+columns:
+  - name: customer_name
+    sql: c_name
+    type: TEXT
+  - name: market_segment
+    sql: c_mktsegment
+    type: TEXT
+  - name: account_balance
+    sql: c_acctbal
+    type: DOUBLE
+  - name: customer_key
+    sql: c_custkey
+    type: INT
+    primary_key: true
+  - name: c_custkey
+    type: TEXT
+    primary_key: true
+    description: Distinct customers
+measures:
+  - formula: c_custkey:count_distinct
+    name: customer_count
+    description: Distinct customers
+    type: INT
+  - formula: c_custkey:count_distinct
+    name: customer_count
+    description: Distinct customers
+joins:
+  - target_model: customer_nation
+    join_pairs:
+      - - c_nationkey
+        - n_nationkey
+    join_type: left
+    description: 'Join name: customer_to_customer_nation.'
+description: One row per customer

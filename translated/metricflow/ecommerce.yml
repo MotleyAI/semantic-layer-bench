@@ -1,0 +1,441 @@
+models:
+  - name: lineitem
+    description: One row per order line; the sales fact
+    columns:
+      - name: l_shipmode
+        description: Shipping mode (AIR, MAIL, SHIP, TRUCK, RAIL, REG AIR, FOB)
+        data_type: varchar
+      - name: l_returnflag
+        description: R = returned, A = accepted, N = not yet known
+        data_type: varchar
+      - name: l_linestatus
+        description: O = open, F = fulfilled
+        data_type: varchar
+      - name: l_shipinstruct
+        data_type: varchar
+      - name: l_quantity
+        description: Units sold
+        data_type: decimal
+      - name: l_discount
+        description: Discount as a fraction (0.05 = 5%)
+        data_type: decimal
+      - name: l_extendedprice
+        description: Price before discount
+        data_type: decimal
+      - name: l_shipdate
+        description: Date the line item shipped
+        data_type: date
+      - name: l_commitdate
+        description: Committed delivery date
+        data_type: date
+      - name: l_receiptdate
+        description: Date the customer received the item
+        data_type: date
+      - name: l_orderkey
+        description: Number of order lines
+        constraints:
+          - type: primary_key
+        data_tests:
+          - relationships:
+              to: ref('orders')
+              field: o_orderkey
+      - name: l_partkey
+        data_tests:
+          - relationships:
+              to: ref('part')
+              field: p_partkey
+          - relationships:
+              to: ref('partsupp')
+              field: ps_partkey
+      - name: l_suppkey
+        data_tests:
+          - relationships:
+              to: ref('supplier')
+              field: s_suppkey
+          - relationships:
+              to: ref('partsupp')
+              field: ps_suppkey
+  - name: orders
+    description: One row per order
+    columns:
+      - name: o_orderstatus
+        description: F = fulfilled, O = open, P = partial
+        data_type: varchar
+      - name: o_orderpriority
+        description: 1-URGENT .. 5-LOW
+        data_type: varchar
+      - name: o_clerk
+        data_type: varchar
+      - name: o_totalprice
+        description: Order total as recorded on the order
+        data_type: decimal
+      - name: o_orderkey
+        description: Number of orders
+        data_type: integer
+        constraints:
+          - type: primary_key
+      - name: o_custkey
+        data_type: integer
+        data_tests:
+          - relationships:
+              to: ref('customer')
+              field: c_custkey
+      - name: o_orderdate
+        description: Date the order was placed
+        data_type: date
+  - name: customer
+    description: One row per customer
+    columns:
+      - name: c_name
+        data_type: varchar
+      - name: c_mktsegment
+        data_type: varchar
+      - name: c_acctbal
+        data_type: decimal
+      - name: c_custkey
+        description: Distinct customers
+        data_type: integer
+        constraints:
+          - type: primary_key
+      - name: c_nationkey
+        data_tests:
+          - relationships:
+              to: ref('customer_nation')
+              field: n_nationkey
+  - name: customer_nation
+    description: Nation, in its role as the customer's nation
+    columns:
+      - name: n_name
+        description: Nation of the customer
+        data_type: varchar
+      - name: n_regionkey
+        data_tests:
+          - relationships:
+              to: ref('customer_region')
+              field: r_regionkey
+  - name: customer_region
+    description: Region, in its role as the customer's region
+    columns:
+      - name: r_name
+        description: Region of the customer
+        data_type: varchar
+  - name: supplier
+    description: One row per supplier
+    columns:
+      - name: s_name
+        data_type: varchar
+      - name: s_suppkey
+        description: Distinct suppliers
+        data_type: integer
+        constraints:
+          - type: primary_key
+      - name: s_nationkey
+        data_tests:
+          - relationships:
+              to: ref('supplier_nation')
+              field: n_nationkey
+  - name: supplier_nation
+    description: Nation, in its role as the supplier's nation
+    columns:
+      - name: n_name
+        description: Nation of the supplier
+        data_type: varchar
+      - name: n_regionkey
+        data_tests:
+          - relationships:
+              to: ref('supplier_region')
+              field: r_regionkey
+  - name: supplier_region
+    description: Region, in its role as the supplier's region
+    columns:
+      - name: r_name
+        description: Region of the supplier
+        data_type: varchar
+  - name: part
+    description: One row per part
+    columns:
+      - name: p_name
+        data_type: varchar
+      - name: p_brand
+        data_type: varchar
+      - name: p_type
+        data_type: varchar
+      - name: p_container
+        data_type: varchar
+      - name: p_size
+        data_type: integer
+      - name: p_mfgr
+        data_type: varchar
+  - name: partsupp
+    description: One row per (part, supplier) offer; a second fact
+    columns:
+      - name: ps_availqty
+        description: Supply quantity available
+        data_type: integer
+      - name: ps_supplycost
+        description: Cost of one unit from this supplier
+        data_type: decimal
+      - name: ps_partkey
+        constraints:
+          - type: primary_key
+        data_tests:
+          - relationships:
+              to: ref('part')
+              field: p_partkey
+      - name: ps_suppkey
+        constraints:
+          - type: primary_key
+        data_tests:
+          - relationships:
+              to: ref('supplier')
+              field: s_suppkey
+semantic_models:
+  - name: lineitem
+    model: ref('lineitem')
+    entities:
+      - name: l_orderkey
+        type: primary
+      - name: l_linenumber
+        type: primary
+    dimensions:
+      - name: ship_mode
+        type: categorical
+        expr: l_shipmode
+      - name: return_flag
+        type: categorical
+        expr: l_returnflag
+      - name: line_status
+        type: categorical
+        expr: l_linestatus
+      - name: ship_instruct
+        type: categorical
+        expr: l_shipinstruct
+      - name: quantity
+        type: categorical
+        expr: l_quantity
+      - name: discount
+        type: categorical
+        expr: l_discount
+      - name: extended_price
+        type: categorical
+        expr: l_extendedprice
+      - name: ship_date
+        type: time
+        expr: l_shipdate
+      - name: commit_date
+        type: time
+        expr: l_commitdate
+      - name: receipt_date
+        type: time
+        expr: l_receiptdate
+    measures:
+      - name: gross_sales
+        agg: sum
+        expr: l_extendedprice
+      - name: total_quantity
+        agg: sum
+        expr: l_quantity
+      - name: line_count
+        agg: count
+        expr: l_orderkey
+      - name: avg_discount
+        agg: avg
+        expr: l_discount
+      - name: revenue
+        agg: sum
+        expr: lineitem.l_extendedprice *(1 - lineitem.l_discount)
+  - name: orders
+    model: ref('orders')
+    entities:
+      - name: o_orderkey
+        type: primary
+    dimensions:
+      - name: order_status
+        type: categorical
+        expr: o_orderstatus
+      - name: order_priority
+        type: categorical
+        expr: o_orderpriority
+      - name: clerk
+        type: categorical
+        expr: o_clerk
+      - name: total_price
+        type: categorical
+        expr: o_totalprice
+      - name: order_date
+        type: time
+        expr: o_orderdate
+    measures:
+      - name: order_count
+        agg: count
+        expr: o_orderkey
+      - name: order_value
+        agg: sum
+        expr: o_totalprice
+  - name: customer
+    model: ref('customer')
+    entities:
+      - name: c_custkey
+        type: primary
+    dimensions:
+      - name: customer_name
+        type: categorical
+        expr: c_name
+      - name: market_segment
+        type: categorical
+        expr: c_mktsegment
+      - name: account_balance
+        type: categorical
+        expr: c_acctbal
+    measures:
+      - name: customer_count
+        agg: count_distinct
+        expr: c_custkey
+  - name: customer_nation
+    model: ref('customer_nation')
+    entities:
+      - name: n_nationkey
+        type: primary
+    dimensions:
+      - name: customer_nation_name
+        type: categorical
+        expr: n_name
+  - name: customer_region
+    model: ref('customer_region')
+    entities:
+      - name: r_regionkey
+        type: primary
+    dimensions:
+      - name: customer_region_name
+        type: categorical
+        expr: r_name
+  - name: supplier
+    model: ref('supplier')
+    entities:
+      - name: s_suppkey
+        type: primary
+    dimensions:
+      - name: supplier_name
+        type: categorical
+        expr: s_name
+    measures:
+      - name: supplier_count
+        agg: count_distinct
+        expr: s_suppkey
+  - name: supplier_nation
+    model: ref('supplier_nation')
+    entities:
+      - name: n_nationkey
+        type: primary
+    dimensions:
+      - name: supplier_nation_name
+        type: categorical
+        expr: n_name
+  - name: supplier_region
+    model: ref('supplier_region')
+    entities:
+      - name: r_regionkey
+        type: primary
+    dimensions:
+      - name: supplier_region_name
+        type: categorical
+        expr: r_name
+  - name: part
+    model: ref('part')
+    entities:
+      - name: p_partkey
+        type: primary
+    dimensions:
+      - name: part_name
+        type: categorical
+        expr: p_name
+      - name: brand
+        type: categorical
+        expr: p_brand
+      - name: part_type
+        type: categorical
+        expr: p_type
+      - name: container
+        type: categorical
+        expr: p_container
+      - name: size
+        type: categorical
+        expr: p_size
+      - name: manufacturer
+        type: categorical
+        expr: p_mfgr
+  - name: partsupp
+    model: ref('partsupp')
+    entities:
+      - name: ps_partkey
+        type: primary
+      - name: ps_suppkey
+        type: primary
+    dimensions:
+      - name: available_qty
+        type: categorical
+        expr: ps_availqty
+      - name: supply_cost
+        type: categorical
+        expr: ps_supplycost
+    measures:
+      - name: total_available_qty
+        agg: sum
+        expr: ps_availqty
+metrics:
+  - name: revenue
+    type: simple
+    description: Net revenue after discount
+    type_params:
+      measure: revenue
+  - name: gross_sales
+    type: simple
+    description: Revenue before discount
+    type_params:
+      measure: gross_sales
+  - name: total_quantity
+    type: simple
+    description: Units sold
+    type_params:
+      measure: total_quantity
+  - name: line_count
+    type: simple
+    description: Number of order lines
+    type_params:
+      measure: line_count
+  - name: avg_discount
+    type: simple
+    description: Average line discount
+    type_params:
+      measure: avg_discount
+  - name: order_count
+    type: simple
+    description: Number of orders
+    type_params:
+      measure: order_count
+  - name: order_value
+    type: simple
+    description: Sum of order total price
+    type_params:
+      measure: order_value
+  - name: avg_order_value
+    type: ratio
+    description: Order value per order
+    type_params:
+      numerator: order_value
+      denominator: order_count
+  - name: customer_count
+    type: simple
+    description: Distinct customers
+    type_params:
+      measure: customer_count
+  - name: supplier_count
+    type: simple
+    description: Distinct suppliers
+    type_params:
+      measure: supplier_count
+  - name: total_available_qty
+    type: simple
+    description: Supply quantity available
+    type_params:
+      measure: total_available_qty

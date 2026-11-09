@@ -1,0 +1,10 @@
+version: 8
+name: supplier_region
+sql_table: tpch.main.region
+data_source: tpch
+columns:
+  - name: supplier_region_name
+    sql: r_name
+    type: TEXT
+    description: Region of the supplier
+description: Region, in its role as the supplier's region

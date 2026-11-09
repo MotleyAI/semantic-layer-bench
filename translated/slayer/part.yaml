@@ -1,0 +1,24 @@
+version: 8
+name: part
+sql_table: tpch.main.part
+data_source: tpch
+columns:
+  - name: part_name
+    sql: p_name
+    type: TEXT
+  - name: brand
+    sql: p_brand
+    type: TEXT
+  - name: part_type
+    sql: p_type
+    type: TEXT
+  - name: container
+    sql: p_container
+    type: TEXT
+  - name: size
+    sql: p_size
+    type: INT
+  - name: manufacturer
+    sql: p_mfgr
+    type: TEXT
+description: One row per part

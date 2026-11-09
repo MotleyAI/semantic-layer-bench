@@ -1,0 +1,117 @@
+version: 8
+name: lineitem
+sql_table: tpch.main.lineitem
+data_source: tpch
+columns:
+  - name: ship_mode
+    sql: l_shipmode
+    type: TEXT
+    description: Shipping mode (AIR, MAIL, SHIP, TRUCK, RAIL, REG AIR, FOB)
+  - name: return_flag
+    sql: l_returnflag
+    type: TEXT
+    description: R = returned, A = accepted, N = not yet known
+  - name: line_status
+    sql: l_linestatus
+    type: TEXT
+    description: O = open, F = fulfilled
+  - name: ship_instruct
+    sql: l_shipinstruct
+    type: TEXT
+  - name: quantity
+    sql: l_quantity
+    type: DOUBLE
+  - name: discount
+    sql: l_discount
+    type: DOUBLE
+    description: Discount as a fraction (0.05 = 5%)
+  - name: extended_price
+    sql: l_extendedprice
+    type: DOUBLE
+    description: Price before discount
+  - name: ship_date
+    sql: l_shipdate
+    type: DATE
+    description: Date the line item shipped
+  - name: commit_date
+    sql: l_commitdate
+    type: DATE
+    description: Committed delivery date
+  - name: receipt_date
+    sql: l_receiptdate
+    type: DATE
+    description: Date the customer received the item
+  - name: l_extendedprice
+    type: TEXT
+    description: Revenue before discount
+  - name: l_quantity
+    type: TEXT
+    description: Units sold
+  - name: l_orderkey
+    type: TEXT
+    primary_key: true
+    description: Number of order lines
+  - name: l_discount
+    type: TEXT
+    description: Average line discount
+  - name: revenue_expr
+    sql: lineitem.l_extendedprice *(1 - lineitem.l_discount)
+    type: DOUBLE
+    hidden: true
+measures:
+  - formula: l_extendedprice:sum
+    name: gross_sales
+    description: Revenue before discount
+  - formula: l_quantity:sum
+    name: total_quantity
+    description: Units sold
+  - formula: l_orderkey:count
+    name: line_count
+    description: Number of order lines
+    type: INT
+  - formula: l_discount:avg
+    name: avg_discount
+    description: Average line discount
+  - formula: revenue_expr:sum
+    name: revenue
+    description: Net revenue after discount
+  - formula: l_extendedprice:sum
+    name: gross_sales
+    description: Revenue before discount
+  - formula: l_quantity:sum
+    name: total_quantity
+    description: Units sold
+  - formula: l_orderkey:count
+    name: line_count
+    description: Number of order lines
+  - formula: l_discount:avg
+    name: avg_discount
+    description: Average line discount
+joins:
+  - target_model: orders
+    join_pairs:
+      - - l_orderkey
+        - o_orderkey
+    join_type: left
+    description: 'Join name: lineitem_to_orders.'
+  - target_model: part
+    join_pairs:
+      - - l_partkey
+        - p_partkey
+    join_type: left
+    description: 'Join name: lineitem_to_part.'
+  - target_model: supplier
+    join_pairs:
+      - - l_suppkey
+        - s_suppkey
+    join_type: left
+    description: 'Join name: lineitem_to_supplier.'
+  - target_model: partsupp
+    join_pairs:
+      - - l_partkey
+        - ps_partkey
+      - - l_suppkey
+        - ps_suppkey
+    join_type: left
+    description: 'Join name: lineitem_to_partsupp.'
+description: One row per order line; the sales fact

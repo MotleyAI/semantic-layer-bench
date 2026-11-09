@@ -1,0 +1,582 @@
+version: 0.2.0.dev0
+semantic_model:
+  - name: tpch
+    datasets:
+      - name: lineitem
+        source: tpch.main.lineitem
+        primary_key:
+          - l_orderkey
+          - l_linenumber
+        description: One row per order line; the sales fact
+        fields:
+          - name: ship_mode
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_shipmode
+            dimension:
+              is_time: false
+            description: Shipping mode (AIR, MAIL, SHIP, TRUCK, RAIL, REG AIR, FOB)
+            datatype: String
+          - name: return_flag
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_returnflag
+            dimension:
+              is_time: false
+            description: R = returned, A = accepted, N = not yet known
+            datatype: String
+          - name: line_status
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_linestatus
+            dimension:
+              is_time: false
+            description: O = open, F = fulfilled
+            datatype: String
+          - name: ship_instruct
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_shipinstruct
+            dimension:
+              is_time: false
+            datatype: String
+          - name: quantity
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_quantity
+            dimension:
+              is_time: false
+            datatype: Decimal
+          - name: discount
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_discount
+            dimension:
+              is_time: false
+            description: Discount as a fraction (0.05 = 5%)
+            datatype: Decimal
+          - name: extended_price
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_extendedprice
+            dimension:
+              is_time: false
+            description: Price before discount
+            datatype: Decimal
+          - name: ship_date
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_shipdate
+            dimension:
+              is_time: true
+            description: Date the line item shipped
+            datatype: Date
+          - name: commit_date
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_commitdate
+            dimension:
+              is_time: true
+            description: Committed delivery date
+            datatype: Date
+          - name: receipt_date
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_receiptdate
+            dimension:
+              is_time: true
+            description: Date the customer received the item
+            datatype: Date
+          - name: gross_sales
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_extendedprice
+            dimension:
+              is_time: false
+            description: Revenue before discount
+          - name: total_quantity
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_quantity
+            dimension:
+              is_time: false
+            description: Units sold
+          - name: line_count
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_orderkey
+            dimension:
+              is_time: false
+            description: Number of order lines
+          - name: avg_discount
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: l_discount
+            dimension:
+              is_time: false
+            description: Average line discount
+      - name: orders
+        source: tpch.main.orders
+        primary_key:
+          - o_orderkey
+        description: One row per order
+        fields:
+          - name: order_status
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_orderstatus
+            dimension:
+              is_time: false
+            description: F = fulfilled, O = open, P = partial
+            datatype: String
+          - name: order_priority
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_orderpriority
+            dimension:
+              is_time: false
+            description: 1-URGENT .. 5-LOW
+            datatype: String
+          - name: clerk
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_clerk
+            dimension:
+              is_time: false
+            datatype: String
+          - name: total_price
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_totalprice
+            dimension:
+              is_time: false
+            description: Order total as recorded on the order
+            datatype: Decimal
+          - name: order_key
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_orderkey
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: customer_key
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_custkey
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: order_date
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_orderdate
+            dimension:
+              is_time: true
+            description: Date the order was placed
+            datatype: Date
+          - name: order_count
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_orderkey
+            dimension:
+              is_time: false
+            description: Number of orders
+          - name: order_value
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: o_totalprice
+            dimension:
+              is_time: false
+            description: Sum of order total price
+      - name: customer
+        source: tpch.main.customer
+        primary_key:
+          - c_custkey
+        description: One row per customer
+        fields:
+          - name: customer_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: c_name
+            dimension:
+              is_time: false
+            datatype: String
+          - name: market_segment
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: c_mktsegment
+            dimension:
+              is_time: false
+            datatype: String
+          - name: account_balance
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: c_acctbal
+            dimension:
+              is_time: false
+            datatype: Decimal
+          - name: customer_key
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: c_custkey
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: customer_count
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: c_custkey
+            dimension:
+              is_time: false
+            description: Distinct customers
+      - name: customer_nation
+        source: tpch.main.nation
+        primary_key:
+          - n_nationkey
+        description: Nation, in its role as the customer's nation
+        fields:
+          - name: customer_nation_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: n_name
+            dimension:
+              is_time: false
+            description: Nation of the customer
+            datatype: String
+      - name: customer_region
+        source: tpch.main.region
+        primary_key:
+          - r_regionkey
+        description: Region, in its role as the customer's region
+        fields:
+          - name: customer_region_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: r_name
+            dimension:
+              is_time: false
+            description: Region of the customer
+            datatype: String
+      - name: supplier
+        source: tpch.main.supplier
+        primary_key:
+          - s_suppkey
+        description: One row per supplier
+        fields:
+          - name: supplier_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: s_name
+            dimension:
+              is_time: false
+            datatype: String
+          - name: supplier_key
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: s_suppkey
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: supplier_count
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: s_suppkey
+            dimension:
+              is_time: false
+            description: Distinct suppliers
+      - name: supplier_nation
+        source: tpch.main.nation
+        primary_key:
+          - n_nationkey
+        description: Nation, in its role as the supplier's nation
+        fields:
+          - name: supplier_nation_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: n_name
+            dimension:
+              is_time: false
+            description: Nation of the supplier
+            datatype: String
+      - name: supplier_region
+        source: tpch.main.region
+        primary_key:
+          - r_regionkey
+        description: Region, in its role as the supplier's region
+        fields:
+          - name: supplier_region_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: r_name
+            dimension:
+              is_time: false
+            description: Region of the supplier
+            datatype: String
+      - name: part
+        source: tpch.main.part
+        primary_key:
+          - p_partkey
+        description: One row per part
+        fields:
+          - name: part_name
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_name
+            dimension:
+              is_time: false
+            datatype: String
+          - name: brand
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_brand
+            dimension:
+              is_time: false
+            datatype: String
+          - name: part_type
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_type
+            dimension:
+              is_time: false
+            datatype: String
+          - name: container
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_container
+            dimension:
+              is_time: false
+            datatype: String
+          - name: size
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_size
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: manufacturer
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: p_mfgr
+            dimension:
+              is_time: false
+            datatype: String
+      - name: partsupp
+        source: tpch.main.partsupp
+        primary_key:
+          - ps_partkey
+          - ps_suppkey
+        description: One row per (part, supplier) offer; a second fact
+        fields:
+          - name: available_qty
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: ps_availqty
+            dimension:
+              is_time: false
+            datatype: Integer
+          - name: supply_cost
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: ps_supplycost
+            dimension:
+              is_time: false
+            description: Cost of one unit from this supplier
+            datatype: Decimal
+          - name: total_available_qty
+            expression:
+              dialects:
+                - dialect: ANSI_SQL
+                  expression: ps_availqty
+            dimension:
+              is_time: false
+            description: Supply quantity available
+    relationships:
+      - name: lineitem_to_orders
+        from: lineitem
+        to: orders
+        from_columns:
+          - l_orderkey
+        to_columns:
+          - o_orderkey
+      - name: lineitem_to_part
+        from: lineitem
+        to: part
+        from_columns:
+          - l_partkey
+        to_columns:
+          - p_partkey
+      - name: lineitem_to_supplier
+        from: lineitem
+        to: supplier
+        from_columns:
+          - l_suppkey
+        to_columns:
+          - s_suppkey
+      - name: lineitem_to_partsupp
+        from: lineitem
+        to: partsupp
+        from_columns:
+          - l_partkey
+          - l_suppkey
+        to_columns:
+          - ps_partkey
+          - ps_suppkey
+      - name: orders_to_customer
+        from: orders
+        to: customer
+        from_columns:
+          - o_custkey
+        to_columns:
+          - c_custkey
+      - name: customer_to_customer_nation
+        from: customer
+        to: customer_nation
+        from_columns:
+          - c_nationkey
+        to_columns:
+          - n_nationkey
+      - name: customer_nation_to_customer_region
+        from: customer_nation
+        to: customer_region
+        from_columns:
+          - n_regionkey
+        to_columns:
+          - r_regionkey
+      - name: supplier_to_supplier_nation
+        from: supplier
+        to: supplier_nation
+        from_columns:
+          - s_nationkey
+        to_columns:
+          - n_nationkey
+      - name: supplier_nation_to_supplier_region
+        from: supplier_nation
+        to: supplier_region
+        from_columns:
+          - n_regionkey
+        to_columns:
+          - r_regionkey
+      - name: partsupp_to_part
+        from: partsupp
+        to: part
+        from_columns:
+          - ps_partkey
+        to_columns:
+          - p_partkey
+      - name: partsupp_to_supplier
+        from: partsupp
+        to: supplier
+        from_columns:
+          - ps_suppkey
+        to_columns:
+          - s_suppkey
+    metrics:
+      - name: revenue
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(lineitem.l_extendedprice *(1 - lineitem.l_discount))
+        description: Net revenue after discount
+      - name: gross_sales
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(lineitem.l_extendedprice)
+        description: Revenue before discount
+      - name: total_quantity
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(lineitem.l_quantity)
+        description: Units sold
+      - name: line_count
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: count(lineitem.l_orderkey)
+        description: Number of order lines
+      - name: avg_discount
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: avg(lineitem.l_discount)
+        description: Average line discount
+      - name: order_count
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: count(orders.o_orderkey)
+        description: Number of orders
+      - name: order_value
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(orders.o_totalprice)
+        description: Sum of order total price
+      - name: avg_order_value
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(orders.o_totalprice) / count(orders.o_orderkey)
+        description: Order value per order
+      - name: customer_count
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: count(distinct customer.c_custkey)
+        description: Distinct customers
+      - name: supplier_count
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: count(distinct supplier.s_suppkey)
+        description: Distinct suppliers
+      - name: total_available_qty
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: sum(partsupp.ps_availqty)
+        description: Supply quantity available
