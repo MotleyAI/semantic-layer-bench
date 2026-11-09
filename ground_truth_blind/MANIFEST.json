@@ -1,0 +1,356 @@
+{
+  "questions_sha256": "c13e6227c6a0b17927f877ecf60ad9f4c821dcd8a000751f0548468098ca7cb8",
+  "n_questions": 50,
+  "answers": {
+    "B01": {
+      "domain": "operations",
+      "difficulty": "simple",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "282bf10b45632f9a19cd32c7359968329a5d22315c233fba0cc432a0d845b0ff"
+    },
+    "B02": {
+      "domain": "operations",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "94089120609e4f405cbb96efc0b627b6bd9e4035024dc24fc9eb46fb824ed6a6"
+    },
+    "B03": {
+      "domain": "operations",
+      "difficulty": "simple",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "e6d660c4f65e2686fa2096774be5f79a2da6d953901ea131698f9af8b9302200"
+    },
+    "B04": {
+      "domain": "operations",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "b79c2c488f0f14fde3a47ae0f79a14bd58bf108205885609edd34e7b6270dcd9"
+    },
+    "B05": {
+      "domain": "operations",
+      "difficulty": "simple",
+      "rows": 3,
+      "order_matters": false,
+      "sha256": "2f7d3ed6742eccf94c5c75a1894962e433a89b8e2b590e203f386d362a058889"
+    },
+    "B06": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "f1132b4cb9e24a5763cfbf33891df6f52999ca0acea5ca6bfb069420c3ce50d1"
+    },
+    "B07": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "689e20f99f9ab54cf6bb0ce9cb63f9b66ddff7758f88d1d8af25c1cc4e3d7937"
+    },
+    "B08": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "5de12e85572bdaa76cdba3ed89f5eb722797e9a211fa85bd94ee8a55b471c9b8"
+    },
+    "B09": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 12,
+      "order_matters": false,
+      "sha256": "2a0d47737f59e0cfa8708c54879e70bc8610c525022122b43bf9ebc21e9491f7"
+    },
+    "B10": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "81b07a9a91bd8d82a6812be69111dbfb282476b7d6c66843e251e3a34a4b3901"
+    },
+    "B11": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 25,
+      "order_matters": false,
+      "sha256": "da3a941c89a608c82983bce41229fec69c9d806553dfe000e15622f560128573"
+    },
+    "B12": {
+      "domain": "operations",
+      "difficulty": "medium",
+      "rows": 30,
+      "order_matters": false,
+      "sha256": "be614d556535c5fb607ea2705b5cb440373d7cfccaa482136de587c4beeaacc6"
+    },
+    "B13": {
+      "domain": "operations",
+      "difficulty": "hard",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "29571f4c1e1edfa40b52ff9693a07b61acb7d7184daa6e4cbddd435308f88256"
+    },
+    "B14": {
+      "domain": "operations",
+      "difficulty": "hard",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "336c067ee1e655bc8f8d73771666ab4aaf72652d49222229937233abb3e0f57f"
+    },
+    "B15": {
+      "domain": "operations",
+      "difficulty": "hard",
+      "rows": 8,
+      "order_matters": false,
+      "sha256": "f100e82aaddf866f67be19b8b85bf87412a76dfbc393cdfc3bb73712e899a2a7"
+    },
+    "B16": {
+      "domain": "operations",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "ddf928539e916600afd7a1ccf74c056f74268c52c55e02ffdf84e394c5f51935"
+    },
+    "B17": {
+      "domain": "operations",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "513ee238ea0c039f9156398fc3848daa44571d4de86b00f6e83c206b32b1ef70"
+    },
+    "B18": {
+      "domain": "finance",
+      "difficulty": "simple",
+      "rows": 7,
+      "order_matters": false,
+      "sha256": "a4bf32b1498f0d418f6962300cc53070b62e453c0d485ea03f7caadd436f6843"
+    },
+    "B19": {
+      "domain": "finance",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "2329374b8f09bb58b868508f5e8420c4756aa1d8535b63a24d9c6193585db0b8"
+    },
+    "B20": {
+      "domain": "finance",
+      "difficulty": "simple",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "850d10d2107a9ca6146db67fe0e0e9479ae21d120fdc063ba5ba0bd0b627bde1"
+    },
+    "B21": {
+      "domain": "finance",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "5134cae04265915df8e730428f15b6cdd354ca4c82bb47af1e81518f5908def3"
+    },
+    "B22": {
+      "domain": "finance",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "a30bb332c57cf3e6533803f3237a0279740242391ecb360baafd51f75a7bc89c"
+    },
+    "B23": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "8a4849d740a068699fd534632256d2313e3237d9bdfdf57919c5b3fa786ee5a0"
+    },
+    "B24": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "42618441ddbf10ce9a88acd4fddd9beea2f8c49f62b2a7e73f2e5c42c14fdc90"
+    },
+    "B25": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "8f2e065cf1b0c7256d9660a2474b9fc49025f3fef5a454ee5bb84d69796ad665"
+    },
+    "B26": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 12,
+      "order_matters": false,
+      "sha256": "f4876effbfeaab5bcdd307af20d4ef93572e72d9dd465f02008b9e7199fb4931"
+    },
+    "B27": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 11,
+      "order_matters": false,
+      "sha256": "85b20e157b98d599fd1eb949bbd1f97fb29391ff93ec76d12c4ae6f9f86232b5"
+    },
+    "B28": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 6,
+      "order_matters": false,
+      "sha256": "19a3a43741f794fa212b44ae54f94e1f1034a27bb35724892146ee746c9707aa"
+    },
+    "B29": {
+      "domain": "finance",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "eadea4c325c8607f2e91d1f4bf4d160fc39f1eea80b5946d178053907d5b446d"
+    },
+    "B30": {
+      "domain": "finance",
+      "difficulty": "hard",
+      "rows": 1,
+      "order_matters": false,
+      "sha256": "12a95528be7074bbda2a79db02fe465233fe4ff48bba240a839080c0a607ff4f"
+    },
+    "B31": {
+      "domain": "finance",
+      "difficulty": "hard",
+      "rows": 15,
+      "order_matters": true,
+      "sha256": "656029ae779e8aa221c276cafb165b32cc61c0b4e8774e3fc8fc507864d08f64"
+    },
+    "B32": {
+      "domain": "finance",
+      "difficulty": "hard",
+      "rows": 25,
+      "order_matters": false,
+      "sha256": "fed95c8fcf3b6cf929afab1bc9c15f6fd9ebb238d1ac703e47c6a6591ad654ff"
+    },
+    "B33": {
+      "domain": "finance",
+      "difficulty": "hard",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "8e656826868aacf8aac217c4d44c9a7c0328768466903ed624432c4e5028e21e"
+    },
+    "B34": {
+      "domain": "finance",
+      "difficulty": "hard",
+      "rows": 20,
+      "order_matters": false,
+      "sha256": "6ac75d78d10c9e88150611169deeb15cada8eb8dc14e6f87ed466bd25eb703de"
+    },
+    "B35": {
+      "domain": "marketing",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "0a1cfaebd5906ce4308fd629473da9745bb935c16e4b0dd405c29037687a2d8f"
+    },
+    "B36": {
+      "domain": "marketing",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "e5eb94e2d101dbdb67e22ead81873acfd110a314c41b69e228ca20335a6458a9"
+    },
+    "B37": {
+      "domain": "marketing",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "292d4b369b6fe7c33583a364fb232bc981022f83018cdf01049f2533f6040cf3"
+    },
+    "B38": {
+      "domain": "marketing",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "76f9bc25e650b1427d556e8ba3d51f77babc30a93dbd350eb37ff02cae9341e3"
+    },
+    "B39": {
+      "domain": "marketing",
+      "difficulty": "simple",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "05138f9af970a474d661811f19307d40160477aff5e986e348212fa8018c8ccb"
+    },
+    "B40": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "a1738fadf5c6402bac5cb57d4fb91f34c669539f3f5cf0eb4c5d7502ace0c586"
+    },
+    "B41": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 10,
+      "order_matters": true,
+      "sha256": "30241865bb73bb27a76510c637c7ed522d75e7979f93c44b439dc4d5340cee3c"
+    },
+    "B42": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "b6334cb650998c391055011823ed26ee23b8ac3da1408a184dde911601a870d2"
+    },
+    "B43": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": true,
+      "sha256": "b9c26f85063eba83bfe5db9a320cef5ebda75fa1b347df002e76adc74312f6b6"
+    },
+    "B44": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "af09b8cb75a52b58ff84ff2c4c5d69f5ecdc91af78359efa1d754c52e2884434"
+    },
+    "B45": {
+      "domain": "marketing",
+      "difficulty": "medium",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "fae4a4902ff6a9a2f097af4f50c0b2c643385e9a20466a380300f868c482365b"
+    },
+    "B46": {
+      "domain": "marketing",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "db3b0a6036623e1edff4d37914f9fa4412985d0b11f7a7e49767506ab56d10ad"
+    },
+    "B47": {
+      "domain": "marketing",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "7bbe3a293fdd21089916587e8a6ae3f607c0e90ace5130b3d485ccf824f625bb"
+    },
+    "B48": {
+      "domain": "marketing",
+      "difficulty": "hard",
+      "rows": 15,
+      "order_matters": true,
+      "sha256": "a1b174c68bf1d84758acd8f3515c04ef7fd79dd7bdd0e766affe17777356ec5b"
+    },
+    "B49": {
+      "domain": "marketing",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "ca5451d93e8db01738a3a27bb2b5e8a3d521d4deb5869b27c79daae8054dffea"
+    },
+    "B50": {
+      "domain": "marketing",
+      "difficulty": "hard",
+      "rows": 5,
+      "order_matters": false,
+      "sha256": "ff585a64b88c894866481822d03fe756a0eea9d7314ecc25a86cc45a8a5b29dd"
+    }
+  }
+}

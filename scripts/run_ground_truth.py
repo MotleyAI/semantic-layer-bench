@@ -14,13 +14,19 @@ import duckdb
 import yaml
 
 root = Path(__file__).resolve().parent.parent
-qfile = root / "questions" / "questions.yaml"
-outdir = root / "ground_truth"
+# --blind: questions_blind/questions.yaml -> ground_truth_blind/ (questions carry domain and
+# difficulty instead of a pattern).
+BLIND = "--blind" in sys.argv
+suffix = "_blind" if BLIND else ""
+qfile = root / f"questions{suffix}" / "questions.yaml"
+outdir = root / f"ground_truth{suffix}"
 outdir.mkdir(exist_ok=True)
 
 spec = yaml.safe_load(qfile.read_text())
-patterns = spec["patterns"]
+patterns = spec.get("patterns", {})
 con = duckdb.connect(str(root / "data" / "tpch.duckdb"), read_only=True)
+DOMAINS = {"operations", "finance", "marketing"}
+DIFFICULTIES = {"simple", "medium", "hard"}
 
 
 def norm(v):
@@ -36,8 +42,14 @@ if len(ids) != len(set(ids)):
 
 for q in spec["questions"]:
     qid = q["id"]
-    if q["pattern"] not in patterns:
-        errors.append(f"{qid}: unknown pattern {q['pattern']}")
+    if BLIND:
+        if q.get("domain") not in DOMAINS or q.get("difficulty") not in DIFFICULTIES:
+            errors.append(f"{qid}: bad domain/difficulty")
+        tag = f"{q.get('domain')}/{q.get('difficulty')}"
+    else:
+        if q["pattern"] not in patterns:
+            errors.append(f"{qid}: unknown pattern {q['pattern']}")
+        tag = q["pattern"]
     try:
         cur = con.execute(q["sql"])
         cols = [d[0] for d in cur.description]
@@ -57,12 +69,12 @@ for q in spec["questions"]:
         w.writerow(cols)
         w.writerows(rows)
     manifest[qid] = {
-        "pattern": q["pattern"],
+        **({"domain": q["domain"], "difficulty": q["difficulty"]} if BLIND else {"pattern": q["pattern"]}),
         "rows": len(rows),
         "order_matters": q["order_matters"],
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
     }
-    print(f"{qid} {q['pattern']} rows={len(rows)}")
+    print(f"{qid} {tag} rows={len(rows)}")
 
 (outdir / "MANIFEST.json").write_text(json.dumps({
     "questions_sha256": hashlib.sha256(qfile.read_bytes()).hexdigest(),
@@ -73,4 +85,4 @@ for q in spec["questions"]:
 if errors:
     print("\nERRORS:\n" + "\n".join(errors))
     sys.exit(1)
-print(f"\nOK: {len(manifest)} questions, {len(patterns)} patterns")
+print(f"\nOK: {len(manifest)} questions" + ("" if BLIND else f", {len(patterns)} patterns"))
