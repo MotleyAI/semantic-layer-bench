@@ -90,7 +90,8 @@ stages), using only declared members. But not every answer expresses the questio
 A strict reading that counts only answers expressing the question exactly as specified, with no
 reliance on properties of this dataset, would not credit the 10 questions above (B16, B17, B30,
 B31, B48, B51, B62, B65, B67, B73): **65 / 75**. This stricter reading was defined after seeing
-the results, so it is reported as a secondary view, not the headline rule. Cube and MetricFlow
+the results. The harness rule (75 / 75) is unchanged, but the published write-ups (blog post,
+results page, LinkedIn card) lead with the strict 65 / 75 and state that it was set afterwards. Cube and MetricFlow
 scores are unchanged under it (none of their answers involve these features).
 
 ## Failures that come from the translation, not the query API
