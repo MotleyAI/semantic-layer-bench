@@ -4,6 +4,37 @@ How many analytical questions can each semantic layer answer from **the same sem
 
 Layers under test: **SLayer**, **Cube**, **dbt MetricFlow**, **Snowflake Semantic Views**.
 
+## Blind round: 75 business questions
+
+The latest results come from a **blind round**: 75 business questions (operations, finance,
+marketing; 15 simple, 25 medium, 35 hard) written by isolated AI authors who saw only the business
+domain and the model vocabulary, never a semantic layer. Each batch was frozen in git with
+ground truth before any layer was tried (B01 to B50 in `5cfec3b`, B51 to B75 in `ccb5b82`).
+Snowflake is not scored yet (no account).
+
+| Layer | Answered exactly as asked | Correct only via a workaround or this data | Could not express | Wrong |
+|---|---|---|---|---|
+| SLayer | **65** | 10 | 0 | 0 |
+| Cube | 15 | 0 | 60 | 0 |
+| dbt MetricFlow | 11 | 0 | 64 | 0 |
+
+Under the harness rules below, any query that returns the ground-truth table counts, so SLayer
+scores 75/75. The strict count, which excludes answers that need a workaround or rely on a
+property of this dataset, was defined after seeing the results; it is the headline we publish.
+Every miss, every SLayer caveat and the translation-related failures are in
+[`BLIND_RESULTS.md`](BLIND_RESULTS.md).
+
+Rerun it:
+
+```bash
+uv run python scripts/make_data.py
+uv run python scripts/run_ground_truth.py --blind
+uv run python scripts/run_attempts.py slayer --blind   # also metricflow, cube
+uv run python scripts/run_attempts.py --aggregate --blind
+```
+
+Each layer needs its own local setup first; see `layers/<layer>/README.md`.
+
 ## Rules
 
 1. **One baseline model, written in OSSIE** (Apache Ossie / Open Semantic Interchange core spec).
@@ -25,6 +56,13 @@ Layers under test: **SLayer**, **Cube**, **dbt MetricFlow**, **Snowflake Semanti
 
    The common rule: SQL wrapped around a semantic query may only reshape the output (project, rename,
    order, limit). Once it computes something, the work is being done by SQL, not by the semantic layer.
+
+   **Member rule.** Anything a query computes must be built from members the shared model declares
+   (dataset fields and metrics), using whatever the layer's query API offers natively: formulas,
+   query-time aggregation of a declared field, filters, time grains, multi-stage queries. Referencing a
+   physical column or table the model does not declare counts as editing the model, so it does not
+   count. A Cube SQL API query counts only when it is equivalent to one Cube REST query; Cube
+   executing extra SQL around it (pushdown, post-processing) does not count.
 4. **Each attempt records**: `answered` / `unsupported` / `wrong`, the exact query text, the reason, and a
    failure category:
    - `expressivity`: the query API cannot express the calculation.
@@ -33,7 +71,8 @@ Layers under test: **SLayer**, **Cube**, **dbt MetricFlow**, **Snowflake Semanti
    - `fixable_in_model`: yes/no, whether adding a native metric type to the model would fix it.
 5. **Ground truth** is hand-written DuckDB SQL over TPC-H SF1. Results are compared automatically:
    column order as specified, numeric relative tolerance 1e-6, row order checked only where
-   `order_matters: true`.
+   `order_matters: true`. A year bucket returned as its first day (`1995-01-01`) matches the year
+   `1995`: layers differ in how they format year grains, not in what they answer.
 
 ## Scores reported
 
@@ -83,5 +122,11 @@ layers/<layer>/            per-layer setup and query attempts
 questions/questions.yaml   59 questions, 24 patterns, ground-truth SQL
 ground_truth/              one CSV per question + MANIFEST.json (hashes, row counts)
 scripts/make_data.py       builds data/tpch.duckdb
-scripts/run_ground_truth.py  executes all ground-truth SQL and writes ground_truth/
+scripts/run_ground_truth.py  executes all ground-truth SQL and writes ground_truth/ (--blind: ground_truth_blind/)
+scripts/run_attempts.py      runs a layer's recorded attempts and scores them (--blind for the blind round)
+questions_blind/             blind questions: authored*.yaml (verbatim from the authors) + questions.yaml with SQL
+ground_truth_blind/          blind answers + MANIFEST.json
+layers/<layer>/attempts_blind.yaml   each layer's blind-round queries, tries and errors
+results_blind/, results_blind.json   scored blind results, with per-domain and per-difficulty breakdowns
+BLIND_RESULTS.md             blind-round write-up: scores, every miss, caveats
 ```
