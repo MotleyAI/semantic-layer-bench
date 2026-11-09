@@ -18,22 +18,7 @@ step 3 (translation) starts, like the questions.
 | `slayer import-osi` (SLayer 1.7.0, DuckDB) | 10 models, 0 unconverted, 0 dropped |
 | SLayer smoke queries: Q01 (total revenue), Q09 (4-hop region join) | match ground truth exactly |
 
-## Translation findings to resolve in step 3
+## Translations
 
-Preliminary semglot outputs are in `../translated/`. Not final.
-
-- **MetricFlow (`dbt` target) is not usable as emitted.**
-  - Entities are named after physical columns. `customer_nation` and `supplier_nation` both get an
-    entity `n_nationkey`, and the two regions both get `r_regionkey`, so the role-playing joins collide.
-  - lineitem gets two `primary` entities, one per key column. MetricFlow allows one.
-  - The lineitem → partsupp composite join has no single-column entity.
-  - The output file is named `ecommerce.yml`, which looks like a semglot bug.
-  - Fix in step 3: either patch semglot's dbt emitter, or hand-correct the translation with every
-    change logged, keeping the meaning identical.
-- **Snowflake semantic view**: emitted without warnings. Still needs to be run on a real Snowflake
-  account.
-- **Cube**: semglot has no Cube emitter. Options: add one to semglot, or port by hand with a
-  documented mapping.
-- **SLayer**: two paths exist. One is the native `import-osi`, used above. The other is semglot's
-  `slayer` target, which warns about role-playing joins. Use `import-osi`, since it is SLayer's own
-  supported route from OSSIE.
+See [`../TRANSLATION.md`](../TRANSLATION.md) for how each layer is generated, what each translation
+could not carry, and the validation results.

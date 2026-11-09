@@ -1,0 +1,18 @@
+cubes:
+  - name: supplier_nation
+    sql_table: tpch.main.nation
+    description: Nation, in its role as the supplier's nation
+    joins:
+      - name: supplier_region
+        sql: '{CUBE}.n_regionkey = {supplier_region}.r_regionkey'
+        relationship: many_to_one
+    dimensions:
+      - name: supplier_nation_name
+        sql: '{CUBE}.n_name'
+        type: string
+        description: Nation of the supplier
+      - name: n_nationkey
+        sql: '{CUBE}.n_nationkey'
+        type: number
+        primary_key: true
+        public: false

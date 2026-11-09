@@ -1,0 +1,28 @@
+cubes:
+  - name: part
+    sql_table: tpch.main.part
+    description: One row per part
+    dimensions:
+      - name: part_name
+        sql: '{CUBE}.p_name'
+        type: string
+      - name: brand
+        sql: '{CUBE}.p_brand'
+        type: string
+      - name: part_type
+        sql: '{CUBE}.p_type'
+        type: string
+      - name: container
+        sql: '{CUBE}.p_container'
+        type: string
+      - name: size
+        sql: '{CUBE}.p_size'
+        type: number
+      - name: manufacturer
+        sql: '{CUBE}.p_mfgr'
+        type: string
+      - name: p_partkey
+        sql: '{CUBE}.p_partkey'
+        type: number
+        primary_key: true
+        public: false

@@ -1,0 +1,7 @@
+name: tpch_mf
+version: "1.0"
+profile: tpch_mf
+model-paths: ["models"]
+models:
+  tpch_mf:
+    +materialized: view

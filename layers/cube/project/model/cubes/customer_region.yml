@@ -1,0 +1,14 @@
+cubes:
+  - name: customer_region
+    sql_table: tpch.main.region
+    description: Region, in its role as the customer's region
+    dimensions:
+      - name: customer_region_name
+        sql: '{CUBE}.r_name'
+        type: string
+        description: Region of the customer
+      - name: r_regionkey
+        sql: '{CUBE}.r_regionkey'
+        type: number
+        primary_key: true
+        public: false

@@ -1,0 +1,27 @@
+cubes:
+  - name: customer
+    sql_table: tpch.main.customer
+    description: One row per customer
+    joins:
+      - name: customer_nation
+        sql: '{CUBE}.c_nationkey = {customer_nation}.n_nationkey'
+        relationship: many_to_one
+    dimensions:
+      - name: customer_name
+        sql: '{CUBE}.c_name'
+        type: string
+      - name: market_segment
+        sql: '{CUBE}.c_mktsegment'
+        type: string
+      - name: account_balance
+        sql: '{CUBE}.c_acctbal'
+        type: number
+      - name: customer_key
+        sql: '{CUBE}.c_custkey'
+        type: number
+        primary_key: true
+    measures:
+      - name: customer_count
+        sql: '{CUBE}.c_custkey'
+        type: count_distinct
+        description: Distinct customers

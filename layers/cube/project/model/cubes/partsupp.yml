@@ -1,0 +1,29 @@
+cubes:
+  - name: partsupp
+    sql_table: tpch.main.partsupp
+    description: One row per (part, supplier) offer; a second fact
+    joins:
+      - name: part
+        sql: '{CUBE}.ps_partkey = {part}.p_partkey'
+        relationship: many_to_one
+      - name: supplier
+        sql: '{CUBE}.ps_suppkey = {supplier}.s_suppkey'
+        relationship: many_to_one
+    dimensions:
+      - name: available_qty
+        sql: '{CUBE}.ps_availqty'
+        type: number
+      - name: supply_cost
+        sql: '{CUBE}.ps_supplycost'
+        type: number
+        description: Cost of one unit from this supplier
+      - name: pk
+        sql: CAST({CUBE}.ps_partkey AS VARCHAR) || '|' || CAST({CUBE}.ps_suppkey AS VARCHAR)
+        type: string
+        primary_key: true
+        public: false
+    measures:
+      - name: total_available_qty
+        sql: '{CUBE}.ps_availqty'
+        type: sum
+        description: Supply quantity available

@@ -1,6 +1,9 @@
 models:
   - name: lineitem
     description: One row per order line; the sales fact
+    constraints:
+      - type: primary_key
+        columns: [l_orderkey, l_linenumber]
     columns:
       - name: l_shipmode
         description: Shipping mode (AIR, MAIL, SHIP, TRUCK, RAIL, REG AIR, FOB)
@@ -33,8 +36,6 @@ models:
         data_type: date
       - name: l_orderkey
         description: Number of order lines
-        constraints:
-          - type: primary_key
         data_tests:
           - relationships:
               to: ref('orders')
@@ -93,7 +94,6 @@ models:
       - name: c_acctbal
         data_type: decimal
       - name: c_custkey
-        description: Distinct customers
         data_type: integer
         constraints:
           - type: primary_key
@@ -125,7 +125,6 @@ models:
       - name: s_name
         data_type: varchar
       - name: s_suppkey
-        description: Distinct suppliers
         data_type: integer
         constraints:
           - type: primary_key
@@ -168,23 +167,21 @@ models:
         data_type: varchar
   - name: partsupp
     description: One row per (part, supplier) offer; a second fact
+    constraints:
+      - type: primary_key
+        columns: [ps_partkey, ps_suppkey]
     columns:
       - name: ps_availqty
-        description: Supply quantity available
         data_type: integer
       - name: ps_supplycost
         description: Cost of one unit from this supplier
         data_type: decimal
       - name: ps_partkey
-        constraints:
-          - type: primary_key
         data_tests:
           - relationships:
               to: ref('part')
               field: p_partkey
       - name: ps_suppkey
-        constraints:
-          - type: primary_key
         data_tests:
           - relationships:
               to: ref('supplier')
@@ -192,11 +189,24 @@ models:
 semantic_models:
   - name: lineitem
     model: ref('lineitem')
+    defaults:
+      agg_time_dimension: ship_date
     entities:
-      - name: l_orderkey
+      - name: lineitem
         type: primary
-      - name: l_linenumber
-        type: primary
+        expr: CAST(l_orderkey AS VARCHAR) || '|' || CAST(l_linenumber AS VARCHAR)
+      - name: orders
+        type: foreign
+        expr: l_orderkey
+      - name: part
+        type: foreign
+        expr: l_partkey
+      - name: supplier
+        type: foreign
+        expr: l_suppkey
+      - name: partsupp
+        type: foreign
+        expr: CAST(l_partkey AS VARCHAR) || '|' || CAST(l_suppkey AS VARCHAR)
     dimensions:
       - name: ship_mode
         type: categorical
@@ -222,12 +232,18 @@ semantic_models:
       - name: ship_date
         type: time
         expr: l_shipdate
+        type_params:
+          time_granularity: day
       - name: commit_date
         type: time
         expr: l_commitdate
+        type_params:
+          time_granularity: day
       - name: receipt_date
         type: time
         expr: l_receiptdate
+        type_params:
+          time_granularity: day
     measures:
       - name: gross_sales
         agg: sum
@@ -239,16 +255,22 @@ semantic_models:
         agg: count
         expr: l_orderkey
       - name: avg_discount
-        agg: avg
+        agg: average
         expr: l_discount
       - name: revenue
         agg: sum
-        expr: lineitem.l_extendedprice *(1 - lineitem.l_discount)
+        expr: l_extendedprice *(1 - l_discount)
   - name: orders
     model: ref('orders')
+    defaults:
+      agg_time_dimension: order_date
     entities:
-      - name: o_orderkey
+      - name: orders
         type: primary
+        expr: o_orderkey
+      - name: customer
+        type: foreign
+        expr: o_custkey
     dimensions:
       - name: order_status
         type: categorical
@@ -265,6 +287,8 @@ semantic_models:
       - name: order_date
         type: time
         expr: o_orderdate
+        type_params:
+          time_granularity: day
     measures:
       - name: order_count
         agg: count
@@ -275,8 +299,12 @@ semantic_models:
   - name: customer
     model: ref('customer')
     entities:
-      - name: c_custkey
+      - name: customer
         type: primary
+        expr: c_custkey
+      - name: customer_nation
+        type: foreign
+        expr: c_nationkey
     dimensions:
       - name: customer_name
         type: categorical
@@ -287,15 +315,15 @@ semantic_models:
       - name: account_balance
         type: categorical
         expr: c_acctbal
-    measures:
-      - name: customer_count
-        agg: count_distinct
-        expr: c_custkey
   - name: customer_nation
     model: ref('customer_nation')
     entities:
-      - name: n_nationkey
+      - name: customer_nation
         type: primary
+        expr: n_nationkey
+      - name: customer_region
+        type: foreign
+        expr: n_regionkey
     dimensions:
       - name: customer_nation_name
         type: categorical
@@ -303,8 +331,9 @@ semantic_models:
   - name: customer_region
     model: ref('customer_region')
     entities:
-      - name: r_regionkey
+      - name: customer_region
         type: primary
+        expr: r_regionkey
     dimensions:
       - name: customer_region_name
         type: categorical
@@ -312,21 +341,25 @@ semantic_models:
   - name: supplier
     model: ref('supplier')
     entities:
-      - name: s_suppkey
+      - name: supplier
         type: primary
+        expr: s_suppkey
+      - name: supplier_nation
+        type: foreign
+        expr: s_nationkey
     dimensions:
       - name: supplier_name
         type: categorical
         expr: s_name
-    measures:
-      - name: supplier_count
-        agg: count_distinct
-        expr: s_suppkey
   - name: supplier_nation
     model: ref('supplier_nation')
     entities:
-      - name: n_nationkey
+      - name: supplier_nation
         type: primary
+        expr: n_nationkey
+      - name: supplier_region
+        type: foreign
+        expr: n_regionkey
     dimensions:
       - name: supplier_nation_name
         type: categorical
@@ -334,8 +367,9 @@ semantic_models:
   - name: supplier_region
     model: ref('supplier_region')
     entities:
-      - name: r_regionkey
+      - name: supplier_region
         type: primary
+        expr: r_regionkey
     dimensions:
       - name: supplier_region_name
         type: categorical
@@ -343,8 +377,9 @@ semantic_models:
   - name: part
     model: ref('part')
     entities:
-      - name: p_partkey
+      - name: part
         type: primary
+        expr: p_partkey
     dimensions:
       - name: part_name
         type: categorical
@@ -367,10 +402,15 @@ semantic_models:
   - name: partsupp
     model: ref('partsupp')
     entities:
-      - name: ps_partkey
+      - name: partsupp
         type: primary
-      - name: ps_suppkey
-        type: primary
+        expr: CAST(ps_partkey AS VARCHAR) || '|' || CAST(ps_suppkey AS VARCHAR)
+      - name: part
+        type: foreign
+        expr: ps_partkey
+      - name: supplier
+        type: foreign
+        expr: ps_suppkey
     dimensions:
       - name: available_qty
         type: categorical
@@ -378,10 +418,6 @@ semantic_models:
       - name: supply_cost
         type: categorical
         expr: ps_supplycost
-    measures:
-      - name: total_available_qty
-        agg: sum
-        expr: ps_availqty
 metrics:
   - name: revenue
     type: simple
@@ -424,18 +460,3 @@ metrics:
     type_params:
       numerator: order_value
       denominator: order_count
-  - name: customer_count
-    type: simple
-    description: Distinct customers
-    type_params:
-      measure: customer_count
-  - name: supplier_count
-    type: simple
-    description: Distinct suppliers
-    type_params:
-      measure: supplier_count
-  - name: total_available_qty
-    type: simple
-    description: Supply quantity available
-    type_params:
-      measure: total_available_qty

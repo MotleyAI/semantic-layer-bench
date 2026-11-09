@@ -1,0 +1,14 @@
+cubes:
+  - name: supplier_region
+    sql_table: tpch.main.region
+    description: Region, in its role as the supplier's region
+    dimensions:
+      - name: supplier_region_name
+        sql: '{CUBE}.r_name'
+        type: string
+        description: Region of the supplier
+      - name: r_regionkey
+        sql: '{CUBE}.r_regionkey'
+        type: number
+        primary_key: true
+        public: false

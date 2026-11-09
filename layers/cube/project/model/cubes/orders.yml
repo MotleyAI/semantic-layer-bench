@@ -1,0 +1,48 @@
+cubes:
+  - name: orders
+    sql_table: tpch.main.orders
+    description: One row per order
+    joins:
+      - name: customer
+        sql: '{CUBE}.o_custkey = {customer}.c_custkey'
+        relationship: many_to_one
+    dimensions:
+      - name: order_status
+        sql: '{CUBE}.o_orderstatus'
+        type: string
+        description: F = fulfilled, O = open, P = partial
+      - name: order_priority
+        sql: '{CUBE}.o_orderpriority'
+        type: string
+        description: 1-URGENT .. 5-LOW
+      - name: clerk
+        sql: '{CUBE}.o_clerk'
+        type: string
+      - name: total_price
+        sql: '{CUBE}.o_totalprice'
+        type: number
+        description: Order total as recorded on the order
+      - name: order_key
+        sql: '{CUBE}.o_orderkey'
+        type: number
+        primary_key: true
+      - name: customer_key
+        sql: '{CUBE}.o_custkey'
+        type: number
+      - name: order_date
+        sql: '{CUBE}.o_orderdate'
+        type: time
+        description: Date the order was placed
+    measures:
+      - name: order_count
+        sql: '{CUBE}.o_orderkey'
+        type: count
+        description: Number of orders
+      - name: order_value
+        sql: '{CUBE}.o_totalprice'
+        type: sum
+        description: Sum of order total price
+      - name: avg_order_value
+        sql: '{order_value} / {order_count}'
+        type: number
+        description: Order value per order

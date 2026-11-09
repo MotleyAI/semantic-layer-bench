@@ -5,18 +5,18 @@ This is a Snowflake **semantic view** — use this to understand the intended wa
 ## Definition
 
 ```sql
-create or replace semantic view SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.TPCH
+create or replace semantic view BENCH.TPCH.TPCH
 	tables (
-		LINEITEM as tpch.main.lineitem primary key (L_ORDERKEY,L_LINENUMBER) comment='One row per order line; the sales fact',
-		ORDERS as tpch.main.orders primary key (O_ORDERKEY) comment='One row per order',
-		CUSTOMER as tpch.main.customer primary key (C_CUSTKEY) comment='One row per customer',
-		CUSTOMER_NATION as tpch.main.nation primary key (N_NATIONKEY) comment='Nation, in its role as the customer''s nation',
-		CUSTOMER_REGION as tpch.main.region primary key (R_REGIONKEY) comment='Region, in its role as the customer''s region',
-		SUPPLIER as tpch.main.supplier primary key (S_SUPPKEY) comment='One row per supplier',
-		SUPPLIER_NATION as tpch.main.nation primary key (N_NATIONKEY) comment='Nation, in its role as the supplier''s nation',
-		SUPPLIER_REGION as tpch.main.region primary key (R_REGIONKEY) comment='Region, in its role as the supplier''s region',
-		PART as tpch.main.part primary key (P_PARTKEY) comment='One row per part',
-		PARTSUPP as tpch.main.partsupp primary key (PS_PARTKEY,PS_SUPPKEY) comment='One row per (part, supplier) offer; a second fact'
+		LINEITEM as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.lineitem primary key (L_ORDERKEY,L_LINENUMBER) comment='One row per order line; the sales fact',
+		ORDERS as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.orders primary key (O_ORDERKEY) comment='One row per order',
+		CUSTOMER as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.customer primary key (C_CUSTKEY) comment='One row per customer',
+		CUSTOMER_NATION as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.nation primary key (N_NATIONKEY) comment='Nation, in its role as the customer''s nation',
+		CUSTOMER_REGION as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.region primary key (R_REGIONKEY) comment='Region, in its role as the customer''s region',
+		SUPPLIER as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.supplier primary key (S_SUPPKEY) comment='One row per supplier',
+		SUPPLIER_NATION as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.nation primary key (N_NATIONKEY) comment='Nation, in its role as the supplier''s nation',
+		SUPPLIER_REGION as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.region primary key (R_REGIONKEY) comment='Region, in its role as the supplier''s region',
+		PART as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.part primary key (P_PARTKEY) comment='One row per part',
+		PARTSUPP as SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.partsupp primary key (PS_PARTKEY,PS_SUPPKEY) comment='One row per (part, supplier) offer; a second fact'
 	)
 	relationships (
 		LINEITEM_TO_ORDERS as LINEITEM(L_ORDERKEY) references ORDERS(O_ORDERKEY),

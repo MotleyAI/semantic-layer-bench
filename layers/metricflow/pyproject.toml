@@ -1,0 +1,7 @@
+[project]
+name = "mf-layer"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-metricflow[dbt-duckdb]>=0.15.0",
+]

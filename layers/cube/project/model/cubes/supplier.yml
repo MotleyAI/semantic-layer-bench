@@ -1,0 +1,21 @@
+cubes:
+  - name: supplier
+    sql_table: tpch.main.supplier
+    description: One row per supplier
+    joins:
+      - name: supplier_nation
+        sql: '{CUBE}.s_nationkey = {supplier_nation}.n_nationkey'
+        relationship: many_to_one
+    dimensions:
+      - name: supplier_name
+        sql: '{CUBE}.s_name'
+        type: string
+      - name: supplier_key
+        sql: '{CUBE}.s_suppkey'
+        type: number
+        primary_key: true
+    measures:
+      - name: supplier_count
+        sql: '{CUBE}.s_suppkey'
+        type: count_distinct
+        description: Distinct suppliers

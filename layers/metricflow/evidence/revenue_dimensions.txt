@@ -1,0 +1,38 @@
+⠋ 🔍 Looking for all available dimensions...⠙ 🔍 Looking for all available dimensions...✔ 🌱 We've found 36 common dimensions for metrics ['revenue'].
+• lineitem__commit_date
+• lineitem__discount
+• lineitem__extended_price
+• lineitem__line_status
+• lineitem__quantity
+• lineitem__receipt_date
+• lineitem__return_flag
+• lineitem__ship_date
+• lineitem__ship_instruct
+• lineitem__ship_mode
+• metric_time
+• orders__clerk
+• orders__customer__account_balance
+• orders__customer__customer_name
+• orders__customer__market_segment
+• orders__order_date
+• orders__order_priority
+• orders__order_status
+• orders__total_price
+• part__brand
+• part__container
+• part__manufacturer
+• part__part_name
+• part__part_type
+• part__size
+• partsupp__available_qty
+• partsupp__part__brand
+• partsupp__part__container
+• partsupp__part__manufacturer
+• partsupp__part__part_name
+• partsupp__part__part_type
+• partsupp__part__size
+• partsupp__supplier__supplier_name
+• partsupp__supply_cost
+• supplier__supplier_name
+• supplier__supplier_nation__supplier_nation_name
+

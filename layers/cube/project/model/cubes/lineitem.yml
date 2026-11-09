@@ -1,0 +1,82 @@
+cubes:
+  - name: lineitem
+    sql_table: tpch.main.lineitem
+    description: One row per order line; the sales fact
+    joins:
+      - name: orders
+        sql: '{CUBE}.l_orderkey = {orders}.o_orderkey'
+        relationship: many_to_one
+      - name: part
+        sql: '{CUBE}.l_partkey = {part}.p_partkey'
+        relationship: many_to_one
+      - name: supplier
+        sql: '{CUBE}.l_suppkey = {supplier}.s_suppkey'
+        relationship: many_to_one
+      - name: partsupp
+        sql: '{CUBE}.l_partkey = {partsupp}.ps_partkey AND {CUBE}.l_suppkey = {partsupp}.ps_suppkey'
+        relationship: many_to_one
+    dimensions:
+      - name: ship_mode
+        sql: '{CUBE}.l_shipmode'
+        type: string
+        description: Shipping mode (AIR, MAIL, SHIP, TRUCK, RAIL, REG AIR, FOB)
+      - name: return_flag
+        sql: '{CUBE}.l_returnflag'
+        type: string
+        description: R = returned, A = accepted, N = not yet known
+      - name: line_status
+        sql: '{CUBE}.l_linestatus'
+        type: string
+        description: O = open, F = fulfilled
+      - name: ship_instruct
+        sql: '{CUBE}.l_shipinstruct'
+        type: string
+      - name: quantity
+        sql: '{CUBE}.l_quantity'
+        type: number
+      - name: discount
+        sql: '{CUBE}.l_discount'
+        type: number
+        description: Discount as a fraction (0.05 = 5%)
+      - name: extended_price
+        sql: '{CUBE}.l_extendedprice'
+        type: number
+        description: Price before discount
+      - name: ship_date
+        sql: '{CUBE}.l_shipdate'
+        type: time
+        description: Date the line item shipped
+      - name: commit_date
+        sql: '{CUBE}.l_commitdate'
+        type: time
+        description: Committed delivery date
+      - name: receipt_date
+        sql: '{CUBE}.l_receiptdate'
+        type: time
+        description: Date the customer received the item
+      - name: pk
+        sql: CAST({CUBE}.l_orderkey AS VARCHAR) || '|' || CAST({CUBE}.l_linenumber AS VARCHAR)
+        type: string
+        primary_key: true
+        public: false
+    measures:
+      - name: revenue
+        sql: '{CUBE}.l_extendedprice *(1 - {CUBE}.l_discount)'
+        type: sum
+        description: Net revenue after discount
+      - name: gross_sales
+        sql: '{CUBE}.l_extendedprice'
+        type: sum
+        description: Revenue before discount
+      - name: total_quantity
+        sql: '{CUBE}.l_quantity'
+        type: sum
+        description: Units sold
+      - name: line_count
+        sql: '{CUBE}.l_orderkey'
+        type: count
+        description: Number of order lines
+      - name: avg_discount
+        sql: '{CUBE}.l_discount'
+        type: avg
+        description: Average line discount

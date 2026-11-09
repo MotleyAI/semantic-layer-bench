@@ -2,3 +2,12 @@ data/
 .venv/
 __pycache__/
 layers/slayer/storage/
+layers/metricflow/mf.duckdb
+layers/metricflow/project/target/
+layers/metricflow/project/logs/
+layers/metricflow/project/dbt_packages/
+layers/metricflow/project/.user.yml
+layers/cube/project/node_modules/
+layers/cube/project/.env
+layers/cube/.token
+layers/cube/*.log

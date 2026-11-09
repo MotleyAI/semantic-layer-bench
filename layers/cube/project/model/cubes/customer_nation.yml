@@ -1,0 +1,18 @@
+cubes:
+  - name: customer_nation
+    sql_table: tpch.main.nation
+    description: Nation, in its role as the customer's nation
+    joins:
+      - name: customer_region
+        sql: '{CUBE}.n_regionkey = {customer_region}.r_regionkey'
+        relationship: many_to_one
+    dimensions:
+      - name: customer_nation_name
+        sql: '{CUBE}.n_name'
+        type: string
+        description: Nation of the customer
+      - name: n_nationkey
+        sql: '{CUBE}.n_nationkey'
+        type: number
+        primary_key: true
+        public: false

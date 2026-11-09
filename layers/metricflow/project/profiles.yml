@@ -1,0 +1,10 @@
+tpch_mf:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../mf.duckdb
+      attach:
+        - path: /Users/yannranchere/Documents/Claude Code/semantic-layer-bench/data/tpch.duckdb
+          alias: tpch
+          read_only: true
