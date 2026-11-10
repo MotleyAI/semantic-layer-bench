@@ -222,7 +222,7 @@
   {
    "id": "B12",
    "status": "unsupported",
-   "reason": "Two facts with different filters (all partsupp offers, undated; lineitem quantity for 1997 orders) plus a ratio. In one REST query the order_date filter forces a lineitem-rooted join tree, so total_available_qty is computed only over offers that sold in 1997 (wrong), and cover_ratio would need a calculated measure anyway.\n",
+   "reason": "Two facts with different filters (all partsupp offers, undated; lineitem quantity for 1997 orders) plus a ratio. Cube applies the order_date filter to the whole join tree, whatever the root (also re-tested after the 2026-11-10 translation fix that added reverse joins: rooted at part, LARGE PLATED BRASS stock is 28,330,172 against 28,635,818), so total_available_qty is wrong, and cover_ratio would need a calculated measure anyway.\n",
    "category": "topology",
    "fixable_in_model": true,
    "tried": [
@@ -1383,8 +1383,8 @@
   {
    "id": "B74",
    "status": "unsupported",
-   "reason": "Never-ordered customers need an existence test from customer to orders (no join in that direction; orders -> customer only) and conditional averages of account_balance, a dimension with no avg measure.\n",
-   "category": "topology",
+   "reason": "Since the 2026-11-10 translation fix (reverse one_to_many joins), the never-ordered count per segment is one REST query rooted at customer (customer_count with orders.customer_key notSet: 9,876 / 10,000 / 10,002 / 10,161 / 9,965). The question still needs the share of all customers next to it and averages of account_balance, a dimension with no avg measure.\n",
+   "category": "expressivity",
    "fixable_in_model": true,
    "tried": [
     {

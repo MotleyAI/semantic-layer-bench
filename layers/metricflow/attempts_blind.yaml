@@ -2,8 +2,10 @@
 # Same facts as attempts.yaml: no query-time arithmetic (ratios, differences, offsets, windows,
 # shares, ranking, nested aggregation); MAX_JOIN_HOPS = 2 (customer_nation_name is 3 hops and
 # customer_region_name 4 hops from lineitem, supplier_region_name 3 hops); metric filters take only
-# entities as group_by and do not inherit the outer where; customer_count, supplier_count and
-# total_available_qty were dropped in translation (no aggregation time dimension).
+# entities as group_by and do not inherit the outer where. customer_count, supplier_count and
+# total_available_qty were first dropped in translation (no aggregation time dimension); since the
+# translation fix of 2026-11-10 they are emitted with a NULL plumbing agg_time dimension, and the
+# affected entries below were re-tested.
 # Multi-hop dimensions inside a where filter use entity_path (see B43).
 
 - id: B01
@@ -37,11 +39,13 @@
 
 - id: B04
   status: unsupported
-  reason: "total_available_qty is not in the MetricFlow project: MetricFlow requires an aggregation time dimension for every measure and partsupp has none, so the metric was dropped in translation (documented in TRANSLATION.md). supplier_region_name is also 3 hops from partsupp."
+  reason: "total_available_qty is available since the translation fix, but supplier_region_name is 3 hops from partsupp (partsupp -> supplier -> supplier_nation -> supplier_region), beyond MetricFlow's hard-coded 2-hop limit. Grouping by supplier nation (2 hops) works."
   category: topology
   fixable_in_model: no
   tried:
-    - "--metrics total_available_qty --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'The given input does not exactly match any known metrics'"
+    - "--metrics total_available_qty --group-by supplier__supplier_nation__supplier_region__supplier_region_name -> 'The given input does not exactly match any known metrics' (before the translation fix)"
+    - "same query after the fix -> 'The given input does not match any of the available group-by-items' (3 hops)"
+    - "--metrics total_available_qty --group-by supplier__supplier_nation__supplier_nation_name -> runs (25 rows)"
 
 - id: B05
   status: attempted
@@ -104,7 +108,7 @@
 
 - id: B12
   status: unsupported
-  reason: "total_available_qty was dropped in translation (partsupp has no aggregation time dimension), and cover_ratio divides two metrics from different facts, which mf query cannot do."
+  reason: "total_available_qty is available since the translation fix, but cover_ratio divides two metrics from different facts (and the 1997 order-date filter applies to one fact only), which mf query cannot do."
   category: expressivity
   fixable_in_model: no
   tried:
@@ -295,12 +299,13 @@
     - "--metrics revenue --group-by orders__customer__customer_nation__customer_region__customer_region_name -> 'does not match any of the available group-by-items'"
 
 - id: B35
-  status: unsupported
-  reason: "customer_count is not in the MetricFlow project (customer has no time dimension, MetricFlow requires an aggregation time dimension per measure; documented drop). No other declared metric counts customers on file."
-  category: topology
-  fixable_in_model: no
-  tried:
-    - "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"
+  status: attempted
+  interface: mf
+  query:
+    metrics: [customer_count]
+    group_by: [customer__market_segment]
+  columns: {market_segment: customer__market_segment, customer_count: customer_count}
+  notes: "Answerable since the translation fix restored customer_count (NULL plumbing agg_time). Before it: 'The given input does not exactly match any known metrics'."
 
 - id: B36
   status: attempted
@@ -313,8 +318,8 @@
 
 - id: B37
   status: unsupported
-  reason: "customer_count was dropped in translation and mf query cannot count distinct customers at query time; customer_region_name is also 3 hops from orders (beyond the 2-hop limit)."
-  category: topology
+  reason: "customer_count is available since the translation fix but counts customers on file: it cannot be restricted to customers with a 1997 order, because orders is not reachable from the customer model (MetricFlow joins many-to-one only) and mf query cannot count distinct customers at query time. customer_region_name is also 3 hops from orders."
+  category: expressivity
   fixable_in_model: no
   tried:
     - "--metrics customer_count -> 'does not exactly match any known metrics'"
@@ -356,7 +361,7 @@
 
 - id: B42
   status: unsupported
-  reason: "Needs distinct customers (customer_count was dropped) and a per-customer order-count threshold (nested aggregation) turned into a share; not expressible."
+  reason: "Needs distinct customers with a 1997 order (customer_count counts customers on file and cannot take an order-date filter) and a per-customer order-count threshold (nested aggregation) turned into a share; not expressible."
   category: expressivity
   fixable_in_model: no
   tried:
@@ -385,7 +390,7 @@
 
 - id: B45
   status: unsupported
-  reason: "customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); customer_count was dropped and revenue_per_customer needs arithmetic."
+  reason: "customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); customer_count cannot be restricted to 1997 buyers and revenue_per_customer needs arithmetic."
   category: topology
   fixable_in_model: no
   tried:
@@ -402,7 +407,7 @@
 
 - id: B47
   status: unsupported
-  reason: "Lapsed customers (ordered in 1996, not in 1997) need an anti-join per customer; customer_count was dropped and mf query has no existence filters."
+  reason: "Lapsed customers (ordered in 1996, not in 1997) need an anti-join per customer; mf query has no existence filters."
   category: expressivity
   fixable_in_model: no
   tried:
@@ -621,7 +626,7 @@
 
 - id: B71
   status: unsupported
-  reason: "Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts; customer_count was dropped in translation and metric filters do not inherit the outer where nor take a date filter."
+  reason: "Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts over order-dated subsets, which customer_count (customers on file) cannot give; metric filters do not inherit the outer where nor take a date filter."
   category: expressivity
   fixable_in_model: no
   tried:
@@ -645,8 +650,8 @@
 
 - id: B74
   status: unsupported
-  reason: "Customers on file with no orders need customer_count (dropped in translation: customer has no aggregation time dimension) and an anti-join; avg account_balance is not a declared metric either."
-  category: topology
+  reason: "customer_count is available since the translation fix, but customers with no orders need an anti-join (orders is not reachable from customer), and avg account_balance is not a declared metric."
+  category: expressivity
   fixable_in_model: no
   tried:
     - "--metrics customer_count --group-by customer__market_segment -> 'The given input does not exactly match any known metrics'"

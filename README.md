@@ -16,13 +16,14 @@ Snowflake is not scored yet (no account).
 |---|---|---|---|---|
 | SLayer | **65** | 10 | 0 | 0 |
 | Cube | 15 | 0 | 60 | 0 |
-| dbt MetricFlow | 11 | 0 | 64 | 0 |
+| dbt MetricFlow | 12 | 0 | 63 | 0 |
 
 Under the harness rules below, any query that returns the ground-truth table counts, so SLayer
 scores 75/75. The strict count, which excludes answers that need a workaround or rely on a
 property of this dataset, was defined after seeing the results; it is the headline we publish.
 Every miss, every SLayer caveat and the translation-related failures are in
-[`BLIND_RESULTS.md`](BLIND_RESULTS.md).
+[`BLIND_RESULTS.md`](BLIND_RESULTS.md). Cube and MetricFlow use the translations as fixed after an
+independent audit on 2026-11-10 (logged in [`TRANSLATION.md`](TRANSLATION.md)).
 
 Rerun it:
 

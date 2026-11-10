@@ -104,13 +104,15 @@ def _cube_token():
 def run_cube(a):
     if a.get("interface", "rest") == "sql":
         import psycopg
-        with psycopg.connect(host="127.0.0.1", port=15432, user="bench", password="bench-local-secret",
+        with psycopg.connect(host="127.0.0.1", port=int(os.environ.get("CUBE_SQL_PORT", "15432")),
+                             user="bench", password="bench-local-secret",
                              dbname="db", autocommit=True) as c:
             cur = c.execute(a["query"])
             cols = [d.name for d in cur.description]
             return [dict(zip(cols, r)) for r in cur.fetchall()]
     body = json.dumps({"query": a["query"]}).encode()
-    req = urllib.request.Request("http://localhost:4000/cubejs-api/v1/load", data=body,
+    url = os.environ.get("CUBE_URL", "http://localhost:4000") + "/cubejs-api/v1/load"
+    req = urllib.request.Request(url, data=body,
                                  headers={"Authorization": _cube_token(),
                                           "Content-Type": "application/json"})
     for _ in range(60):  # Cube answers "Continue wait" while a query is running

@@ -94,6 +94,7 @@ models:
       - name: c_acctbal
         data_type: decimal
       - name: c_custkey
+        description: Distinct customers
         data_type: integer
         constraints:
           - type: primary_key
@@ -125,6 +126,7 @@ models:
       - name: s_name
         data_type: varchar
       - name: s_suppkey
+        description: Distinct suppliers
         data_type: integer
         constraints:
           - type: primary_key
@@ -172,6 +174,7 @@ models:
         columns: [ps_partkey, ps_suppkey]
     columns:
       - name: ps_availqty
+        description: Supply quantity available
         data_type: integer
       - name: ps_supplycost
         description: Cost of one unit from this supplier
@@ -284,6 +287,12 @@ semantic_models:
       - name: total_price
         type: categorical
         expr: o_totalprice
+      - name: order_key
+        type: categorical
+        expr: o_orderkey
+      - name: customer_key
+        type: categorical
+        expr: o_custkey
       - name: order_date
         type: time
         expr: o_orderdate
@@ -298,6 +307,8 @@ semantic_models:
         expr: o_totalprice
   - name: customer
     model: ref('customer')
+    defaults:
+      agg_time_dimension: agg_time
     entities:
       - name: customer
         type: primary
@@ -315,6 +326,18 @@ semantic_models:
       - name: account_balance
         type: categorical
         expr: c_acctbal
+      - name: customer_key
+        type: categorical
+        expr: c_custkey
+      - name: agg_time
+        type: time
+        expr: cast(null as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: customer_count
+        agg: count_distinct
+        expr: c_custkey
   - name: customer_nation
     model: ref('customer_nation')
     entities:
@@ -340,6 +363,8 @@ semantic_models:
         expr: r_name
   - name: supplier
     model: ref('supplier')
+    defaults:
+      agg_time_dimension: agg_time
     entities:
       - name: supplier
         type: primary
@@ -351,6 +376,18 @@ semantic_models:
       - name: supplier_name
         type: categorical
         expr: s_name
+      - name: supplier_key
+        type: categorical
+        expr: s_suppkey
+      - name: agg_time
+        type: time
+        expr: cast(null as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: supplier_count
+        agg: count_distinct
+        expr: s_suppkey
   - name: supplier_nation
     model: ref('supplier_nation')
     entities:
@@ -401,6 +438,8 @@ semantic_models:
         expr: p_mfgr
   - name: partsupp
     model: ref('partsupp')
+    defaults:
+      agg_time_dimension: agg_time
     entities:
       - name: partsupp
         type: primary
@@ -418,6 +457,15 @@ semantic_models:
       - name: supply_cost
         type: categorical
         expr: ps_supplycost
+      - name: agg_time
+        type: time
+        expr: cast(null as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: total_available_qty
+        agg: sum
+        expr: ps_availqty
 metrics:
   - name: revenue
     type: simple
@@ -460,3 +508,18 @@ metrics:
     type_params:
       numerator: order_value
       denominator: order_count
+  - name: customer_count
+    type: simple
+    description: Distinct customers
+    type_params:
+      measure: customer_count
+  - name: supplier_count
+    type: simple
+    description: Distinct suppliers
+    type_params:
+      measure: supplier_count
+  - name: total_available_qty
+    type: simple
+    description: Supply quantity available
+    type_params:
+      measure: total_available_qty

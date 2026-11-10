@@ -6,6 +6,9 @@ cubes:
       - name: customer_nation
         sql: '{CUBE}.c_nationkey = {customer_nation}.n_nationkey'
         relationship: many_to_one
+      - name: orders
+        sql: '{CUBE}.c_custkey = {orders}.o_custkey'
+        relationship: one_to_many
     dimensions:
       - name: customer_name
         sql: '{CUBE}.c_name'
@@ -20,6 +23,7 @@ cubes:
         sql: '{CUBE}.c_custkey'
         type: number
         primary_key: true
+        public: true
     measures:
       - name: customer_count
         sql: '{CUBE}.c_custkey'

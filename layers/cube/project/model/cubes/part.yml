@@ -2,6 +2,13 @@ cubes:
   - name: part
     sql_table: tpch.main.part
     description: One row per part
+    joins:
+      - name: lineitem
+        sql: '{CUBE}.p_partkey = {lineitem}.l_partkey'
+        relationship: one_to_many
+      - name: partsupp
+        sql: '{CUBE}.p_partkey = {partsupp}.ps_partkey'
+        relationship: one_to_many
     dimensions:
       - name: part_name
         sql: '{CUBE}.p_name'

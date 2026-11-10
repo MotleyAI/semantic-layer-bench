@@ -9,6 +9,9 @@ cubes:
       - name: supplier
         sql: '{CUBE}.ps_suppkey = {supplier}.s_suppkey'
         relationship: many_to_one
+      - name: lineitem
+        sql: '{CUBE}.ps_partkey = {lineitem}.l_partkey AND {CUBE}.ps_suppkey = {lineitem}.l_suppkey'
+        relationship: one_to_many
     dimensions:
       - name: available_qty
         sql: '{CUBE}.ps_availqty'

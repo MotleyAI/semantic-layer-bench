@@ -2,6 +2,10 @@ cubes:
   - name: supplier_region
     sql_table: tpch.main.region
     description: Region, in its role as the supplier's region
+    joins:
+      - name: supplier_nation
+        sql: '{CUBE}.r_regionkey = {supplier_nation}.n_regionkey'
+        relationship: one_to_many
     dimensions:
       - name: supplier_region_name
         sql: '{CUBE}.r_name'

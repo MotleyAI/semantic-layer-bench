@@ -42,26 +42,29 @@ not scored (no account).
 |---|---|---|---|
 | SLayer | **75 / 75** | 0 | 0 |
 | Cube | 15 / 75 | 0 | 60 |
-| MetricFlow | 11 / 75 | 0 | 64 |
+| MetricFlow | 12 / 75 | 0 | 63 |
 
-By batch: B01 to B50 SLayer 50, Cube 15, MetricFlow 11. B51 to B75 SLayer 25, Cube 0, MetricFlow 0.
+By batch: B01 to B50 SLayer 50, Cube 15, MetricFlow 12. B51 to B75 SLayer 25, Cube 0, MetricFlow 0.
+
+These scores use the translations as fixed on 2026-11-10 (see "Translation audit" below). Before
+the fix MetricFlow scored 11 (B35 was blocked by a dropped metric); Cube and SLayer did not change.
 
 | Domain | SLayer | Cube | MetricFlow |
 |---|---|---|---|
 | Operations (25) | 25 | 3 | 2 |
 | Finance (26) | 26 | 6 | 5 |
-| Marketing (24) | 24 | 6 | 4 |
+| Marketing (24) | 24 | 6 | 5 |
 
 | Difficulty | SLayer | Cube | MetricFlow |
 |---|---|---|---|
-| Simple (15) | 15 | 12 | 8 |
+| Simple (15) | 15 | 12 | 9 |
 | Medium (25) | 25 | 3 | 3 |
 | Hard (35) | 35 | 0 | 0 |
 
 ## What the blind questions show
 
 Only 15 of the 75 questions are a declared metric grouped and filtered (exactly Cube's 15
-answers; MetricFlow's 11 are a subset). The other 60 need, at query time, things the OSSIE model
+answers; MetricFlow's 12 are a subset). The other 60 need, at query time, things the OSSIE model
 has no slot for: ratios between metrics or of a filtered count to a total, conditions comparing
 two fields (receipt date after commit date), aggregates of row-level expressions (supply cost
 times quantity), period comparisons, running and rolling totals, percentiles, ranks and buckets
@@ -94,18 +97,46 @@ the results. The harness rule (75 / 75) is unchanged, but the published write-up
 results page, LinkedIn card) lead with the strict 65 / 75 and state that it was set afterwards. Cube and MetricFlow
 scores are unchanged under it (none of their answers involve these features).
 
+## Translation audit (2026-11-10)
+
+After the round was scored, two independent reviews checked whether the Cube and MetricFlow
+translations were the best faithful ones (most idiomatic for each tool, nothing added). They found
+three translation issues, now fixed in semglot (branch `bench-dbt-cube`, commit `cdfa768`), with
+both layers regenerated and re-scored on all 75 questions. Details in `TRANSLATION.md`.
+
+- **Cube, primary keys hidden (bug).** `orders.order_key`, `customer.customer_key` and
+  `supplier.supplier_key` are declared fields but were emitted as primary keys, which Cube makes
+  private by default. Now `public: true`.
+- **Cube, joins one way only.** Every relationship was emitted only as `many_to_one` from the many
+  side; the source relationship is a key equality that can be walked both ways. The reverse
+  `one_to_many` join is now emitted too (Cube's documented pattern). No member is added.
+- **MetricFlow, three metrics dropped.** `customer_count`, `supplier_count` and
+  `total_available_qty` are now emitted with their exact definitions; customer, supplier and
+  partsupp each get a NULL-valued plumbing time dimension `agg_time` to satisfy MetricFlow's
+  aggregation-time requirement (it adds no business member and gives no metric a fake date). The
+  declared key fields are also emitted as dimensions.
+
+Effect: MetricFlow 11 to 12 (B35). Cube unchanged at 15 (every Cube miss also needs query-time
+ratios, conditional measures, windows or nested aggregation; B74's never-ordered count is now one
+query, but the question still needs a share and averages). No previously answered question changed.
+
+Not changed: MetricFlow's 2-hop join limit is hard-coded in the engine (`MAX_JOIN_HOPS = 2`).
+Denormalising nation and region onto customer and supplier would make B22 and B04 answerable
+(MetricFlow 14), but that changes the model layout rather than translating it, so it is not part of
+the score.
+
 ## Failures that come from the translation, not the query API
 
-No layer agent found a translation bug. Several MetricFlow failures come from the documented
-translation losses: `customer_count`, `supplier_count` and `total_available_qty` were dropped
-(MetricFlow needs an aggregation time dimension on each measure's model), which blocks B35 and
-contributes to B04, B12, B37, B42, B45, B71 and B74; `metric_time` is `ship_date`, which also
-limits order-dated offsets (B23, B34, B61, B63); and the 2-hop join limit puts customer and
-supplier nation and region out of reach (B22, B29, B34, B45, B48, B64 and parts of others).
-For Cube, B12 and B74 are join-direction effects (many-to-one only, as declared; no customer to
-orders path, so never-ordered customers are invisible).
+No translation bug remains known. MetricFlow failures that come from engine constraints on the
+shared model: the 2-hop join limit puts customer nation and region and supplier region out of reach
+(B04, B22, B29, B34, B45, B48, B64 and parts of others), and MetricFlow joins only towards the one
+side, so `customer_count` cannot be restricted to customers with orders in a period (B37, B42, B45,
+B71). `metric_time` for line-item metrics is `ship_date` (OSSIE has no aggregation-time setting),
+which would matter for model-level offset metrics (Score B) but not here: B23, B34, B61 and B63
+fail under Score A because `mf query` has no query-time offsets or arithmetic. For Cube, B12 fails
+because a filter applies to the whole join tree, whatever its root.
 
-Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
+Cube: 52 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 63.
 
 ## Every non-answered question
 
@@ -115,14 +146,14 @@ Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 |---|---|---|---|---|
 | B01 | operations / simple | expressivity | yes | late_share is a ratio of a filtered count (receipt_date > commit_date) to the unfiltered line_count. mf query applies one where clause to the whole query and has no query-time arithmetic, so the late count and the total cannot be returned or divided in one query. |
 | B02 | operations / simple | expressivity | no | Needs a returned-line share (filtered count / count, query-time arithmetic) and supplier_region_name is 3 hops from lineitem (lineitem -> supplier -> supplier_nation -> supplier_region), beyond MetricFlow's 2-hop limit. |
-| B04 | operations / simple | topology | no | total_available_qty is not in the MetricFlow project: MetricFlow requires an aggregation time dimension for every measure and partsupp has none, so the metric was dropped in translation (documented in TRANSLATION.md). supplier_region_name is also 3 hops from partsupp. |
+| B04 | operations / simple | topology | no | total_available_qty is available since the translation fix, but supplier_region_name is 3 hops from partsupp (partsupp -> supplier -> supplier_nation -> supplier_region), beyond MetricFlow's hard-coded 2-hop limit. Grouping by supplier nation (2 hops) works. |
 | B06 | operations / medium | expressivity | no | Average of a per-line date difference (receipt_date - ship_date) is a query-time aggregation of an expression over dimensions. mf query can only request declared metrics; no declared metric aggregates a date difference. |
 | B07 | operations / medium | expressivity | yes | late_share is a filtered-count ratio (no query-time arithmetic). The HAVING line_count >= 100 could be a metric filter on the supplier entity, but --explain shows that subquery ignores the outer receipt-date filter, so it counts all-time lines. |
 | B08 | operations / medium | expressivity | yes | late_share is a ratio of a filtered line count to line_count; mf query has one where clause and no query-time arithmetic. line_count by order_priority with the 1995 filter alone is expressible. |
 | B09 | operations / medium | expressivity | yes | late_share per ship month is a ratio of a filtered line count to line_count; not expressible at query time (no arithmetic, single where). |
 | B10 | operations / medium | expressivity | yes | returned_qty_share = total_quantity on return_flag = 'R' lines / total_quantity: a filtered measure next to the unfiltered one and their ratio. Not expressible in mf query. |
 | B11 | operations / medium | expressivity | no | late_line_count is expressible (line_count with receipt_date > commit_date, supplier_nation_name is 2 hops), but avg_days_late averages a per-line date difference, which is not a declared metric and cannot be computed at query time. |
-| B12 | operations / medium | expressivity | no | total_available_qty was dropped in translation (partsupp has no aggregation time dimension), and cover_ratio divides two metrics from different facts, which mf query cannot do. |
+| B12 | operations / medium | expressivity | no | total_available_qty is available since the translation fix, but cover_ratio divides two metrics from different facts (and the 1997 order-date filter applies to one fact only), which mf query cannot do. |
 | B13 | operations / hard | expressivity | yes | late_line_count is expressible, but shipped_late_share and transit_late_share are ratios of differently filtered counts; mf query has one where clause and no arithmetic. |
 | B14 | operations / hard | expressivity | no | Needs late_share (a filtered-count ratio) for two years side by side per supplier, their difference, a per-year >= 50 lines threshold, and a ranking on the difference. mf query has no arithmetic, no period-side-by-side filtered metrics and cannot order by a computed change. |
 | B15 | operations / hard | expressivity | no | Distribution of orders by number of late lines is a nested aggregation (count lines per order, then count orders per value). mf query aggregates once and cannot group by a metric. |
@@ -140,15 +171,14 @@ Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 | B32 | finance / hard | expressivity | no | Line margin needs supply_cost * quantity per line, then a filter on the per-line margin and a share; not expressible (no expression aggregation, measures cannot use joined columns). |
 | B33 | finance / hard | expressivity | no | Needs avg_order_value for 1996 and 1997 side by side per clerk, their difference, a >= 100 orders per year threshold and a ranking on the difference. Metric filters only take entities as group_by (clerk is a dimension), and there is no arithmetic. |
 | B34 | finance / hard | topology | no | customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); same-quarter-last-year growth also needs an offset and arithmetic. |
-| B35 | marketing / simple | topology | no | customer_count is not in the MetricFlow project (customer has no time dimension, MetricFlow requires an aggregation time dimension per measure; documented drop). No other declared metric counts customers on file. |
-| B37 | marketing / simple | topology | no | customer_count was dropped in translation and mf query cannot count distinct customers at query time; customer_region_name is also 3 hops from orders (beyond the 2-hop limit). |
+| B37 | marketing / simple | expressivity | no | customer_count is available since the translation fix but counts customers on file: it cannot be restricted to customers with a 1997 order, because orders is not reachable from the customer model (MetricFlow joins many-to-one only) and mf query cannot count distinct customers at query time. customer_region_name is also 3 hops from orders. |
 | B40 | marketing / medium | expressivity | no | container_size is a derived dimension (first word of container) that the model does not declare, and revenue_share needs a total across groups and a ratio. mf query groups only by declared dimensions and has no arithmetic. |
 | B41 | marketing / medium | expressivity | no | customer_nation_name is 3 hops from lineitem (beyond the 2-hop limit); revenue for two years side by side and their growth also need filtered metrics and arithmetic. |
-| B42 | marketing / medium | expressivity | no | Needs distinct customers (customer_count was dropped) and a per-customer order-count threshold (nested aggregation) turned into a share; not expressible. |
+| B42 | marketing / medium | expressivity | no | Needs distinct customers with a 1997 order (customer_count counts customers on file and cannot take an order-date filter) and a per-customer order-count threshold (nested aggregation) turned into a share; not expressible. |
 | B44 | marketing / medium | expressivity | yes | Revenue from negative-balance customers / total revenue per segment is a filtered measure next to the unfiltered one plus a ratio; mf query has one where clause and no arithmetic. |
-| B45 | marketing / medium | topology | no | customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); customer_count was dropped and revenue_per_customer needs arithmetic. |
+| B45 | marketing / medium | topology | no | customer_region_name is 4 hops from lineitem (beyond the 2-hop limit); customer_count cannot be restricted to 1997 buyers and revenue_per_customer needs arithmetic. |
 | B46 | marketing / hard | expressivity | no | Cohort by first-order year is a dimension derived from an aggregate (min order_date per customer), plus a next-year existence test and a share; mf query cannot group by a metric and has no existence filters. |
-| B47 | marketing / hard | expressivity | no | Lapsed customers (ordered in 1996, not in 1997) need an anti-join per customer; customer_count was dropped and mf query has no existence filters. |
+| B47 | marketing / hard | expressivity | no | Lapsed customers (ordered in 1996, not in 1997) need an anti-join per customer; mf query has no existence filters. |
 | B48 | marketing / hard | expressivity | no | Top-3 brands per customer region needs ranking within groups (mf query has only a global order and limit), and customer_region_name is 4 hops from lineitem. |
 | B49 | marketing / hard | expressivity | no | Bucketing customers by lifetime order count is a dimension derived from a metric (multi-stage), then customer counts and revenue per bucket; mf query cannot group by a metric. |
 | B50 | marketing / hard | expressivity | no | Share of each year's revenue per segment needs a partitioned total and a ratio for two years side by side plus their difference; not expressible. |
@@ -172,10 +202,10 @@ Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 | B68 | marketing / hard | expressivity | no | Cohort by first-order year is a dimension derived from min(order_date) per customer (multi-stage), plus an index over the cohort's first year; mf query cannot group by a metric and has no arithmetic. |
 | B69 | marketing / hard | expressivity | no | Days to second order needs per-customer order positions (row_number) and percentiles; not expressible. |
 | B70 | marketing / hard | expressivity | no | Manufacturer pair co-occurrence per order is a self-join of lineitem through orders, and lift needs ratios over N; not expressible in mf query. |
-| B71 | marketing / hard | expressivity | no | Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts; customer_count was dropped in translation and metric filters do not inherit the outer where nor take a date filter. |
+| B71 | marketing / hard | expressivity | no | Lapsed and reactivated customers need per-customer existence tests across years (anti-join) and distinct customer counts over order-dated subsets, which customer_count (customers on file) cannot give; metric filters do not inherit the outer where nor take a date filter. |
 | B72 | marketing / medium | expressivity | no | First order per customer (earliest order_date, ties by key) is a row-number-derived dimension; averages of first versus later orders and their ratio are not expressible. |
 | B73 | marketing / hard | expressivity | no | Revenue quartiles per year (NTILE) for customers active in both years, cross-tabulated with zero-filled cells: multi-stage ranking and existence tests; not expressible. |
-| B74 | marketing / medium | topology | no | Customers on file with no orders need customer_count (dropped in translation: customer has no aggregation time dimension) and an anti-join; avg account_balance is not a declared metric either. |
+| B74 | marketing / medium | expressivity | no | customer_count is available since the translation fix, but customers with no orders need an anti-join (orders is not reachable from customer), and avg account_balance is not a declared metric. |
 | B75 | marketing / hard | expressivity | no | Bucketing customers by number of distinct brands bought is a dimension derived from a per-customer count distinct (multi-stage), then customer counts, averages and shares; not expressible. |
 
 ### cube
@@ -190,7 +220,7 @@ Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 | B09 | operations / medium | expressivity | yes | Monthly late_share needs a member-vs-member conditional count and a ratio; same limit as B01. |
 | B10 | operations / medium | expressivity | yes | returned_qty_share = SUM(quantity) on return_flag 'R' lines / SUM(quantity) per manufacturer: needs a filtered measure beside the unfiltered one and a ratio; neither exists at query time. |
 | B11 | operations / medium | expressivity | yes | Restricting to late lines needs a member-vs-member filter (receipt_date > commit_date), and avg_days_late is an average of a row-level date difference; neither is expressible. |
-| B12 | operations / medium | topology | yes | Two facts with different filters (all partsupp offers, undated; lineitem quantity for 1997 orders) plus a ratio. In one REST query the order_date filter forces a lineitem-rooted join tree, so total_available_qty is computed only over offers that sold in 1997 (wrong), and cover_ratio would need a calculated measure anyway. |
+| B12 | operations / medium | topology | yes | Two facts with different filters (all partsupp offers, undated; lineitem quantity for 1997 orders) plus a ratio. Cube applies the order_date filter to the whole join tree, whatever the root (also re-tested after the 2026-11-10 translation fix that added reverse joins: rooted at part, LARGE PLATED BRASS stock is 28,330,172 against 28,635,818), so total_available_qty is wrong, and cover_ratio would need a calculated measure anyway. |
 | B13 | operations / hard | expressivity | yes | Restricted to late lines (member-vs-member filter) with two conditional shares based on ship_date vs commit_date (also member-vs-member). Not expressible at query time. |
 | B14 | operations / hard | expressivity | yes | Per-supplier late_share for two years side by side and their difference, ranked. Needs the conditional ratio (B01), per-year columns (per-measure filters or time shift) and arithmetic. |
 | B15 | operations / hard | expressivity | yes | Distribution of orders by their count of late lines: a dimension derived from a per-order conditional aggregate, then a count of orders per value. Aggregate of an aggregate plus member-vs-member condition; not expressible. |
@@ -240,5 +270,5 @@ Cube: 51 of 60 misses are `fixable_in_model: yes`. MetricFlow: 14 of 64.
 | B71 | marketing / hard | expressivity | yes | Lapsed and reactivated customers need per-customer existence flags across three periods (anti-join and semi-join), then counts per segment and a ratio. |
 | B72 | marketing / medium | expressivity | yes | First order per customer (ROW_NUMBER by date, key), then conditional averages of total_price on first vs other orders and their ratio; no window, no conditional measure, no calculated measure. |
 | B73 | marketing / hard | expressivity | no | Two NTILE(4) assignments per customer (one per year, on per-year revenue), restricted to customers active in both years, cross-tabulated with zero cells; windows over sub-results and a dense grid. |
-| B74 | marketing / medium | topology | yes | Never-ordered customers need an existence test from customer to orders (no join in that direction; orders -> customer only) and conditional averages of account_balance, a dimension with no avg measure. |
+| B74 | marketing / medium | expressivity | yes | Since the 2026-11-10 translation fix (reverse one_to_many joins), the never-ordered count per segment is one REST query rooted at customer (customer_count with orders.customer_key notSet: 9,876 / 10,000 / 10,002 / 10,161 / 9,965). The question still needs the share of all customers next to it and averages of account_balance, a dimension with no avg measure. |
 | B75 | marketing / hard | expressivity | yes | Per-customer distinct brand count (an aggregate) bucketed into a dimension, then counts, averages and revenue shares per bucket; aggregate of an aggregate plus ratios. |

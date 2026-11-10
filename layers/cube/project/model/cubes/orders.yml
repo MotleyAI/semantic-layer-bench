@@ -6,6 +6,9 @@ cubes:
       - name: customer
         sql: '{CUBE}.o_custkey = {customer}.c_custkey'
         relationship: many_to_one
+      - name: lineitem
+        sql: '{CUBE}.o_orderkey = {lineitem}.l_orderkey'
+        relationship: one_to_many
     dimensions:
       - name: order_status
         sql: '{CUBE}.o_orderstatus'
@@ -26,6 +29,7 @@ cubes:
         sql: '{CUBE}.o_orderkey'
         type: number
         primary_key: true
+        public: true
       - name: customer_key
         sql: '{CUBE}.o_custkey'
         type: number

@@ -6,6 +6,12 @@ cubes:
       - name: supplier_nation
         sql: '{CUBE}.s_nationkey = {supplier_nation}.n_nationkey'
         relationship: many_to_one
+      - name: lineitem
+        sql: '{CUBE}.s_suppkey = {lineitem}.l_suppkey'
+        relationship: one_to_many
+      - name: partsupp
+        sql: '{CUBE}.s_suppkey = {partsupp}.ps_suppkey'
+        relationship: one_to_many
     dimensions:
       - name: supplier_name
         sql: '{CUBE}.s_name'
@@ -14,6 +20,7 @@ cubes:
         sql: '{CUBE}.s_suppkey'
         type: number
         primary_key: true
+        public: true
     measures:
       - name: supplier_count
         sql: '{CUBE}.s_suppkey'

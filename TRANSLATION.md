@@ -55,8 +55,9 @@ translation bug, which is logged in this file. SHA-256 of the model: `b000d9acf0
 
 - **MetricFlow**
   - **No measures on tables without a time dimension.** MetricFlow requires an aggregation time
-    dimension in the measure's own semantic model. `customer_count`, `supplier_count` and
-    `total_available_qty` are therefore dropped (`dbt parse` fails if they are kept).
+    dimension in the measure's own semantic model. Until 2026-11-10 `customer_count`,
+    `supplier_count` and `total_available_qty` were dropped for this reason; they are now kept with
+    a NULL plumbing time dimension (see the log below).
   - **Join depth.** From `revenue`, MetricFlow reaches `supplier_nation` (2 hops), but not
     `customer_nation` (3 hops) or `customer_region` (4 hops). Evidence:
     `layers/metricflow/evidence/revenue_dimensions.txt`. These count as `topology` failures.
@@ -65,6 +66,32 @@ translation bug, which is logged in this file. SHA-256 of the model: `b000d9acf0
     one. MetricFlow's time functions (offsets, cumulative) only work on `metric_time`. So
     "by order month" time-series questions on line-item metrics are limited by this. Recorded as a
     `topology` limitation; Score B may change it.
-- **Cube.** Relationship names are not carried (Cube names a join after its target cube). Joins
-  are many-to-one only, as declared.
+- **Cube.** Relationship names are not carried (Cube names a join after its target cube). Since
+  2026-11-10 each relationship is emitted in both directions (see the log below).
 - **Snowflake.** Relationship synonyms only. Runtime behaviour is untested.
+
+## Translation fix log
+
+### 2026-11-10: audit of the Cube and MetricFlow translations
+
+Two independent reviews (one per tool, checked against current Cube 1.6.76 and MetricFlow 0.213
+docs and code, every change tested in a scratch copy) asked whether each translation was the best
+faithful one. Fixed in semglot `bench-dbt-cube` commit `cdfa768`; both layers regenerated with
+`semglot build --profile cube|metricflow`. The OSSIE model itself is unchanged (same SHA-256).
+
+| Layer | Fix | Why | Adds a member? |
+|---|---|---|---|
+| Cube | Declared primary-key fields (`orders.order_key`, `customer.customer_key`, `supplier.supplier_key`) emitted with `public: true` | Cube makes primary keys private by default, which hid declared fields (bug) | No, restores declared fields |
+| Cube | Each relationship also emitted as a `one_to_many` join on the one side | A source relationship is a key equality usable in both directions; Cube joins are directed, and its docs show the reverse join as the way to express that | No (joins are not members) |
+| MetricFlow | `customer_count`, `supplier_count`, `total_available_qty` kept, with a NULL-valued time dimension `agg_time` as `defaults.agg_time_dimension` on customer, supplier and partsupp | MetricFlow requires an aggregation time dimension; NULL keeps metric definitions exact and gives no fake date | One disclosed plumbing time dimension per table; metric definitions unchanged |
+| MetricFlow | Declared key fields emitted as categorical dimensions (`order_key`, `customer_key`, `supplier_key`) | They were only reachable as entities, under other names | No, restores declared fields |
+
+Validation: Cube loads all cubes; `dbt parse` and `mf validate-configs` (including warehouse checks)
+report 0 errors. Re-scoring the blind round: MetricFlow 11 to 12 (B35), Cube unchanged at 15, no
+previously answered question changed.
+
+Considered and not applied: denormalising nation and region onto MetricFlow's customer and supplier
+models to get round the hard-coded 2-hop join limit. It would answer B04 and B22, but it changes the
+model's layout rather than translating it. The ship_date `agg_time_dimension` was kept: order_date is
+not on lineitem, and MetricFlow only accepts a time dimension of the measure's own model.
+
