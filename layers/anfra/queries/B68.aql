@@ -1,0 +1,18 @@
+dimension customer.first_order_date = orders | min(orders.order_date) | dimensionalize(customer.customer_key);
+dimension customer.first_order_year = date_part('year', customer.first_order_date);
+dimension orders.is_first_year = date_part('year', orders.order_date) == customer.first_order_year;
+explore {
+  dimensions {
+    first_order_year: customer.first_order_year,
+    order_year: orders.order_date | year(),
+  }
+  measures {
+    revenue: revenue,
+    revenue_index: revenue / (revenue | where(orders.is_first_year is true) | keep_grains(customer.first_order_year)),
+  }
+  filters {
+    customer.first_order_year in [1992, 1993, 1994, 1995],
+    orders.order_date matches @(1992-01-01 - 1997-12-31),
+  }
+  sorts { first_order_year asc, order_year asc }
+}

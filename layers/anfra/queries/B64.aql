@@ -1,0 +1,13 @@
+dimension orders.large_order_threshold_1997 = orders | percentile_cont(orders.total_price, 0.9) | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize();
+dimension orders.is_large = orders.total_price > orders.large_order_threshold_1997;
+explore {
+  dimensions { customer_region_name: customer_region.customer_region_name }
+  measures {
+    large_order_threshold: orders | max(orders.large_order_threshold_1997),
+    order_value: order_value,
+    large_order_count: order_count | where(orders.is_large is true),
+    large_order_value_share: (order_value | where(orders.is_large is true)) / order_value,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { customer_region_name asc }
+}

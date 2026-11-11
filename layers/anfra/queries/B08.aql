@@ -1,0 +1,9 @@
+explore {
+  dimensions { order_priority: orders.order_priority }
+  measures {
+    line_count: line_count,
+    late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+  }
+  filters { orders.order_date matches @(1995-01-01 - 1995-12-31) }
+  sorts { order_priority asc }
+}

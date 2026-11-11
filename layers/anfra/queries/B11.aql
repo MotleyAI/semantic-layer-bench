@@ -1,0 +1,13 @@
+dimension lineitem.is_late = lineitem.receipt_date > lineitem.commit_date;
+explore {
+  dimensions { supplier_nation_name: supplier_nation.supplier_nation_name }
+  measures {
+    late_line_count: line_count,
+    avg_days_late: lineitem | avg(date_diff('day', lineitem.commit_date, lineitem.receipt_date)),
+  }
+  filters {
+    lineitem.ship_date matches @(1996-01-01 - 1996-12-31),
+    lineitem.is_late is true,
+  }
+  sorts { supplier_nation_name asc }
+}

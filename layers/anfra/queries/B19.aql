@@ -1,0 +1,5 @@
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures { avg_discount: avg_discount }
+  sorts { market_segment asc }
+}

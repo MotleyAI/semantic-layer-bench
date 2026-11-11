@@ -1,0 +1,15 @@
+metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+metric supply_cost_1997 = lineitem | sum(partsupp.supply_cost * lineitem.quantity) | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+dimension customer.orders_1997 = order_count | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+dimension customer.margin_rate_1997 = (revenue_1997 - supply_cost_1997) / revenue_1997 | dimensionalize(customer.customer_key);
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    customer_count: customer_count,
+    p25_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.25),
+    median_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.5),
+    p75_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.75),
+  }
+  filters { customer.orders_1997 > 2 }
+  sorts { market_segment asc }
+}

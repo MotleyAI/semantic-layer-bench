@@ -1,0 +1,7 @@
+# Copy to .anfra/data_sources.yml and set path. anfra's DuckDB connector (1.4.2) cannot open
+# data/tpch.duckdb, so point it at the storage-v1.4 copy from scripts/make_duckdb_v14.py.
+data_sources:
+  tpch:
+    type: duckdb
+    connection:
+      path: <absolute path to ~/Library/Caches/sl-bench/tpch.duckdb>

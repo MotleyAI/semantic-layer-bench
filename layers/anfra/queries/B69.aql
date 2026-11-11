@@ -1,0 +1,19 @@
+metric order_position = rank(
+  order: orders | min(orders.order_date) | asc(),
+  order: orders | min(orders.order_key) | asc(),
+  partition: customer.customer_key
+);
+dimension orders.position = order_position;
+dimension customer.first_order_date = orders | where(orders.position == 1) | min(orders.order_date) | dimensionalize(customer.customer_key);
+dimension customer.second_order_date = orders | where(orders.position == 2) | min(orders.order_date) | dimensionalize(customer.customer_key);
+dimension customer.days_to_second_order = date_diff('day', customer.first_order_date, customer.second_order_date);
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    customer_count: customer_count,
+    median_days_to_second_order: customer | percentile_cont(customer.days_to_second_order, 0.5),
+    p90_days_to_second_order: customer | percentile_cont(customer.days_to_second_order, 0.9),
+  }
+  filters { customer.second_order_date is not null }
+  sorts { market_segment asc }
+}

@@ -1,0 +1,7 @@
+explore {
+  dimensions { supplier_region_name: supplier_region.supplier_region_name }
+  measures {
+    returned_share: (lineitem | count_if(lineitem.return_flag == 'R')) / line_count,
+  }
+  sorts { supplier_region_name asc }
+}

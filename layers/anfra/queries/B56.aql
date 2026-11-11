@@ -1,0 +1,14 @@
+metric returned_share = (lineitem | count_if(lineitem.return_flag == 'R')) / line_count;
+explore {
+  dimensions {
+    ship_mode: lineitem.ship_mode,
+    ship_instruct: lineitem.ship_instruct,
+  }
+  measures {
+    line_count: line_count,
+    returned_share: returned_share,
+    return_rate_index: returned_share / (returned_share | exclude_grains(lineitem.ship_mode, lineitem.ship_instruct)),
+  }
+  filters { lineitem.receipt_date matches @(1993-01-01 - 1994-12-31) }
+  sorts { ship_mode asc, ship_instruct asc }
+}

@@ -1,0 +1,26 @@
+metric revenue_1996 = revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+dimension customer.revenue_1996 = revenue_1996 | dimensionalize(customer.customer_key);
+dimension customer.revenue_1997 = revenue_1997 | dimensionalize(customer.customer_key);
+dimension customer.in_both_years = customer.revenue_1996 is not null and customer.revenue_1997 is not null;
+metric quartile_1996 = ntile(4,
+  order: revenue_1996 | desc(),
+  order: customer | min(customer.customer_key) | asc(),
+  partition: customer.in_both_years
+);
+metric quartile_1997 = ntile(4,
+  order: revenue_1997 | desc(),
+  order: customer | min(customer.customer_key) | asc(),
+  partition: customer.in_both_years
+);
+dimension customer.revenue_quartile_1996 = quartile_1996;
+dimension customer.revenue_quartile_1997 = quartile_1997;
+explore {
+  dimensions {
+    revenue_quartile_1996: customer.revenue_quartile_1996,
+    revenue_quartile_1997: customer.revenue_quartile_1997,
+  }
+  measures { customer_count: customer | count(customer.customer_key) }
+  filters { customer.in_both_years is true }
+  sorts { revenue_quartile_1996 asc, revenue_quartile_1997 asc }
+}

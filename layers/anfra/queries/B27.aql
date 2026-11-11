@@ -1,0 +1,6 @@
+explore {
+  dimensions { discount: lineitem.discount }
+  measures { line_count: line_count, revenue: revenue }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { discount asc }
+}

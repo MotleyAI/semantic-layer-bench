@@ -11,7 +11,7 @@ Attempts live in layers/<layer>/attempts.yaml, one entry per question:
 
   - id: Q09
     status: attempted            # or: unsupported
-    interface: query             # slayer: query | cube: rest, sql | metricflow: mf
+    interface: query             # slayer: query | cube: rest, sql | metricflow: mf | anfra: aql
     query: {...}                 # the exact native query (dict, or a string for cube sql)
     columns:                     # expected column -> result column (projection + rename only)
       customer_region_name: orders.customer.customer_nation.customer_region.customer_region_name
@@ -44,7 +44,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 REL_TOL = 1e-6
-LAYERS = ["slayer", "metricflow", "cube", "snowflake"]
+LAYERS = ["slayer", "metricflow", "cube", "snowflake", "anfra"]
 
 BLIND = "--blind" in sys.argv
 SUFFIX = "_blind" if BLIND else ""
@@ -130,8 +130,20 @@ def run_snowflake(a):
     raise RuntimeError("Snowflake executor not configured (no account yet)")
 
 
+def run_anfra(a):
+    p = subprocess.run(["anfra", "query", "--non-interactive", "--json", "--dataset", "tpch", a["query"]],
+                       cwd=ROOT / "layers/anfra/project", capture_output=True, text=True, timeout=600)
+    if p.returncode != 0:
+        raise RuntimeError((p.stderr or p.stdout).strip()[-2000:])
+    res = json.loads(p.stdout)
+    if res.get("has_more"):
+        raise RuntimeError("result has more than one page")
+    fields = res["result"]["fields"]
+    return [dict(zip(fields, r)) for r in res["result"]["records"]]
+
+
 EXECUTORS = {"slayer": run_slayer, "metricflow": run_metricflow, "cube": run_cube,
-             "snowflake": run_snowflake}
+             "snowflake": run_snowflake, "anfra": run_anfra}
 
 
 # ---------------------------------------------------------------- comparison

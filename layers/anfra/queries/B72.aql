@@ -1,0 +1,17 @@
+metric order_position = rank(
+  order: orders | min(orders.order_date) | asc(),
+  order: orders | min(orders.order_key) | asc(),
+  partition: customer.customer_key
+);
+dimension orders.position = order_position;
+metric first_order_avg_value = orders | where(orders.position == 1) | avg(orders.total_price);
+metric repeat_order_avg_value = orders | where(orders.position > 1) | avg(orders.total_price);
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    first_order_avg_value: first_order_avg_value,
+    repeat_order_avg_value: repeat_order_avg_value,
+    first_to_repeat_ratio: first_order_avg_value / repeat_order_avg_value,
+  }
+  sorts { market_segment asc }
+}

@@ -1,0 +1,12 @@
+metric avg_promised_days = lineitem | avg(date_diff('day', orders.order_date, lineitem.commit_date));
+metric avg_actual_days = lineitem | avg(date_diff('day', orders.order_date, lineitem.receipt_date));
+explore {
+  dimensions { order_priority: orders.order_priority }
+  measures {
+    avg_promised_days: avg_promised_days,
+    avg_actual_days: avg_actual_days,
+    avg_gap_days: avg_actual_days - avg_promised_days,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { order_priority asc }
+}

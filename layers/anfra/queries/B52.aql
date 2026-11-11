@@ -1,0 +1,11 @@
+dimension lineitem.transit_days = date_diff('day', lineitem.ship_date, lineitem.receipt_date);
+explore {
+  dimensions { ship_mode: lineitem.ship_mode }
+  measures {
+    line_count: line_count,
+    median_transit_days: lineitem | percentile_cont(lineitem.transit_days, 0.5),
+    p90_transit_days: lineitem | percentile_cont(lineitem.transit_days, 0.9),
+  }
+  filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { ship_mode asc }
+}

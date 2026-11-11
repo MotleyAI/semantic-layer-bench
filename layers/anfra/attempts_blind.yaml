@@ -1,0 +1,1589 @@
+# anfra (AMQL) blind-round attempts. Query text is the exact AQL passed to `anfra query -d tpch`.
+# strict: the query expresses the question exactly (incl. tie-breaks) with no reliance on this data.
+- id: B01
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { ship_mode: lineitem.ship_mode }
+      measures {
+        line_count: line_count,
+        late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+      }
+      sorts { ship_mode asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    line_count: line_count
+    late_share: late_share
+  strict: true
+- id: B02
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { supplier_region_name: supplier_region.supplier_region_name }
+      measures {
+        returned_share: (lineitem | count_if(lineitem.return_flag == 'R')) / line_count,
+      }
+      sorts { supplier_region_name asc }
+    }
+  columns:
+    supplier_region_name: supplier_region_name
+    returned_share: returned_share
+  strict: true
+- id: B03
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { ship_mode: lineitem.ship_mode }
+      measures { total_quantity: total_quantity }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { ship_mode asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    total_quantity: total_quantity
+  strict: true
+- id: B04
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { supplier_region_name: supplier_region.supplier_region_name }
+      measures { total_available_qty: total_available_qty }
+      sorts { supplier_region_name asc }
+    }
+  columns:
+    supplier_region_name: supplier_region_name
+    total_available_qty: total_available_qty
+  strict: true
+- id: B05
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_status: orders.order_status }
+      measures { order_count: order_count }
+      sorts { order_status asc }
+    }
+  columns:
+    order_status: order_status
+    order_count: order_count
+  strict: true
+- id: B06
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { ship_mode: lineitem.ship_mode }
+      measures { avg_transit_days: lineitem | avg(date_diff('day', lineitem.ship_date, lineitem.receipt_date)) }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { ship_mode asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    avg_transit_days: avg_transit_days
+  strict: true
+- id: B07
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { supplier_name: supplier.supplier_name }
+      measures {
+        line_count: line_count,
+        late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+      }
+      filters { lineitem.receipt_date matches @(1996-01-01 - 1997-12-31) }
+      having { line_count > 99 }
+      sorts { late_share desc, supplier_name asc }
+      limit: 10
+    }
+  columns:
+    supplier_name: supplier_name
+    line_count: line_count
+    late_share: late_share
+  strict: true
+- id: B08
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_priority: orders.order_priority }
+      measures {
+        line_count: line_count,
+        late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+      }
+      filters { orders.order_date matches @(1995-01-01 - 1995-12-31) }
+      sorts { order_priority asc }
+    }
+  columns:
+    order_priority: order_priority
+    line_count: line_count
+    late_share: late_share
+  strict: true
+- id: B09
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { ship_month: lineitem.ship_date | month() }
+      measures {
+        late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+      }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { ship_month asc }
+    }
+  columns:
+    ship_month: ship_month
+    late_share: late_share
+  strict: true
+- id: B10
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { manufacturer: part.manufacturer }
+      measures {
+        returned_qty_share: (total_quantity | where(lineitem.return_flag == 'R')) / total_quantity,
+      }
+      filters { lineitem.receipt_date matches @(1994-01-01 - 1994-12-31) }
+      sorts { manufacturer asc }
+    }
+  columns:
+    manufacturer: manufacturer
+    returned_qty_share: returned_qty_share
+  strict: true
+- id: B11
+  status: attempted
+  interface: aql
+  query: |
+    dimension lineitem.is_late = lineitem.receipt_date > lineitem.commit_date;
+    explore {
+      dimensions { supplier_nation_name: supplier_nation.supplier_nation_name }
+      measures {
+        late_line_count: line_count,
+        avg_days_late: lineitem | avg(date_diff('day', lineitem.commit_date, lineitem.receipt_date)),
+      }
+      filters {
+        lineitem.ship_date matches @(1996-01-01 - 1996-12-31),
+        lineitem.is_late is true,
+      }
+      sorts { supplier_nation_name asc }
+    }
+  columns:
+    supplier_nation_name: supplier_nation_name
+    late_line_count: late_line_count
+    avg_days_late: avg_days_late
+  strict: true
+- id: B12
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { part_type: part.part_type }
+      measures {
+        total_available_qty: total_available_qty,
+        total_quantity_1997: total_quantity | where(orders.order_date matches @(1997-01-01 - 1997-12-31)),
+        cover_ratio: total_available_qty / (total_quantity | where(orders.order_date matches @(1997-01-01 - 1997-12-31))),
+      }
+      filters { part.part_type like '%BRASS%' }
+      sorts { part_type asc }
+    }
+  columns:
+    part_type: part_type
+    total_available_qty: total_available_qty
+    total_quantity_1997: total_quantity_1997
+    cover_ratio: cover_ratio
+  strict: true
+- id: B13
+  status: attempted
+  interface: aql
+  query: |
+    dimension lineitem.is_late = lineitem.receipt_date > lineitem.commit_date;
+    explore {
+      dimensions { ship_mode: lineitem.ship_mode }
+      measures {
+        late_line_count: line_count,
+        shipped_late_share: (lineitem | count_if(lineitem.ship_date > lineitem.commit_date)) / line_count,
+        transit_late_share: (lineitem | count_if(lineitem.ship_date <= lineitem.commit_date)) / line_count,
+      }
+      filters {
+        lineitem.ship_date matches @(1997-01-01 - 1997-12-31),
+        lineitem.is_late is true,
+      }
+      sorts { ship_mode asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    late_line_count: late_line_count
+    shipped_late_share: shipped_late_share
+    transit_late_share: transit_late_share
+  strict: true
+- id: B14
+  status: attempted
+  interface: aql
+  query: |
+    metric late_share = (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count;
+    metric late_share_1995 = late_share | where(lineitem.ship_date matches @(1995-01-01 - 1995-12-31));
+    metric late_share_1996 = late_share | where(lineitem.ship_date matches @(1996-01-01 - 1996-12-31));
+    metric lines_1995 = line_count | where(lineitem.ship_date matches @(1995-01-01 - 1995-12-31));
+    metric lines_1996 = line_count | where(lineitem.ship_date matches @(1996-01-01 - 1996-12-31));
+    explore {
+      dimensions { supplier_name: supplier.supplier_name }
+      measures {
+        late_share_1995: late_share_1995,
+        late_share_1996: late_share_1996,
+        late_share_change: late_share_1996 - late_share_1995,
+      }
+      having { lines_1995 > 49, lines_1996 > 49 }
+      sorts { late_share_change desc, supplier_name asc }
+      limit: 10
+    }
+  columns:
+    supplier_name: supplier_name
+    late_share_1995: late_share_1995
+    late_share_1996: late_share_1996
+    late_share_change: late_share_change
+  strict: true
+- id: B15
+  status: attempted
+  interface: aql
+  query: |
+    dimension orders.late_lines_in_order = coalesce(lineitem | count_if(lineitem.receipt_date > lineitem.commit_date) | dimensionalize(orders.order_key), 0);
+    explore {
+      dimensions { late_lines_in_order: orders.late_lines_in_order }
+      measures { order_count: order_count }
+      filters {
+        orders.order_status == 'F',
+        orders.order_date matches @(1994-01-01 - 1994-12-31),
+      }
+      sorts { late_lines_in_order asc }
+    }
+  columns:
+    late_lines_in_order: late_lines_in_order
+    order_count: order_count
+  strict: true
+  notes: Orders with no line items would land in bucket 0 via coalesce, as the question asks.
+- id: B16
+  status: attempted
+  interface: aql
+  query: |
+    metric late_share = (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count;
+    metric nation_rank = rank(
+      order: late_share | desc(),
+      order: supplier_nation | min(supplier_nation.supplier_nation_name) | asc(),
+      partition: supplier_region.supplier_region_name
+    );
+    explore {
+      dimensions {
+        supplier_region_name: supplier_region.supplier_region_name,
+        supplier_nation_name: supplier_nation.supplier_nation_name,
+      }
+      measures { late_share: late_share }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      having { nation_rank == 1 }
+      sorts { supplier_region_name asc }
+    }
+  columns:
+    supplier_region_name: supplier_region_name
+    supplier_nation_name: supplier_nation_name
+    late_share: late_share
+  strict: true
+  notes: Tie-break by nation name expressed as a second rank() order key.
+- id: B17
+  status: attempted
+  interface: aql
+  query: |
+    dimension part.min_supply_cost = partsupp | min(partsupp.supply_cost) | dimensionalize(part.part_name, part.manufacturer);
+    explore {
+      dimensions { manufacturer: part.manufacturer }
+      measures {
+        cheapest_source_qty_share: (total_quantity | where(partsupp.supply_cost == part.min_supply_cost)) / total_quantity,
+      }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { manufacturer asc }
+    }
+  columns:
+    manufacturer: manufacturer
+    cheapest_source_qty_share: cheapest_source_qty_share
+  strict: false
+  notes: The model declares no part key, so a part is identified by part_name + manufacturer when taking the minimum
+    supply_cost per part. Correct because that pair is unique over all 200,000 parts in this data (same caveat as
+    SLayer).
+- id: B18
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_year: orders.order_date | year() }
+      measures { revenue: revenue }
+      sorts { order_year asc }
+    }
+  columns:
+    order_year: order_year
+    revenue: revenue
+  strict: true
+- id: B19
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures { avg_discount: avg_discount }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    avg_discount: avg_discount
+  strict: true
+- id: B20
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      measures {
+        gross_sales: gross_sales,
+        revenue: revenue,
+        discount_amount: gross_sales - revenue,
+      }
+      filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+    }
+  columns:
+    gross_sales: gross_sales
+    revenue: revenue
+    discount_amount: discount_amount
+  strict: true
+- id: B21
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_priority: orders.order_priority }
+      measures { avg_order_value: avg_order_value }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { order_priority asc }
+    }
+  columns:
+    order_priority: order_priority
+    avg_order_value: avg_order_value
+  strict: true
+- id: B22
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { customer_region_name: customer_region.customer_region_name }
+      measures { revenue: revenue }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { customer_region_name asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    revenue: revenue
+  strict: true
+- id: B23
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_year: orders.order_date | year() }
+      measures {
+        revenue: revenue,
+        revenue_growth: revenue / (revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+      }
+      filters { orders.order_date matches @(1993-01-01 - 1997-12-31) }
+      sorts { order_year asc }
+    }
+  columns:
+    order_year: order_year
+    revenue: revenue
+    revenue_growth: revenue_growth
+  strict: true
+  notes: relative_period reaches 1992 for the 1993 base even though the explore filter starts at 1993.
+- id: B24
+  status: attempted
+  interface: aql
+  query: |
+    metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+    explore {
+      dimensions { supplier_region_name: supplier_region.supplier_region_name }
+      measures {
+        revenue: revenue,
+        margin: revenue - supply_cost_amount,
+        margin_rate: (revenue - supply_cost_amount) / revenue,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { supplier_region_name asc }
+    }
+  columns:
+    supplier_region_name: supplier_region_name
+    revenue: revenue
+    margin: margin
+    margin_rate: margin_rate
+  strict: true
+- id: B25
+  status: attempted
+  interface: aql
+  query: |
+    metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+    explore {
+      dimensions { brand: part.brand }
+      measures { margin: revenue - supply_cost_amount }
+      filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+      sorts { margin desc, brand asc }
+      limit: 10
+    }
+  columns:
+    brand: brand
+    margin: margin
+  strict: true
+- id: B26
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_month: orders.order_date | month() }
+      measures { revenue: revenue }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { order_month asc }
+    }
+  columns:
+    order_month: order_month
+    revenue: revenue
+  strict: true
+- id: B27
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { discount: lineitem.discount }
+      measures { line_count: line_count, revenue: revenue }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { discount asc }
+    }
+  columns:
+    discount: discount
+    line_count: line_count
+    revenue: revenue
+  strict: true
+- id: B28
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { order_year: orders.order_date | year() }
+      measures {
+        returned_revenue: coalesce(revenue | where(lineitem.return_flag == 'R'), 0),
+        returned_revenue_share: coalesce(revenue | where(lineitem.return_flag == 'R'), 0) / revenue,
+      }
+      filters { orders.order_date matches @(1992-01-01 - 1997-12-31) }
+      sorts { order_year asc }
+    }
+  columns:
+    order_year: order_year
+    returned_revenue: returned_revenue
+    returned_revenue_share: returned_revenue_share
+  strict: true
+  notes: A first attempt without coalesce silently dropped the years with no returned lines (4 rows instead of 6).
+    An explore drops a row when all its measures are null, and both measures were null there. Fixed with coalesce(...,
+    0).
+- id: B29
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_h1_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-06-30));
+    metric revenue_h1_1998 = revenue | where(orders.order_date matches @(1998-01-01 - 1998-06-30));
+    explore {
+      dimensions { customer_region_name: customer_region.customer_region_name }
+      measures {
+        revenue_h1_1997: revenue_h1_1997,
+        revenue_h1_1998: revenue_h1_1998,
+        revenue_growth: revenue_h1_1998 / revenue_h1_1997 - 1,
+      }
+      sorts { customer_region_name asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    revenue_h1_1997: revenue_h1_1997
+    revenue_h1_1998: revenue_h1_1998
+    revenue_growth: revenue_growth
+  strict: true
+- id: B30
+  status: attempted
+  interface: aql
+  query: |
+    metric customer_rank = rank(
+      order: revenue | desc(),
+      order: customer | min(customer.customer_key) | asc(),
+      partition: []
+    );
+    metric top100_customers = unique(customer.customer_key) | filter(customer_rank < 101);
+    metric top100_revenue = revenue | where(customer.customer_key in (top100_customers | select(customer.customer_key)));
+    explore {
+      measures {
+        top100_revenue: top100_revenue,
+        total_revenue: revenue,
+        top100_share: top100_revenue / revenue,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+    }
+  columns:
+    top100_revenue: top100_revenue
+    total_revenue: total_revenue
+    top100_share: top100_share
+  strict: true
+  notes: Tie-break by customer_key expressed as a second rank() order key.
+- id: B31
+  status: attempted
+  interface: aql
+  query: |
+    metric rank_in_segment = rank(
+      order: revenue | desc(),
+      order: customer_nation | min(customer_nation.customer_nation_name) | asc(),
+      partition: customer.market_segment
+    );
+    explore {
+      dimensions {
+        market_segment: customer.market_segment,
+        customer_nation_name: customer_nation.customer_nation_name,
+      }
+      measures {
+        revenue: revenue,
+        segment_revenue_share: revenue / (revenue | exclude_grains(customer_nation.customer_nation_name)),
+        rank_in_segment: rank_in_segment,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      having { rank_in_segment < 4 }
+      sorts { market_segment asc, rank_in_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    customer_nation_name: customer_nation_name
+    revenue: revenue
+    segment_revenue_share: segment_revenue_share
+    rank_in_segment: rank_in_segment
+  strict: true
+  notes: rank() partitioned by market_segment with a name tie-break; share via exclude_grains.
+- id: B32
+  status: attempted
+  interface: aql
+  query: |
+    dimension lineitem.line_margin = lineitem.extended_price * (1 - lineitem.discount) - partsupp.supply_cost * lineitem.quantity;
+    explore {
+      dimensions { brand: part.brand }
+      measures {
+        below_cost_line_share: (lineitem | count_if(lineitem.line_margin < 0)) / line_count,
+        below_cost_margin: coalesce(lineitem | where(lineitem.line_margin < 0) | sum(lineitem.line_margin), 0),
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { brand asc }
+    }
+  columns:
+    brand: brand
+    below_cost_line_share: below_cost_line_share
+    below_cost_margin: below_cost_margin
+  strict: true
+- id: B33
+  status: attempted
+  interface: aql
+  query: |
+    metric aov_1996 = avg_order_value | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric aov_1997 = avg_order_value | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    metric orders_1996 = order_count | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric orders_1997 = order_count | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    explore {
+      dimensions { clerk: orders.clerk }
+      measures {
+        avg_order_value_1996: aov_1996,
+        avg_order_value_1997: aov_1997,
+        avg_order_value_change: aov_1997 - aov_1996,
+      }
+      having { orders_1996 > 99, orders_1997 > 99 }
+      sorts { avg_order_value_change desc, clerk asc }
+      limit: 10
+    }
+  columns:
+    clerk: clerk
+    avg_order_value_1996: avg_order_value_1996
+    avg_order_value_1997: avg_order_value_1997
+    avg_order_value_change: avg_order_value_change
+  strict: true
+- id: B34
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions {
+        customer_region_name: customer_region.customer_region_name,
+        order_quarter: orders.order_date | quarter(),
+      }
+      measures {
+        revenue: revenue,
+        revenue_yoy_growth: revenue / (revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { customer_region_name asc, order_quarter asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    order_quarter: order_quarter
+    revenue: revenue
+    revenue_yoy_growth: revenue_yoy_growth
+  strict: true
+- id: B35
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures { customer_count: customer_count }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    customer_count: customer_count
+  strict: true
+- id: B36
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { manufacturer: part.manufacturer }
+      measures { revenue: revenue }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { manufacturer asc }
+    }
+  columns:
+    manufacturer: manufacturer
+    revenue: revenue
+  strict: true
+- id: B37
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { customer_region_name: customer_region.customer_region_name }
+      measures { customer_count: customer_count }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { customer_region_name asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    customer_count: customer_count
+  strict: true
+- id: B38
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures { order_count: order_count }
+      filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    order_count: order_count
+  strict: true
+- id: B39
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures { avg_order_value: avg_order_value }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    avg_order_value: avg_order_value
+  strict: true
+- id: B40
+  status: attempted
+  interface: aql
+  query: |
+    dimension part.container_size = split_part(part.container, ' ', 1);
+    explore {
+      dimensions { container_size: part.container_size }
+      measures {
+        revenue: revenue,
+        revenue_share: revenue / (revenue | exclude_grains(part.container_size)),
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { container_size asc }
+    }
+  columns:
+    container_size: container_size
+    revenue: revenue
+    revenue_share: revenue_share
+  strict: true
+- id: B41
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1996 = revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    explore {
+      dimensions { customer_nation_name: customer_nation.customer_nation_name }
+      measures {
+        revenue_1996: revenue_1996,
+        revenue_1997: revenue_1997,
+        revenue_growth: revenue_1997 / revenue_1996 - 1,
+      }
+      sorts { revenue_growth desc, customer_nation_name asc }
+      limit: 10
+    }
+  columns:
+    customer_nation_name: customer_nation_name
+    revenue_1996: revenue_1996
+    revenue_1997: revenue_1997
+    revenue_growth: revenue_growth
+  strict: true
+- id: B42
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.orders_1997 = order_count | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        customer_count: customer_count,
+        repeat_customer_share: (customer_count | where(customer.orders_1997 > 1)) / customer_count,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    customer_count: customer_count
+    repeat_customer_share: repeat_customer_share
+  strict: true
+- id: B43
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { brand: part.brand }
+      measures { revenue: revenue }
+      filters {
+        orders.order_date matches @(1997-01-01 - 1997-12-31),
+        customer.market_segment == 'AUTOMOBILE',
+      }
+      sorts { revenue desc, brand asc }
+      limit: 5
+    }
+  columns:
+    brand: brand
+    revenue: revenue
+  strict: true
+- id: B44
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        negative_balance_revenue_share: (revenue | where(customer.account_balance < 0)) / revenue,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    negative_balance_revenue_share: negative_balance_revenue_share
+  strict: true
+- id: B45
+  status: attempted
+  interface: aql
+  query: |
+    explore {
+      dimensions { customer_region_name: customer_region.customer_region_name }
+      measures {
+        revenue: revenue,
+        customer_count: customer_count,
+        revenue_per_customer: revenue / customer_count,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { customer_region_name asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    revenue: revenue
+    customer_count: customer_count
+    revenue_per_customer: revenue_per_customer
+  strict: true
+- id: B46
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.first_order_date = orders | min(orders.order_date) | dimensionalize(customer.customer_key);
+    dimension customer.first_order_year = date_part('year', customer.first_order_date);
+    dimension orders.in_year_after_first = date_part('year', orders.order_date) == customer.first_order_year + 1;
+    dimension customer.orders_year_after_first = order_count | where(orders.in_year_after_first is true) | dimensionalize(customer.customer_key);
+    explore {
+      dimensions { first_order_year: customer.first_order_year }
+      measures {
+        customer_count: customer_count,
+        retained_next_year_share: (customer_count | where(customer.orders_year_after_first > 0)) / customer_count,
+      }
+      filters { customer.first_order_year in [1992, 1993, 1994, 1995, 1996] }
+      sorts { first_order_year asc }
+    }
+  columns:
+    first_order_year: first_order_year
+    customer_count: customer_count
+    retained_next_year_share: retained_next_year_share
+  strict: true
+- id: B47
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.orders_1996 = order_count | where(orders.order_date matches @(1996-01-01 - 1996-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.orders_1997 = order_count | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.is_lapsed = coalesce(customer.orders_1996, 0) > 0 and coalesce(customer.orders_1997, 0) == 0;
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        lapsed_customer_count: customer_count,
+        lapsed_revenue_1996: coalesce(revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31)), 0),
+      }
+      filters { customer.is_lapsed is true }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    lapsed_customer_count: lapsed_customer_count
+    lapsed_revenue_1996: lapsed_revenue_1996
+  strict: true
+- id: B48
+  status: attempted
+  interface: aql
+  query: |
+    metric brand_rank = rank(
+      order: revenue | desc(),
+      order: part | min(part.brand) | asc(),
+      partition: customer_region.customer_region_name
+    );
+    explore {
+      dimensions {
+        customer_region_name: customer_region.customer_region_name,
+        brand: part.brand,
+      }
+      measures {
+        revenue: revenue,
+        brand_rank: brand_rank,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      having { brand_rank < 4 }
+      sorts { customer_region_name asc, brand_rank asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    brand: brand
+    revenue: revenue
+    brand_rank: brand_rank
+  strict: true
+  notes: rank() partitioned by region with a brand tie-break.
+- id: B49
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.lifetime_orders = order_count | dimensionalize(customer.customer_key);
+    dimension customer.order_count_bucket = case(
+      when: customer.lifetime_orders < 10, then: '1-9',
+      when: customer.lifetime_orders < 15, then: '10-14',
+      when: customer.lifetime_orders < 20, then: '15-19',
+      when: customer.lifetime_orders < 25, then: '20-24',
+      else: '25+'
+    );
+    explore {
+      dimensions { order_count_bucket: customer.order_count_bucket }
+      measures { customer_count: customer_count, revenue: revenue }
+      filters { customer.lifetime_orders > 0 }
+      sorts { order_count_bucket asc }
+    }
+  columns:
+    order_count_bucket: order_count_bucket
+    customer_count: customer_count
+    revenue: revenue
+  strict: true
+- id: B50
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1993 = revenue | where(orders.order_date matches @(1993-01-01 - 1993-12-31));
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    metric revenue_share_1993 = revenue_1993 / (revenue_1993 | exclude_grains(customer.market_segment));
+    metric revenue_share_1997 = revenue_1997 / (revenue_1997 | exclude_grains(customer.market_segment));
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        revenue_share_1993: revenue_share_1993,
+        revenue_share_1997: revenue_share_1997,
+        share_change: revenue_share_1997 - revenue_share_1993,
+      }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    revenue_share_1993: revenue_share_1993
+    revenue_share_1997: revenue_share_1997
+    share_change: share_change
+  strict: true
+- id: B51
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    dimension supplier.revenue_1997 = revenue_1997 | dimensionalize(supplier.supplier_key);
+    dimension supplier.cumulative_revenue_1997 = window_sum(
+      revenue_1997,
+      order: revenue_1997 | desc(),
+      order: supplier | min(supplier.supplier_key) | asc(),
+      partition: []
+    );
+    dimension supplier.total_revenue_1997 = revenue_1997 | dimensionalize();
+    dimension supplier.needed_for_80pct = supplier.cumulative_revenue_1997 - supplier.revenue_1997 < 0.8 * supplier.total_revenue_1997;
+    metric active_supplier_count = supplier_count | where(supplier.revenue_1997 is not null);
+    metric suppliers_for_80pct_revenue = supplier_count | where(supplier.revenue_1997 is not null) | where(supplier.needed_for_80pct is true);
+    explore {
+      measures {
+        active_supplier_count: active_supplier_count,
+        suppliers_for_80pct_revenue: suppliers_for_80pct_revenue,
+        supplier_share_for_80pct: suppliers_for_80pct_revenue / active_supplier_count,
+      }
+    }
+  columns:
+    active_supplier_count: active_supplier_count
+    suppliers_for_80pct_revenue: suppliers_for_80pct_revenue
+    supplier_share_for_80pct: supplier_share_for_80pct
+  strict: true
+  notes: 'Pareto count: window_sum over suppliers ordered by revenue desc, supplier_key asc (exact tie-break, no
+    rank-to-date trick).'
+- id: B52
+  status: attempted
+  interface: aql
+  query: |
+    dimension lineitem.transit_days = date_diff('day', lineitem.ship_date, lineitem.receipt_date);
+    explore {
+      dimensions { ship_mode: lineitem.ship_mode }
+      measures {
+        line_count: line_count,
+        median_transit_days: lineitem | percentile_cont(lineitem.transit_days, 0.5),
+        p90_transit_days: lineitem | percentile_cont(lineitem.transit_days, 0.9),
+      }
+      filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { ship_mode asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    line_count: line_count
+    median_transit_days: median_transit_days
+    p90_transit_days: p90_transit_days
+  strict: true
+- id: B53
+  status: attempted
+  interface: aql
+  query: |
+    dimension orders.late_lines = lineitem | count_if(lineitem.receipt_date > lineitem.commit_date) | dimensionalize(orders.order_key);
+    explore {
+      dimensions {
+        order_year: orders.order_date | year(),
+        order_priority: orders.order_priority,
+      }
+      measures {
+        order_count: order_count,
+        perfect_order_share: (order_count | where(coalesce(orders.late_lines, 0) == 0)) / order_count,
+      }
+      filters { orders.order_date matches @(1993-01-01 - 1997-12-31) }
+      sorts { order_year asc, order_priority asc }
+    }
+  columns:
+    order_year: order_year
+    order_priority: order_priority
+    order_count: order_count
+    perfect_order_share: perfect_order_share
+  strict: true
+- id: B54
+  status: attempted
+  interface: aql
+  query: |
+    metric avg_promised_days = lineitem | avg(date_diff('day', orders.order_date, lineitem.commit_date));
+    metric avg_actual_days = lineitem | avg(date_diff('day', orders.order_date, lineitem.receipt_date));
+    explore {
+      dimensions { order_priority: orders.order_priority }
+      measures {
+        avg_promised_days: avg_promised_days,
+        avg_actual_days: avg_actual_days,
+        avg_gap_days: avg_actual_days - avg_promised_days,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { order_priority asc }
+    }
+  columns:
+    order_priority: order_priority
+    avg_promised_days: avg_promised_days
+    avg_actual_days: avg_actual_days
+    avg_gap_days: avg_gap_days
+  strict: true
+- id: B55
+  status: attempted
+  interface: aql
+  query: |
+    metric late_lines = lineitem | count_if(lineitem.receipt_date > lineitem.commit_date);
+    explore {
+      dimensions { ship_month: lineitem.ship_date | month() }
+      measures {
+        late_share: late_lines / line_count,
+        rolling_3m_late_share: (late_lines | trailing_period(lineitem.ship_date, interval(3 months)))
+          / (line_count | trailing_period(lineitem.ship_date, interval(3 months))),
+      }
+      filters { lineitem.ship_date matches @(1996-01-01 - 1997-12-31) }
+      sorts { ship_month asc }
+    }
+  columns:
+    ship_month: ship_month
+    late_share: late_share
+    rolling_3m_late_share: rolling_3m_late_share
+  strict: true
+  notes: trailing_period(3 months) reads Nov/Dec 1995 although the explore filter starts at 1996.
+- id: B56
+  status: attempted
+  interface: aql
+  query: |
+    metric returned_share = (lineitem | count_if(lineitem.return_flag == 'R')) / line_count;
+    explore {
+      dimensions {
+        ship_mode: lineitem.ship_mode,
+        ship_instruct: lineitem.ship_instruct,
+      }
+      measures {
+        line_count: line_count,
+        returned_share: returned_share,
+        return_rate_index: returned_share / (returned_share | exclude_grains(lineitem.ship_mode, lineitem.ship_instruct)),
+      }
+      filters { lineitem.receipt_date matches @(1993-01-01 - 1994-12-31) }
+      sorts { ship_mode asc, ship_instruct asc }
+    }
+  columns:
+    ship_mode: ship_mode
+    ship_instruct: ship_instruct
+    line_count: line_count
+    returned_share: returned_share
+    return_rate_index: return_rate_index
+  strict: true
+- id: B57
+  status: attempted
+  interface: aql
+  query: |
+    metric lines_1997 = line_count | where(lineitem.ship_date matches @(1997-01-01 - 1997-12-31));
+    metric late_lines_1997 = lineitem | count_if(lineitem.receipt_date > lineitem.commit_date) | where(lineitem.ship_date matches @(1997-01-01 - 1997-12-31));
+    metric late_share_1997 = late_lines_1997 / lines_1997;
+    dimension supplier.lines_1997 = lines_1997 | dimensionalize(supplier.supplier_key);
+    dimension supplier.late_share_1997 = late_share_1997 | dimensionalize(supplier.supplier_key);
+    dimension supplier.region_late_share_1997 = late_share_1997 | dimensionalize(supplier_region.supplier_region_name);
+    dimension supplier.is_outlier = supplier.late_share_1997 >= supplier.region_late_share_1997 + 0.10;
+    metric qualifying_supplier_count = supplier_count | where(supplier.lines_1997 > 49);
+    metric outlier_supplier_count = coalesce(qualifying_supplier_count | where(supplier.is_outlier is true), 0);
+    explore {
+      dimensions { supplier_region_name: supplier_region.supplier_region_name }
+      measures {
+        region_late_share: late_share_1997,
+        qualifying_supplier_count: qualifying_supplier_count,
+        outlier_supplier_count: outlier_supplier_count,
+        outlier_share: outlier_supplier_count / qualifying_supplier_count,
+      }
+      sorts { supplier_region_name asc }
+    }
+  columns:
+    supplier_region_name: supplier_region_name
+    region_late_share: region_late_share
+    qualifying_supplier_count: qualifying_supplier_count
+    outlier_supplier_count: outlier_supplier_count
+    outlier_share: outlier_share
+  strict: true
+- id: B58
+  status: attempted
+  interface: aql
+  query: |
+    dimension orders.line_items = line_count | dimensionalize(orders.order_key);
+    dimension orders.first_ship_date = lineitem | min(lineitem.ship_date) | dimensionalize(orders.order_key);
+    dimension orders.last_ship_date = lineitem | max(lineitem.ship_date) | dimensionalize(orders.order_key);
+    dimension orders.ship_span_days = date_diff('day', orders.first_ship_date, orders.last_ship_date);
+    explore {
+      dimensions { order_priority: orders.order_priority }
+      measures {
+        order_count: order_count,
+        median_ship_span_days: orders | percentile_cont(orders.ship_span_days, 0.5),
+        p90_ship_span_days: orders | percentile_cont(orders.ship_span_days, 0.9),
+      }
+      filters {
+        orders.order_date matches @(1996-01-01 - 1996-12-31),
+        orders.line_items > 1,
+      }
+      sorts { order_priority asc }
+    }
+  columns:
+    order_priority: order_priority
+    order_count: order_count
+    median_ship_span_days: median_ship_span_days
+    p90_ship_span_days: p90_ship_span_days
+  strict: true
+- id: B59
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1996 = revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    metric quantity_1996 = total_quantity | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric quantity_1997 = total_quantity | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    explore {
+      dimensions { manufacturer: part.manufacturer }
+      measures {
+        revenue_1996: revenue_1996,
+        revenue_1997: revenue_1997,
+        revenue_change: revenue_1997 - revenue_1996,
+        volume_effect: (quantity_1997 - quantity_1996) * (revenue_1996 / quantity_1996),
+        price_effect: (revenue_1997 / quantity_1997 - revenue_1996 / quantity_1996) * quantity_1997,
+      }
+      sorts { manufacturer asc }
+    }
+  columns:
+    manufacturer: manufacturer
+    revenue_1996: revenue_1996
+    revenue_1997: revenue_1997
+    revenue_change: revenue_change
+    volume_effect: volume_effect
+    price_effect: price_effect
+  strict: true
+- id: B60
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    metric supply_cost_1997 = lineitem | sum(partsupp.supply_cost * lineitem.quantity) | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    dimension customer.orders_1997 = order_count | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.margin_rate_1997 = (revenue_1997 - supply_cost_1997) / revenue_1997 | dimensionalize(customer.customer_key);
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        customer_count: customer_count,
+        p25_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.25),
+        median_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.5),
+        p75_margin_rate: customer | percentile_cont(customer.margin_rate_1997, 0.75),
+      }
+      filters { customer.orders_1997 > 2 }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    customer_count: customer_count
+    p25_margin_rate: p25_margin_rate
+    median_margin_rate: median_margin_rate
+    p75_margin_rate: p75_margin_rate
+  strict: true
+- id: B61
+  status: attempted
+  interface: aql
+  query: |
+    metric ytd_revenue = revenue | period_to_date('year', orders.order_date);
+    explore {
+      dimensions { order_month: orders.order_date | month() }
+      measures {
+        ytd_revenue_1998: ytd_revenue,
+        ytd_revenue_1997: ytd_revenue | relative_period(orders.order_date, interval(-1 year)),
+        ytd_growth: ytd_revenue / (ytd_revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+      }
+      filters { orders.order_date matches @(1998-01-01 - 1998-07-31) }
+      sorts { order_month asc }
+    }
+  columns:
+    order_month: order_month
+    ytd_revenue_1998: ytd_revenue_1998
+    ytd_revenue_1997: ytd_revenue_1997
+    ytd_growth: ytd_growth
+  strict: true
+  notes: period_to_date(year) combined with relative_period(-1 year).
+- id: B62
+  status: attempted
+  interface: aql
+  query: |
+    metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+    metric margin = revenue - supply_cost_amount;
+    metric margin_rank = rank(
+      order: margin | desc(),
+      order: customer | min(customer.customer_key) | asc(),
+      partition: []
+    );
+    explore {
+      dimensions {
+        customer_key: customer.customer_key,
+        customer_name: customer.customer_name,
+      }
+      measures {
+        margin_rank: margin_rank,
+        margin: margin,
+        margin_rate: margin / revenue,
+        cumulative_margin_share: window_sum(margin, order: margin | desc(), order: customer | min(customer.customer_key) | asc(), partition: [])
+          / (margin | exclude_grains(customer.customer_key, customer.customer_name)),
+      }
+      having { margin_rank < 21 }
+      sorts { margin_rank asc }
+    }
+  columns:
+    margin_rank: margin_rank
+    customer_name: customer_name
+    margin: margin
+    margin_rate: margin_rate
+    cumulative_margin_share: cumulative_margin_share
+  strict: true
+  notes: rank and running window_sum ordered by margin desc, customer_key asc; total via exclude_grains.
+- id: B63
+  status: attempted
+  interface: aql
+  query: |
+    metric ttm_revenue = revenue | trailing_period(orders.order_date, interval(12 months));
+    explore {
+      dimensions { order_month: orders.order_date | month() }
+      measures {
+        ttm_revenue: ttm_revenue,
+        ttm_revenue_prior_year: ttm_revenue | relative_period(orders.order_date, interval(-1 year)),
+        ttm_growth: ttm_revenue / (ttm_revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { order_month asc }
+    }
+  columns:
+    order_month: order_month
+    ttm_revenue: ttm_revenue
+    ttm_revenue_prior_year: ttm_revenue_prior_year
+    ttm_growth: ttm_growth
+  strict: true
+  notes: trailing_period(12 months) combined with relative_period(-1 year).
+- id: B64
+  status: attempted
+  interface: aql
+  query: |
+    dimension orders.large_order_threshold_1997 = orders | percentile_cont(orders.total_price, 0.9) | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize();
+    dimension orders.is_large = orders.total_price > orders.large_order_threshold_1997;
+    explore {
+      dimensions { customer_region_name: customer_region.customer_region_name }
+      measures {
+        large_order_threshold: orders | max(orders.large_order_threshold_1997),
+        order_value: order_value,
+        large_order_count: order_count | where(orders.is_large is true),
+        large_order_value_share: (order_value | where(orders.is_large is true)) / order_value,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { customer_region_name asc }
+    }
+  columns:
+    customer_region_name: customer_region_name
+    large_order_threshold: large_order_threshold
+    order_value: order_value
+    large_order_count: large_order_count
+    large_order_value_share: large_order_value_share
+  strict: true
+- id: B65
+  status: attempted
+  interface: aql
+  query: |
+    dimension part.min_supply_cost = partsupp | min(partsupp.supply_cost) | dimensionalize(part.part_name, part.manufacturer);
+    metric actual_cost = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+    metric cheapest_cost = lineitem | sum(part.min_supply_cost * lineitem.quantity);
+    explore {
+      dimensions { manufacturer: part.manufacturer }
+      measures {
+        actual_cost: actual_cost,
+        cheapest_cost: cheapest_cost,
+        savings_opportunity: actual_cost - cheapest_cost,
+        savings_share: (actual_cost - cheapest_cost) / actual_cost,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { manufacturer asc }
+    }
+  columns:
+    manufacturer: manufacturer
+    actual_cost: actual_cost
+    cheapest_cost: cheapest_cost
+    savings_opportunity: savings_opportunity
+    savings_share: savings_share
+  strict: false
+  notes: 'Same as B17: minimum supply_cost per part is taken over part_name + manufacturer, which is unique in this
+    data but not declared as a key.'
+- id: B66
+  status: attempted
+  interface: aql
+  query: |
+    metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+    explore {
+      dimensions { order_priority: orders.order_priority }
+      measures {
+        avg_discount: avg_discount,
+        revenue: revenue,
+        margin_rate: (revenue - supply_cost_amount) / revenue,
+      }
+      filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+      sorts { order_priority asc }
+    }
+  columns:
+    order_priority: order_priority
+    avg_discount: avg_discount
+    revenue: revenue
+    margin_rate: margin_rate
+  strict: true
+- id: B67
+  status: attempted
+  interface: aql
+  query: |
+    dimension orders.is_1997 = orders.order_date matches @(1997-01-01 - 1997-12-31);
+    metric decile_within_year_flag = ntile(10,
+      order: orders | max(orders.total_price) | desc(),
+      order: orders | min(orders.order_key) | asc(),
+      partition: orders.is_1997
+    );
+    dimension orders.value_decile = decile_within_year_flag;
+    explore {
+      dimensions { value_decile: orders.value_decile }
+      measures {
+        order_count: order_count,
+        order_value: order_value,
+        order_value_share: order_value / (order_value | exclude_grains(orders.value_decile)),
+        min_total_price: orders | min(orders.total_price),
+        max_total_price: orders | max(orders.total_price),
+      }
+      filters { orders.is_1997 is true }
+      sorts { value_decile asc }
+    }
+  columns:
+    value_decile: value_decile
+    order_count: order_count
+    order_value: order_value
+    order_value_share: order_value_share
+    min_total_price: min_total_price
+    max_total_price: max_total_price
+  strict: true
+  notes: The ntile window is partitioned by an is-1997 flag so it ranks only 1997 orders. A first attempt with ntile(...)
+    | dimensionalize(orders.order_key) put order_key in the window partition (1 row, silently wrong); a second without
+    the partition flag ranked all-history orders and the explore filter applied afterwards (10 rows, wrong deciles,
+    silently wrong).
+- id: B68
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.first_order_date = orders | min(orders.order_date) | dimensionalize(customer.customer_key);
+    dimension customer.first_order_year = date_part('year', customer.first_order_date);
+    dimension orders.is_first_year = date_part('year', orders.order_date) == customer.first_order_year;
+    explore {
+      dimensions {
+        first_order_year: customer.first_order_year,
+        order_year: orders.order_date | year(),
+      }
+      measures {
+        revenue: revenue,
+        revenue_index: revenue / (revenue | where(orders.is_first_year is true) | keep_grains(customer.first_order_year)),
+      }
+      filters {
+        customer.first_order_year in [1992, 1993, 1994, 1995],
+        orders.order_date matches @(1992-01-01 - 1997-12-31),
+      }
+      sorts { first_order_year asc, order_year asc }
+    }
+  columns:
+    first_order_year: first_order_year
+    order_year: order_year
+    revenue: revenue
+    revenue_index: revenue_index
+  strict: true
+- id: B69
+  status: attempted
+  interface: aql
+  query: |
+    metric order_position = rank(
+      order: orders | min(orders.order_date) | asc(),
+      order: orders | min(orders.order_key) | asc(),
+      partition: customer.customer_key
+    );
+    dimension orders.position = order_position;
+    dimension customer.first_order_date = orders | where(orders.position == 1) | min(orders.order_date) | dimensionalize(customer.customer_key);
+    dimension customer.second_order_date = orders | where(orders.position == 2) | min(orders.order_date) | dimensionalize(customer.customer_key);
+    dimension customer.days_to_second_order = date_diff('day', customer.first_order_date, customer.second_order_date);
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        customer_count: customer_count,
+        median_days_to_second_order: customer | percentile_cont(customer.days_to_second_order, 0.5),
+        p90_days_to_second_order: customer | percentile_cont(customer.days_to_second_order, 0.9),
+      }
+      filters { customer.second_order_date is not null }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    customer_count: customer_count
+    median_days_to_second_order: median_days_to_second_order
+    p90_days_to_second_order: p90_days_to_second_order
+  strict: true
+  notes: Order position via rank() partitioned by customer, ordered by order_date then order_key. Declaring it with
+    | dimensionalize(orders.order_key) returned 0 rows (the grain went into the partition); declaring the window
+    metric directly as a dimension works.
+- id: B70
+  status: unsupported
+  reason: Needs every unordered pair of manufacturers present in the same order, i.e. part joined to itself through
+    lineitem/orders. The shared model has one part role, and an AQL explore cannot produce two independent manufacturer
+    columns over the same order (no self-join or cross join of a model). Hard-coding one dimension per manufacturer
+    value would pivot to columns, not the 10 requested rows, and would rely on knowing the 5 values.
+  category: expressivity
+  fixable_in_model: 'yes'
+  tried:
+  - explore with part.manufacturer twice (same column, no pair rows)
+  - per-order flags orders.has_<mfgr> via dimensionalize (gives columns, not pair rows; needs literal manufacturer
+    values)
+  - explore relationships {} block to add a second part role (that adds a join to the model, excluded by the rules)
+- id: B71
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.orders_1994 = order_count | where(orders.order_date matches @(1994-01-01 - 1994-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.orders_1995 = order_count | where(orders.order_date matches @(1995-01-01 - 1995-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.orders_1996_1997 = order_count | where(orders.order_date matches @(1996-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.is_lapsed = coalesce(customer.orders_1994, 0) > 0 and coalesce(customer.orders_1995, 0) == 0;
+    dimension customer.is_reactivated = coalesce(customer.orders_1996_1997, 0) > 0;
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        lapsed_customer_count: customer_count,
+        reactivated_customer_count: customer_count | where(customer.is_reactivated is true),
+        reactivation_share: (customer_count | where(customer.is_reactivated is true)) / customer_count,
+      }
+      filters { customer.is_lapsed is true }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    lapsed_customer_count: lapsed_customer_count
+    reactivated_customer_count: reactivated_customer_count
+    reactivation_share: reactivation_share
+  strict: true
+- id: B72
+  status: attempted
+  interface: aql
+  query: |
+    metric order_position = rank(
+      order: orders | min(orders.order_date) | asc(),
+      order: orders | min(orders.order_key) | asc(),
+      partition: customer.customer_key
+    );
+    dimension orders.position = order_position;
+    metric first_order_avg_value = orders | where(orders.position == 1) | avg(orders.total_price);
+    metric repeat_order_avg_value = orders | where(orders.position > 1) | avg(orders.total_price);
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        first_order_avg_value: first_order_avg_value,
+        repeat_order_avg_value: repeat_order_avg_value,
+        first_to_repeat_ratio: first_order_avg_value / repeat_order_avg_value,
+      }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    first_order_avg_value: first_order_avg_value
+    repeat_order_avg_value: repeat_order_avg_value
+    first_to_repeat_ratio: first_to_repeat_ratio
+  strict: true
+  notes: Same order-position dimension as B69 (exact tie-break, no sentinel values).
+- id: B73
+  status: attempted
+  interface: aql
+  query: |
+    metric revenue_1996 = revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+    metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+    dimension customer.revenue_1996 = revenue_1996 | dimensionalize(customer.customer_key);
+    dimension customer.revenue_1997 = revenue_1997 | dimensionalize(customer.customer_key);
+    dimension customer.in_both_years = customer.revenue_1996 is not null and customer.revenue_1997 is not null;
+    metric quartile_1996 = ntile(4,
+      order: revenue_1996 | desc(),
+      order: customer | min(customer.customer_key) | asc(),
+      partition: customer.in_both_years
+    );
+    metric quartile_1997 = ntile(4,
+      order: revenue_1997 | desc(),
+      order: customer | min(customer.customer_key) | asc(),
+      partition: customer.in_both_years
+    );
+    dimension customer.revenue_quartile_1996 = quartile_1996;
+    dimension customer.revenue_quartile_1997 = quartile_1997;
+    explore {
+      dimensions {
+        revenue_quartile_1996: customer.revenue_quartile_1996,
+        revenue_quartile_1997: customer.revenue_quartile_1997,
+      }
+      measures { customer_count: customer | count(customer.customer_key) }
+      filters { customer.in_both_years is true }
+      sorts { revenue_quartile_1996 asc, revenue_quartile_1997 asc }
+    }
+  columns:
+    revenue_quartile_1996: revenue_quartile_1996
+    revenue_quartile_1997: revenue_quartile_1997
+    customer_count: customer_count
+  strict: false
+  notes: ntile windows partitioned by an in-both-years flag so only qualifying customers are ranked. First attempt
+    (dimensionalize + explore filter) returned 1 row. Combinations with zero customers would be missing rather than
+    shown as 0 (an explore returns only combinations that exist); all 16 combinations are non-empty in this data.
+- id: B74
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.lifetime_orders = order_count | dimensionalize(customer.customer_key);
+    explore {
+      dimensions { market_segment: customer.market_segment }
+      measures {
+        never_ordered_count: customer_count | where(customer.lifetime_orders is null),
+        never_ordered_share: (customer_count | where(customer.lifetime_orders is null)) / customer_count,
+        avg_balance_never_ordered: customer | where(customer.lifetime_orders is null) | avg(customer.account_balance),
+        avg_balance_ordered: customer | where(customer.lifetime_orders is not null) | avg(customer.account_balance),
+      }
+      sorts { market_segment asc }
+    }
+  columns:
+    market_segment: market_segment
+    never_ordered_count: never_ordered_count
+    never_ordered_share: never_ordered_share
+    avg_balance_never_ordered: avg_balance_never_ordered
+    avg_balance_ordered: avg_balance_ordered
+  strict: true
+- id: B75
+  status: attempted
+  interface: aql
+  query: |
+    dimension customer.brands_1997 = lineitem | count_distinct(part.brand) | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+    dimension customer.brand_count_bucket = case(
+      when: customer.brands_1997 < 3, then: '1-2',
+      when: customer.brands_1997 < 6, then: '3-5',
+      when: customer.brands_1997 < 11, then: '6-10',
+      else: '11+'
+    );
+    explore {
+      dimensions { brand_count_bucket: customer.brand_count_bucket }
+      measures {
+        customer_count: customer_count,
+        avg_revenue_per_customer: revenue / customer_count,
+        revenue_share: revenue / (revenue | exclude_grains(customer.brand_count_bucket)),
+      }
+      filters {
+        orders.order_date matches @(1997-01-01 - 1997-12-31),
+        customer.brands_1997 > 0,
+      }
+      sorts { brand_count_bucket asc }
+    }
+  columns:
+    brand_count_bucket: brand_count_bucket
+    customer_count: customer_count
+    avg_revenue_per_customer: avg_revenue_per_customer
+    revenue_share: revenue_share
+  strict: true

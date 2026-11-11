@@ -1,0 +1,17 @@
+dimension orders.line_items = line_count | dimensionalize(orders.order_key);
+dimension orders.first_ship_date = lineitem | min(lineitem.ship_date) | dimensionalize(orders.order_key);
+dimension orders.last_ship_date = lineitem | max(lineitem.ship_date) | dimensionalize(orders.order_key);
+dimension orders.ship_span_days = date_diff('day', orders.first_ship_date, orders.last_ship_date);
+explore {
+  dimensions { order_priority: orders.order_priority }
+  measures {
+    order_count: order_count,
+    median_ship_span_days: orders | percentile_cont(orders.ship_span_days, 0.5),
+    p90_ship_span_days: orders | percentile_cont(orders.ship_span_days, 0.9),
+  }
+  filters {
+    orders.order_date matches @(1996-01-01 - 1996-12-31),
+    orders.line_items > 1,
+  }
+  sorts { order_priority asc }
+}

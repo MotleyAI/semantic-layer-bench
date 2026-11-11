@@ -1,0 +1,19 @@
+metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+dimension supplier.revenue_1997 = revenue_1997 | dimensionalize(supplier.supplier_key);
+dimension supplier.cumulative_revenue_1997 = window_sum(
+  revenue_1997,
+  order: revenue_1997 | desc(),
+  order: supplier | min(supplier.supplier_key) | asc(),
+  partition: []
+);
+dimension supplier.total_revenue_1997 = revenue_1997 | dimensionalize();
+dimension supplier.needed_for_80pct = supplier.cumulative_revenue_1997 - supplier.revenue_1997 < 0.8 * supplier.total_revenue_1997;
+metric active_supplier_count = supplier_count | where(supplier.revenue_1997 is not null);
+metric suppliers_for_80pct_revenue = supplier_count | where(supplier.revenue_1997 is not null) | where(supplier.needed_for_80pct is true);
+explore {
+  measures {
+    active_supplier_count: active_supplier_count,
+    suppliers_for_80pct_revenue: suppliers_for_80pct_revenue,
+    supplier_share_for_80pct: suppliers_for_80pct_revenue / active_supplier_count,
+  }
+}

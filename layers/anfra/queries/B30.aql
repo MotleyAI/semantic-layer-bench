@@ -1,0 +1,15 @@
+metric customer_rank = rank(
+  order: revenue | desc(),
+  order: customer | min(customer.customer_key) | asc(),
+  partition: []
+);
+metric top100_customers = unique(customer.customer_key) | filter(customer_rank < 101);
+metric top100_revenue = revenue | where(customer.customer_key in (top100_customers | select(customer.customer_key)));
+explore {
+  measures {
+    top100_revenue: top100_revenue,
+    total_revenue: revenue,
+    top100_share: top100_revenue / revenue,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+}

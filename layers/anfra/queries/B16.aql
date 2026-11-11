@@ -1,0 +1,16 @@
+metric late_share = (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count;
+metric nation_rank = rank(
+  order: late_share | desc(),
+  order: supplier_nation | min(supplier_nation.supplier_nation_name) | asc(),
+  partition: supplier_region.supplier_region_name
+);
+explore {
+  dimensions {
+    supplier_region_name: supplier_region.supplier_region_name,
+    supplier_nation_name: supplier_nation.supplier_nation_name,
+  }
+  measures { late_share: late_share }
+  filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+  having { nation_rank == 1 }
+  sorts { supplier_region_name asc }
+}

@@ -1,0 +1,16 @@
+metric late_share = (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count;
+metric late_share_1995 = late_share | where(lineitem.ship_date matches @(1995-01-01 - 1995-12-31));
+metric late_share_1996 = late_share | where(lineitem.ship_date matches @(1996-01-01 - 1996-12-31));
+metric lines_1995 = line_count | where(lineitem.ship_date matches @(1995-01-01 - 1995-12-31));
+metric lines_1996 = line_count | where(lineitem.ship_date matches @(1996-01-01 - 1996-12-31));
+explore {
+  dimensions { supplier_name: supplier.supplier_name }
+  measures {
+    late_share_1995: late_share_1995,
+    late_share_1996: late_share_1996,
+    late_share_change: late_share_1996 - late_share_1995,
+  }
+  having { lines_1995 > 49, lines_1996 > 49 }
+  sorts { late_share_change desc, supplier_name asc }
+  limit: 10
+}
