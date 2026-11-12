@@ -1,0 +1,12 @@
+metric revenue_1996 = revenue | where(orders.order_date matches @(1996-01-01 - 1996-12-31));
+metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+explore {
+  dimensions { customer_nation_name: customer_nation.customer_nation_name }
+  measures {
+    revenue_1996: revenue_1996,
+    revenue_1997: revenue_1997,
+    revenue_growth: revenue_1997 / revenue_1996 - 1,
+  }
+  sorts { revenue_growth desc, customer_nation_name asc }
+  limit: 10
+}

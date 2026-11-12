@@ -1,0 +1,15 @@
+dimension customer.orders_1994 = order_count | where(orders.order_date matches @(1994-01-01 - 1994-12-31)) | dimensionalize(customer.customer_key);
+dimension customer.orders_1995 = order_count | where(orders.order_date matches @(1995-01-01 - 1995-12-31)) | dimensionalize(customer.customer_key);
+dimension customer.orders_1996_1997 = order_count | where(orders.order_date matches @(1996-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+dimension customer.is_lapsed = coalesce(customer.orders_1994, 0) > 0 and coalesce(customer.orders_1995, 0) == 0;
+dimension customer.is_reactivated = coalesce(customer.orders_1996_1997, 0) > 0;
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    lapsed_customer_count: customer_count,
+    reactivated_customer_count: customer_count | where(customer.is_reactivated is true),
+    reactivation_share: (customer_count | where(customer.is_reactivated is true)) / customer_count,
+  }
+  filters { customer.is_lapsed is true }
+  sorts { market_segment asc }
+}

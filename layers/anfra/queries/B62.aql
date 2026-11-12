@@ -1,0 +1,22 @@
+metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+metric margin = revenue - supply_cost_amount;
+metric margin_rank = rank(
+  order: margin | desc(),
+  order: customer | min(customer.customer_key) | asc(),
+  partition: []
+);
+explore {
+  dimensions {
+    customer_key: customer.customer_key,
+    customer_name: customer.customer_name,
+  }
+  measures {
+    margin_rank: margin_rank,
+    margin: margin,
+    margin_rate: margin / revenue,
+    cumulative_margin_share: window_sum(margin, order: margin | desc(), order: customer | min(customer.customer_key) | asc(), partition: [])
+      / (margin | exclude_grains(customer.customer_key, customer.customer_name)),
+  }
+  having { margin_rank < 21 }
+  sorts { margin_rank asc }
+}

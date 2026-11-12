@@ -1,0 +1,14 @@
+dimension lineitem.is_late = lineitem.receipt_date > lineitem.commit_date;
+explore {
+  dimensions { ship_mode: lineitem.ship_mode }
+  measures {
+    late_line_count: line_count,
+    shipped_late_share: (lineitem | count_if(lineitem.ship_date > lineitem.commit_date)) / line_count,
+    transit_late_share: (lineitem | count_if(lineitem.ship_date <= lineitem.commit_date)) / line_count,
+  }
+  filters {
+    lineitem.ship_date matches @(1997-01-01 - 1997-12-31),
+    lineitem.is_late is true,
+  }
+  sorts { ship_mode asc }
+}

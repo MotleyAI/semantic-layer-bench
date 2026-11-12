@@ -1,0 +1,8 @@
+explore {
+  dimensions { manufacturer: part.manufacturer }
+  measures {
+    returned_qty_share: (total_quantity | where(lineitem.return_flag == 'R')) / total_quantity,
+  }
+  filters { lineitem.receipt_date matches @(1994-01-01 - 1994-12-31) }
+  sorts { manufacturer asc }
+}

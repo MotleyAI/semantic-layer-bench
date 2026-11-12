@@ -1,0 +1,19 @@
+metric rank_in_segment = rank(
+  order: revenue | desc(),
+  order: customer_nation | min(customer_nation.customer_nation_name) | asc(),
+  partition: customer.market_segment
+);
+explore {
+  dimensions {
+    market_segment: customer.market_segment,
+    customer_nation_name: customer_nation.customer_nation_name,
+  }
+  measures {
+    revenue: revenue,
+    segment_revenue_share: revenue / (revenue | exclude_grains(customer_nation.customer_nation_name)),
+    rank_in_segment: rank_in_segment,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  having { rank_in_segment < 4 }
+  sorts { market_segment asc, rank_in_segment asc }
+}

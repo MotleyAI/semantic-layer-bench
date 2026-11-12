@@ -1,0 +1,8 @@
+explore {
+  measures {
+    gross_sales: gross_sales,
+    revenue: revenue,
+    discount_amount: gross_sales - revenue,
+  }
+  filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+}

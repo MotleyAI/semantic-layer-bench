@@ -1,0 +1,13 @@
+dimension customer.first_order_date = orders | min(orders.order_date) | dimensionalize(customer.customer_key);
+dimension customer.first_order_year = date_part('year', customer.first_order_date);
+dimension orders.in_year_after_first = date_part('year', orders.order_date) == customer.first_order_year + 1;
+dimension customer.orders_year_after_first = order_count | where(orders.in_year_after_first is true) | dimensionalize(customer.customer_key);
+explore {
+  dimensions { first_order_year: customer.first_order_year }
+  measures {
+    customer_count: customer_count,
+    retained_next_year_share: (customer_count | where(customer.orders_year_after_first > 0)) / customer_count,
+  }
+  filters { customer.first_order_year in [1992, 1993, 1994, 1995, 1996] }
+  sorts { first_order_year asc }
+}

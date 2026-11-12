@@ -1,0 +1,6 @@
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures { order_count: order_count }
+  filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+  sorts { market_segment asc }
+}

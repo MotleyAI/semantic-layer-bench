@@ -1,0 +1,8 @@
+metric supply_cost_amount = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+explore {
+  dimensions { brand: part.brand }
+  measures { margin: revenue - supply_cost_amount }
+  filters { orders.order_date matches @(1996-01-01 - 1996-12-31) }
+  sorts { margin desc, brand asc }
+  limit: 10
+}

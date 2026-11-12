@@ -1,0 +1,11 @@
+metric ttm_revenue = revenue | trailing_period(orders.order_date, interval(12 months));
+explore {
+  dimensions { order_month: orders.order_date | month() }
+  measures {
+    ttm_revenue: ttm_revenue,
+    ttm_revenue_prior_year: ttm_revenue | relative_period(orders.order_date, interval(-1 year)),
+    ttm_growth: ttm_revenue / (ttm_revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { order_month asc }
+}

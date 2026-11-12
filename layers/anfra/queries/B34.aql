@@ -1,0 +1,12 @@
+explore {
+  dimensions {
+    customer_region_name: customer_region.customer_region_name,
+    order_quarter: orders.order_date | quarter(),
+  }
+  measures {
+    revenue: revenue,
+    revenue_yoy_growth: revenue / (revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { customer_region_name asc, order_quarter asc }
+}

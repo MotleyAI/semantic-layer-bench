@@ -1,0 +1,6 @@
+explore {
+  dimensions { ship_mode: lineitem.ship_mode }
+  measures { avg_transit_days: lineitem | avg(date_diff('day', lineitem.ship_date, lineitem.receipt_date)) }
+  filters { lineitem.ship_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { ship_mode asc }
+}

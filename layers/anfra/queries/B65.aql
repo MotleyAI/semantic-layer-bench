@@ -1,0 +1,14 @@
+dimension part.min_supply_cost = partsupp | min(partsupp.supply_cost) | dimensionalize(part.part_name, part.manufacturer);
+metric actual_cost = lineitem | sum(partsupp.supply_cost * lineitem.quantity);
+metric cheapest_cost = lineitem | sum(part.min_supply_cost * lineitem.quantity);
+explore {
+  dimensions { manufacturer: part.manufacturer }
+  measures {
+    actual_cost: actual_cost,
+    cheapest_cost: cheapest_cost,
+    savings_opportunity: actual_cost - cheapest_cost,
+    savings_share: (actual_cost - cheapest_cost) / actual_cost,
+  }
+  filters { orders.order_date matches @(1997-01-01 - 1997-12-31) }
+  sorts { manufacturer asc }
+}

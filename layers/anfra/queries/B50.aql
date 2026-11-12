@@ -1,0 +1,13 @@
+metric revenue_1993 = revenue | where(orders.order_date matches @(1993-01-01 - 1993-12-31));
+metric revenue_1997 = revenue | where(orders.order_date matches @(1997-01-01 - 1997-12-31));
+metric revenue_share_1993 = revenue_1993 / (revenue_1993 | exclude_grains(customer.market_segment));
+metric revenue_share_1997 = revenue_1997 / (revenue_1997 | exclude_grains(customer.market_segment));
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    revenue_share_1993: revenue_share_1993,
+    revenue_share_1997: revenue_share_1997,
+    share_change: revenue_share_1997 - revenue_share_1993,
+  }
+  sorts { market_segment asc }
+}

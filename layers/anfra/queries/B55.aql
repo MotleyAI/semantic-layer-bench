@@ -1,0 +1,11 @@
+metric late_lines = lineitem | count_if(lineitem.receipt_date > lineitem.commit_date);
+explore {
+  dimensions { ship_month: lineitem.ship_date | month() }
+  measures {
+    late_share: late_lines / line_count,
+    rolling_3m_late_share: (late_lines | trailing_period(lineitem.ship_date, interval(3 months)))
+      / (line_count | trailing_period(lineitem.ship_date, interval(3 months))),
+  }
+  filters { lineitem.ship_date matches @(1996-01-01 - 1997-12-31) }
+  sorts { ship_month asc }
+}

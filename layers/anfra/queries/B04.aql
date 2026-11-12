@@ -1,0 +1,5 @@
+explore {
+  dimensions { supplier_region_name: supplier_region.supplier_region_name }
+  measures { total_available_qty: total_available_qty }
+  sorts { supplier_region_name asc }
+}

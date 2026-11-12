@@ -1,0 +1,11 @@
+dimension customer.lifetime_orders = order_count | dimensionalize(customer.customer_key);
+explore {
+  dimensions { market_segment: customer.market_segment }
+  measures {
+    never_ordered_count: customer_count | where(customer.lifetime_orders is null),
+    never_ordered_share: (customer_count | where(customer.lifetime_orders is null)) / customer_count,
+    avg_balance_never_ordered: customer | where(customer.lifetime_orders is null) | avg(customer.account_balance),
+    avg_balance_ordered: customer | where(customer.lifetime_orders is not null) | avg(customer.account_balance),
+  }
+  sorts { market_segment asc }
+}

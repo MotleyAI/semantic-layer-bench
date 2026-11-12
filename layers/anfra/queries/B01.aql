@@ -1,0 +1,8 @@
+explore {
+  dimensions { ship_mode: lineitem.ship_mode }
+  measures {
+    line_count: line_count,
+    late_share: (lineitem | count_if(lineitem.receipt_date > lineitem.commit_date)) / line_count,
+  }
+  sorts { ship_mode asc }
+}

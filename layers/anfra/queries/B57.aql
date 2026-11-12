@@ -1,0 +1,19 @@
+metric lines_1997 = line_count | where(lineitem.ship_date matches @(1997-01-01 - 1997-12-31));
+metric late_lines_1997 = lineitem | count_if(lineitem.receipt_date > lineitem.commit_date) | where(lineitem.ship_date matches @(1997-01-01 - 1997-12-31));
+metric late_share_1997 = late_lines_1997 / lines_1997;
+dimension supplier.lines_1997 = lines_1997 | dimensionalize(supplier.supplier_key);
+dimension supplier.late_share_1997 = late_share_1997 | dimensionalize(supplier.supplier_key);
+dimension supplier.region_late_share_1997 = late_share_1997 | dimensionalize(supplier_region.supplier_region_name);
+dimension supplier.is_outlier = supplier.late_share_1997 >= supplier.region_late_share_1997 + 0.10;
+metric qualifying_supplier_count = supplier_count | where(supplier.lines_1997 > 49);
+metric outlier_supplier_count = coalesce(qualifying_supplier_count | where(supplier.is_outlier is true), 0);
+explore {
+  dimensions { supplier_region_name: supplier_region.supplier_region_name }
+  measures {
+    region_late_share: late_share_1997,
+    qualifying_supplier_count: qualifying_supplier_count,
+    outlier_supplier_count: outlier_supplier_count,
+    outlier_share: outlier_supplier_count / qualifying_supplier_count,
+  }
+  sorts { supplier_region_name asc }
+}

@@ -1,0 +1,10 @@
+dimension orders.late_lines_in_order = coalesce(lineitem | count_if(lineitem.receipt_date > lineitem.commit_date) | dimensionalize(orders.order_key), 0);
+explore {
+  dimensions { late_lines_in_order: orders.late_lines_in_order }
+  measures { order_count: order_count }
+  filters {
+    orders.order_status == 'F',
+    orders.order_date matches @(1994-01-01 - 1994-12-31),
+  }
+  sorts { late_lines_in_order asc }
+}

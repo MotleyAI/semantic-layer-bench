@@ -1,0 +1,20 @@
+dimension customer.brands_1997 = lineitem | count_distinct(part.brand) | where(orders.order_date matches @(1997-01-01 - 1997-12-31)) | dimensionalize(customer.customer_key);
+dimension customer.brand_count_bucket = case(
+  when: customer.brands_1997 < 3, then: '1-2',
+  when: customer.brands_1997 < 6, then: '3-5',
+  when: customer.brands_1997 < 11, then: '6-10',
+  else: '11+'
+);
+explore {
+  dimensions { brand_count_bucket: customer.brand_count_bucket }
+  measures {
+    customer_count: customer_count,
+    avg_revenue_per_customer: revenue / customer_count,
+    revenue_share: revenue / (revenue | exclude_grains(customer.brand_count_bucket)),
+  }
+  filters {
+    orders.order_date matches @(1997-01-01 - 1997-12-31),
+    customer.brands_1997 > 0,
+  }
+  sorts { brand_count_bucket asc }
+}

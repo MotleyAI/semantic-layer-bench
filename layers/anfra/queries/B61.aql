@@ -1,0 +1,11 @@
+metric ytd_revenue = revenue | period_to_date('year', orders.order_date);
+explore {
+  dimensions { order_month: orders.order_date | month() }
+  measures {
+    ytd_revenue_1998: ytd_revenue,
+    ytd_revenue_1997: ytd_revenue | relative_period(orders.order_date, interval(-1 year)),
+    ytd_growth: ytd_revenue / (ytd_revenue | relative_period(orders.order_date, interval(-1 year))) - 1,
+  }
+  filters { orders.order_date matches @(1998-01-01 - 1998-07-31) }
+  sorts { order_month asc }
+}
