@@ -2,10 +2,7 @@
 
   uv run python layers/anfra/translate.py
 
-OSSIE dataset -> AML Model (one per file), OSSIE field -> dimension, OSSIE relationship ->
-AML Relationship (composite keys via `on {}`), OSSIE metric -> dataset metric. The physical
-key columns the relationships and primary keys use but the model does not declare as fields
-become hidden dimensions (AML joins on dimensions); queries never reference them.
+OSSIE dataset -> AML Model (one per file), OSSIE field -> dimension, OSSIE relationship -> AML Relationship (composite keys via `on {}`), OSSIE metric -> dataset metric. The physical key columns the relationships and primary keys use but the model does not declare as fields become hidden dimensions (AML joins on dimensions); queries never reference them.
 """
 from pathlib import Path
 

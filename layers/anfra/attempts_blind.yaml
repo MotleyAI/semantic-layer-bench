@@ -310,9 +310,7 @@
     manufacturer: manufacturer
     cheapest_source_qty_share: cheapest_source_qty_share
   strict: false
-  notes: The model declares no part key, so a part is identified by part_name + manufacturer when taking the minimum
-    supply_cost per part. Correct because that pair is unique over all 200,000 parts in this data (same caveat as
-    SLayer).
+  notes: The model declares no part key, so a part is identified by part_name + manufacturer when taking the minimum supply_cost per part. Correct because that pair is unique over all 200,000 parts in this data (same caveat as SLayer).
 - id: B18
   status: attempted
   interface: aql
@@ -487,9 +485,7 @@
     returned_revenue: returned_revenue
     returned_revenue_share: returned_revenue_share
   strict: true
-  notes: A first attempt without coalesce silently dropped the years with no returned lines (4 rows instead of 6).
-    An explore drops a row when all its measures are null, and both measures were null there. Fixed with coalesce(...,
-    0).
+  notes: A first attempt without coalesce silently dropped the years with no returned lines (4 rows instead of 6). An explore drops a row when all its measures are null, and both measures were null there. Fixed with coalesce(..., 0).
 - id: B29
   status: attempted
   interface: aql
@@ -962,8 +958,7 @@
     suppliers_for_80pct_revenue: suppliers_for_80pct_revenue
     supplier_share_for_80pct: supplier_share_for_80pct
   strict: true
-  notes: 'Pareto count: window_sum over suppliers ordered by revenue desc, supplier_key asc (exact tie-break, no
-    rank-to-date trick).'
+  notes: 'Pareto count: window_sum over suppliers ordered by revenue desc, supplier_key asc (exact tie-break, no rank-to-date trick).'
 - id: B52
   status: attempted
   interface: aql
@@ -1313,8 +1308,7 @@
     savings_opportunity: savings_opportunity
     savings_share: savings_share
   strict: false
-  notes: 'Same as B17: minimum supply_cost per part is taken over part_name + manufacturer, which is unique in this
-    data but not declared as a key.'
+  notes: 'Same as B17: minimum supply_cost per part is taken over part_name + manufacturer, which is unique in this data but not declared as a key.'
 - id: B66
   status: attempted
   interface: aql
@@ -1367,10 +1361,7 @@
     min_total_price: min_total_price
     max_total_price: max_total_price
   strict: true
-  notes: The ntile window is partitioned by an is-1997 flag so it ranks only 1997 orders. A first attempt with ntile(...)
-    | dimensionalize(orders.order_key) put order_key in the window partition (1 row, silently wrong); a second without
-    the partition flag ranked all-history orders and the explore filter applied afterwards (10 rows, wrong deciles,
-    silently wrong).
+  notes: The ntile window is partitioned by an is-1997 flag so it ranks only 1997 orders. A first attempt with ntile(...) | dimensionalize(orders.order_key) put order_key in the window partition (1 row, silently wrong); a second without the partition flag ranked all-history orders and the explore filter applied afterwards (10 rows, wrong deciles, silently wrong).
 - id: B68
   status: attempted
   interface: aql
@@ -1428,21 +1419,15 @@
     median_days_to_second_order: median_days_to_second_order
     p90_days_to_second_order: p90_days_to_second_order
   strict: true
-  notes: Order position via rank() partitioned by customer, ordered by order_date then order_key. Declaring it with
-    | dimensionalize(orders.order_key) returned 0 rows (the grain went into the partition); declaring the window
-    metric directly as a dimension works.
+  notes: Order position via rank() partitioned by customer, ordered by order_date then order_key. Declaring it with | dimensionalize(orders.order_key) returned 0 rows (the grain went into the partition); declaring the window metric directly as a dimension works.
 - id: B70
   status: unsupported
-  reason: Needs every unordered pair of manufacturers present in the same order, i.e. part joined to itself through
-    lineitem/orders. The shared model has one part role, and an AQL explore cannot produce two independent manufacturer
-    columns over the same order (no self-join or cross join of a model). Hard-coding one dimension per manufacturer
-    value would pivot to columns, not the 10 requested rows, and would rely on knowing the 5 values.
+  reason: Needs every unordered pair of manufacturers present in the same order, i.e. part joined to itself through lineitem/orders. The shared model has one part role, and an AQL explore cannot produce two independent manufacturer columns over the same order (no self-join or cross join of a model). Hard-coding one dimension per manufacturer value would pivot to columns, not the 10 requested rows, and would rely on knowing the 5 values.
   category: expressivity
   fixable_in_model: 'yes'
   tried:
   - explore with part.manufacturer twice (same column, no pair rows)
-  - per-order flags orders.has_<mfgr> via dimensionalize (gives columns, not pair rows; needs literal manufacturer
-    values)
+  - per-order flags orders.has_<mfgr> via dimensionalize (gives columns, not pair rows; needs literal manufacturer values)
   - explore relationships {} block to add a second part role (that adds a join to the model, excluded by the rules)
 - id: B71
   status: attempted
@@ -1532,9 +1517,7 @@
     revenue_quartile_1997: revenue_quartile_1997
     customer_count: customer_count
   strict: false
-  notes: ntile windows partitioned by an in-both-years flag so only qualifying customers are ranked. First attempt
-    (dimensionalize + explore filter) returned 1 row. Combinations with zero customers would be missing rather than
-    shown as 0 (an explore returns only combinations that exist); all 16 combinations are non-empty in this data.
+  notes: ntile windows partitioned by an in-both-years flag so only qualifying customers are ranked. First attempt (dimensionalize + explore filter) returned 1 row. Combinations with zero customers would be missing rather than shown as 0 (an explore returns only combinations that exist); all 16 combinations are non-empty in this data.
 - id: B74
   status: attempted
   interface: aql
